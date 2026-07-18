@@ -1,0 +1,36 @@
+Surface: OpenCode 1.18.3 HTTP server with freshly built local plugin
+Model: opencode/big-pickle
+Command: /start-work .omo/plans/qa-plan.md
+Isolation: throwaway HOME, OPENCODE_CONFIG_DIR, and XDG data/config/cache/state
+
+HTTP_HEALTH={"healthy":true,"version":"1.18.3"}
+START_WORK_COMMAND_COUNT=1
+START_WORK_COMMAND_SOURCE=command
+COMMAND1_HTTP=200
+COMMAND2_HTTP=200
+WORKS_AFTER_FIRST=1
+WORKS_AFTER_SECOND=1
+BUILTIN_SCOPE_HITS=2
+AUTO_SELECTED_HITS=1
+SSE_MESSAGE_PART_UPDATED=154
+SANDBOX_SESSION_COUNT=2
+HOST_DB_BEFORE=79
+HOST_DB_AFTER=79
+SERVER_ERROR_COUNT=0
+
+The first assistant turn reported non-zero usage:
+- total tokens: 37448
+- input tokens: 1742
+- output tokens: 357
+- reasoning tokens: 21
+
+The second assistant turn also reported non-zero usage:
+- total tokens: 29523
+- input tokens: 4691
+- output tokens: 166
+- reasoning tokens: 90
+
+Observed persistence:
+- First command created one schema-v2 Boulder work for qa-plan.
+- The model completed the two fixture checkboxes during the first turn.
+- Second command recognized qa-plan as complete and did not create a duplicate work.
