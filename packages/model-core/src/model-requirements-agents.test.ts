@@ -17,15 +17,16 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
     expect(primary?.variant).toBe("high")
   })
 
-  test("sisyphus keeps opus primary before kimi-k3, k2p5, kimi-k2.5, gpt-5.5 medium, and big-pickle", () => {
+  test("sisyphus keeps opus primary before kimi chain, gpt-5.5 medium, experimental grok-4.5 high, glm-5, and big-pickle", () => {
     // given
     const sisyphus = AGENT_MODEL_REQUIREMENTS["sisyphus"]
 
     // when
-    const [primary, second, third, fourth, fifth, sixth, seventh, last] = sisyphus.fallbackChain
+    const [primary, second, third, fourth, fifth, sixth, seventh, eighth, last] =
+      sisyphus.fallbackChain
 
     // then
-    expect(sisyphus.fallbackChain).toHaveLength(8)
+    expect(sisyphus.fallbackChain).toHaveLength(9)
     expect(sisyphus.requiresAnyModel).toBe(true)
     expect(primary).toEqual({
       providers: ["anthropic", "github-copilot", "opencode", "vercel"],
@@ -44,8 +45,13 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
       model: "gpt-5.5",
       variant: "medium",
     })
-    expect(seventh?.providers[0]).toBe("zai-coding-plan")
-    expect(seventh?.model).toBe("glm-5")
+    expect(seventh).toEqual({
+      providers: ["xai", "opencode"],
+      model: "grok-4.5",
+      variant: "high",
+    })
+    expect(eighth?.providers[0]).toBe("zai-coding-plan")
+    expect(eighth?.model).toBe("glm-5")
     expect(last?.providers[0]).toBe("opencode")
     expect(last?.model).toBe("big-pickle")
   })
@@ -211,15 +217,15 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
     })
   })
 
-  test("atlas keeps sonnet, kimi, gpt-5.5, and minimax fallback order", () => {
+  test("atlas keeps sonnet, kimi, gpt-5.5, experimental grok-4.5 medium, and minimax fallback order", () => {
     // given
     const atlas = AGENT_MODEL_REQUIREMENTS["atlas"]
 
     // when
-    const [primary, secondary, tertiary, fourth, fifth, sixth] = atlas.fallbackChain
+    const [primary, secondary, tertiary, fourth, fifth, sixth, seventh] = atlas.fallbackChain
 
     // then
-    expect(atlas.fallbackChain).toHaveLength(6)
+    expect(atlas.fallbackChain).toHaveLength(7)
     expect(primary?.model).toBe("claude-sonnet-4-6")
     expect(primary?.providers[0]).toBe("anthropic")
     expect(secondary?.model).toBe("kimi-k2.6")
@@ -229,17 +235,22 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
       model: "gpt-5.5",
       variant: "medium",
     })
-    expect(fourth?.model).toBe("minimax-m3")
-    expect(fourth?.providers[0]).toBe("opencode-go")
-    expect(fifth).toEqual({
+    expect(fourth).toEqual({
+      providers: ["xai", "opencode"],
+      model: "grok-4.5",
+      variant: "medium",
+    })
+    expect(fifth?.model).toBe("minimax-m3")
+    expect(fifth?.providers[0]).toBe("opencode-go")
+    expect(sixth).toEqual({
       providers: ["minimax-coding-plan", "minimax-cn-coding-plan"],
       model: "MiniMax-M3",
     })
-    expect(sixth?.model).toBe("minimax-m2.7")
-    expect(sixth?.providers[0]).toBe("opencode-go")
+    expect(seventh?.model).toBe("minimax-m2.7")
+    expect(seventh?.providers[0]).toBe("opencode-go")
   })
 
-  test("sisyphus-junior keeps OpenAI fallback before minimax and big-pickle", () => {
+  test("sisyphus-junior keeps OpenAI fallback, experimental grok-4.5 medium, then minimax and big-pickle", () => {
     // given
     const sisyphusJunior = AGENT_MODEL_REQUIREMENTS["sisyphus-junior"]
 
@@ -250,6 +261,8 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
     const openAiFallbackIndex = sisyphusJunior.fallbackChain.findIndex((entry) =>
       entry.providers.includes("openai")
     )
+    const grokEntry = sisyphusJunior.fallbackChain.find((entry) => entry.model === "grok-4.5")
+    const grokIndex = sisyphusJunior.fallbackChain.findIndex((entry) => entry.model === "grok-4.5")
     const minimaxM3Index = sisyphusJunior.fallbackChain.findIndex(
       (entry) => entry.model === "minimax-m3"
     )
@@ -269,8 +282,14 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
       model: "gpt-5.5",
       variant: "medium",
     })
+    expect(grokEntry).toEqual({
+      providers: ["xai", "opencode"],
+      model: "grok-4.5",
+      variant: "medium",
+    })
     expect(openAiFallbackIndex).toBeGreaterThan(-1)
-    expect(minimaxM3Index).toBeGreaterThan(openAiFallbackIndex)
+    expect(grokIndex).toBeGreaterThan(openAiFallbackIndex)
+    expect(minimaxM3Index).toBeGreaterThan(grokIndex)
     expect(minimaxCodingPlanIndex).toBeGreaterThan(minimaxM3Index)
     expect(minimaxIndex).toBeGreaterThan(minimaxCodingPlanIndex)
     expect(bigPickleIndex).toBeGreaterThan(minimaxIndex)

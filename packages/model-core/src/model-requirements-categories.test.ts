@@ -2,12 +2,17 @@ import { describe, expect, test } from "bun:test"
 import { CATEGORY_MODEL_REQUIREMENTS } from "./model-requirements"
 
 describe("CATEGORY_MODEL_REQUIREMENTS", () => {
-  test("ultrabrain keeps native gpt-5.6-sol xhigh before Copilot high and gpt-5.5", () => {
+  test("ultrabrain keeps native gpt-5.6-sol xhigh before Copilot high, gpt-5.5 xhigh, and experimental grok-4.5 high", () => {
     // given
     const ultrabrain = CATEGORY_MODEL_REQUIREMENTS["ultrabrain"]
 
     // when
     const [primary, copilot, legacyFallback] = ultrabrain.fallbackChain
+    const gpt55Index = ultrabrain.fallbackChain.findIndex(
+      (entry) => entry.model === "gpt-5.5" && entry.variant === "xhigh"
+    )
+    const grokEntry = ultrabrain.fallbackChain.find((entry) => entry.model === "grok-4.5")
+    const grokIndex = ultrabrain.fallbackChain.findIndex((entry) => entry.model === "grok-4.5")
 
     // then
     expect(ultrabrain.fallbackChain.length).toBeGreaterThan(1)
@@ -21,14 +26,26 @@ describe("CATEGORY_MODEL_REQUIREMENTS", () => {
     })
     expect(legacyFallback?.model).toBe("gpt-5.5")
     expect(legacyFallback?.variant).toBe("xhigh")
+    expect(grokEntry).toEqual({
+      providers: ["xai", "opencode"],
+      model: "grok-4.5",
+      variant: "high",
+    })
+    expect(gpt55Index).toBeGreaterThan(-1)
+    expect(grokIndex).toBeGreaterThan(gpt55Index)
   })
 
-  test("deep keeps native gpt-5.6-terra xhigh before Copilot terra high and shared sol high", () => {
+  test("deep keeps native gpt-5.6-terra xhigh before Copilot terra high, shared sol high, gpt-5.5 medium, and experimental grok-4.5 high", () => {
     // given
     const deep = CATEGORY_MODEL_REQUIREMENTS["deep"]
 
     // when
     const [primary, copilot, sharedSol, legacyFallback] = deep.fallbackChain
+    const gpt55Index = deep.fallbackChain.findIndex(
+      (entry) => entry.model === "gpt-5.5" && entry.variant === "medium"
+    )
+    const grokEntry = deep.fallbackChain.find((entry) => entry.model === "grok-4.5")
+    const grokIndex = deep.fallbackChain.findIndex((entry) => entry.model === "grok-4.5")
 
     // then
     expect(deep.fallbackChain.length).toBeGreaterThan(2)
@@ -49,6 +66,13 @@ describe("CATEGORY_MODEL_REQUIREMENTS", () => {
     expect(legacyFallback?.model).toBe("gpt-5.5")
     expect(legacyFallback?.variant).toBe("medium")
     expect(legacyFallback?.providers).toContain("github-copilot")
+    expect(grokEntry).toEqual({
+      providers: ["xai", "opencode"],
+      model: "grok-4.5",
+      variant: "high",
+    })
+    expect(gpt55Index).toBeGreaterThan(-1)
+    expect(grokIndex).toBeGreaterThan(gpt55Index)
   })
 
   test("visual-engineering keeps gemini, glm, opus, opencode-go, and k2p5 fallback order", () => {
@@ -109,12 +133,13 @@ describe("CATEGORY_MODEL_REQUIREMENTS", () => {
     expect(legacyFallback?.providers[0]).toBe("anthropic")
   })
 
-  test("unspecified-high keeps opus primary before gpt-5.5 high", () => {
+  test("unspecified-high keeps opus primary before gpt-5.5 high and hard-requires experimental grok-4.5 high", () => {
     // given
     const unspecifiedHigh = CATEGORY_MODEL_REQUIREMENTS["unspecified-high"]
 
     // when
     const [primary, secondary] = unspecifiedHigh.fallbackChain
+    const grokEntry = unspecifiedHigh.fallbackChain.find((entry) => entry.model === "grok-4.5")
 
     // then
     expect(unspecifiedHigh.fallbackChain.length).toBeGreaterThan(1)
@@ -126,6 +151,11 @@ describe("CATEGORY_MODEL_REQUIREMENTS", () => {
     expect(secondary).toEqual({
       providers: ["openai", "github-copilot", "opencode", "vercel"],
       model: "gpt-5.5",
+      variant: "high",
+    })
+    expect(grokEntry).toEqual({
+      providers: ["xai", "opencode"],
+      model: "grok-4.5",
       variant: "high",
     })
   })
@@ -144,29 +174,34 @@ describe("CATEGORY_MODEL_REQUIREMENTS", () => {
     expect(primary?.providers[0]).toBe("google")
   })
 
-  test("writing keeps gemini, kimi, sonnet, and minimax fallback order", () => {
+  test("writing keeps gemini, experimental grok-4.5 medium, kimi, sonnet, and minimax fallback order", () => {
     // given
     const writing = CATEGORY_MODEL_REQUIREMENTS["writing"]
 
     // when
-    const [primary, second, third, fourth, fifth, sixth] = writing.fallbackChain
+    const [primary, second, third, fourth, fifth, sixth, seventh] = writing.fallbackChain
 
     // then
-    expect(writing.fallbackChain).toHaveLength(6)
+    expect(writing.fallbackChain).toHaveLength(7)
     expect(primary?.model).toBe("gemini-3-flash")
     expect(primary?.providers[0]).toBe("google")
-    expect(second?.model).toBe("kimi-k2.6")
-    expect(second?.providers[0]).toBe("opencode-go")
-    expect(third?.model).toBe("claude-sonnet-4-6")
-    expect(third?.providers[0]).toBe("anthropic")
-    expect(fourth?.model).toBe("minimax-m3")
-    expect(fourth?.providers[0]).toBe("opencode-go")
-    expect(fifth).toEqual({
+    expect(second).toEqual({
+      providers: ["xai", "opencode"],
+      model: "grok-4.5",
+      variant: "medium",
+    })
+    expect(third?.model).toBe("kimi-k2.6")
+    expect(third?.providers[0]).toBe("opencode-go")
+    expect(fourth?.model).toBe("claude-sonnet-4-6")
+    expect(fourth?.providers[0]).toBe("anthropic")
+    expect(fifth?.model).toBe("minimax-m3")
+    expect(fifth?.providers[0]).toBe("opencode-go")
+    expect(sixth).toEqual({
       providers: ["minimax-coding-plan", "minimax-cn-coding-plan"],
       model: "MiniMax-M3",
     })
-    expect(sixth?.model).toBe("minimax-m2.7")
-    expect(sixth?.providers[0]).toBe("opencode-go")
+    expect(seventh?.model).toBe("minimax-m2.7")
+    expect(seventh?.providers[0]).toBe("opencode-go")
   })
 
   test("deep and artistry no longer hard-require primary models", () => {
