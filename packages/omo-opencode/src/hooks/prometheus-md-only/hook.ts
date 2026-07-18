@@ -2,12 +2,18 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import { HOOK_NAME, BLOCKED_TOOLS, PLANNING_CONSULT_WARNING, PLANNING_CONTEXT_OPEN, PROMETHEUS_WORKFLOW_REMINDER } from "./constants"
 import { log } from "../../shared/logger"
 import { replaceToolArgs } from "../../shared/replace-tool-args"
-import { getAgentDisplayName } from "../../shared/agent-display-names"
 import { getAgentFromSession } from "./agent-resolution"
 import { isPrometheusAgent } from "./agent-matcher"
+import { isAllowedPrometheusBashCommand } from "./bash-command-policy"
 import { isAllowedFile } from "./path-policy"
 
 const TASK_TOOLS = ["task", "call_omo_agent"]
+const BASH_TOOLS = ["bash", "Bash"]
+
+function readBashCommand(args: Record<string, unknown>): string {
+  const command = args.command ?? args.cmd
+  return typeof command === "string" ? command : ""
+}
 
 export function createPrometheusMdOnlyHook(ctx: PluginInput) {
   return {
@@ -22,6 +28,25 @@ export function createPrometheusMdOnlyHook(ctx: PluginInput) {
       }
 
       const toolName = input.tool
+
+      // Defense-in-depth: pattern bash allow is not enough against chained commands.
+      if (BASH_TOOLS.includes(toolName)) {
+        const command = readBashCommand(output.args)
+        if (!isAllowedPrometheusBashCommand(command)) {
+          log(`[${HOOK_NAME}] Blocked: Prometheus bash outside scaffold-plan.mjs allowlist`, {
+            sessionID: input.sessionID,
+            tool: toolName,
+            agent: agentName,
+            command,
+          })
+          throw new Error(
+            `[${HOOK_NAME}] Prometheus bash is restricted to node|bun invocations of scaffold-plan.mjs only ` +
+              `(ulw-plan plan scaffold). No other shell commands are allowed. ` +
+              `Attempted command: ${command || "(empty)"}.`,
+          )
+        }
+        return
+      }
 
       // Inject planning-only warning for task tools called by Prometheus
        if (TASK_TOOLS.includes(toolName)) {
