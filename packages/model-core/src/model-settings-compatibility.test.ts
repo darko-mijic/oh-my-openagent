@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 
 import { getBundledModelCapabilitiesSnapshot, getModelCapabilities } from "./model-capabilities"
+import { detectHeuristicModelFamily } from "./model-capability-heuristics"
 import { resolveCompatibleModelSettings } from "./model-settings-compatibility"
 import bundledModelCapabilitiesSnapshotJson from "../../../packages/omo-opencode/src/generated/model-capabilities.generated.json"
 
@@ -256,6 +257,12 @@ describe("resolveCompatibleModelSettings", () => {
       { name: "Gemini", modelID: "gemini-3.1-pro", expectedVariants: ["low", "medium", "high"], hasReasoningEffort: false },
       { name: "Grok", modelID: "grok-4.3", expectedVariants: ["low", "medium", "high"], hasReasoningEffort: true },
       { name: "Grok 4.5", modelID: "grok-4.5", expectedVariants: ["low", "medium", "high"], hasReasoningEffort: true },
+      {
+        name: "Grok multi-agent",
+        modelID: "grok-4.20-multi-agent",
+        expectedVariants: ["low", "medium", "high", "xhigh"],
+        hasReasoningEffort: true,
+      },
       { name: "Kimi (kimi)", modelID: "kimi-k2.5", expectedVariants: ["low", "medium", "high"], hasReasoningEffort: false },
       { name: "Kimi (k2)", modelID: "k2-v2", expectedVariants: ["low", "medium", "high"], hasReasoningEffort: false },
       { name: "GLM", modelID: "glm-5", expectedVariants: ["low", "medium", "high"], hasReasoningEffort: false },
@@ -312,6 +319,57 @@ describe("resolveCompatibleModelSettings", () => {
         }
       })
     }
+  })
+
+  test("#given Grok multi-agent without metadata #when desired xhigh #then keeps xhigh", () => {
+    // given
+    const modelID = "xai/grok-4.20-multi-agent"
+
+    // when
+    const result = resolveCompatibleModelSettings({
+      providerID: "xai",
+      modelID,
+      desired: { variant: "xhigh", reasoningEffort: "xhigh" },
+    })
+
+    // then
+    expect(result.variant).toBe("xhigh")
+    expect(result.reasoningEffort).toBe("xhigh")
+    expect(result.changes).toEqual([])
+  })
+
+  test("#given Grok 4.5 without metadata #when desired xhigh #then downgrades to high", () => {
+    // given
+    const modelID = "xai/grok-4.5"
+
+    // when
+    const result = resolveCompatibleModelSettings({
+      providerID: "xai",
+      modelID,
+      desired: { variant: "xhigh", reasoningEffort: "xhigh" },
+    })
+
+    // then
+    expect(result.variant).toBe("high")
+    expect(result.reasoningEffort).toBe("high")
+    expect(result.changes.some((change) => change.reason === "unsupported-by-model-family")).toBe(true)
+  })
+
+  test("#given Grok multi-agent id #when detectHeuristicModelFamily #then returns xhigh-capable grok entry", () => {
+    // given
+    const modelID = "xai/grok-4.20-multi-agent"
+
+    // when
+    const family = detectHeuristicModelFamily(modelID)
+
+    // then
+    expect(family).toMatchObject({
+      family: "grok",
+      variants: ["low", "medium", "high", "xhigh"],
+      reasoningEfforts: ["low", "medium", "high", "xhigh"],
+      supportsThinking: false,
+    })
+    expect(family?.pattern?.test("grok-4.20-multi-agent")).toBe(true)
   })
 
   test("GPT-5 keeps xhigh variant and reasoningEffort", () => {

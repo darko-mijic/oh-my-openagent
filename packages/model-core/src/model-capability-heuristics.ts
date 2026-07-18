@@ -50,6 +50,14 @@ export const HEURISTIC_MODEL_FAMILY_REGISTRY: ReadonlyArray<HeuristicModelFamily
     includes: ["qwen"],
   },
   {
+    // Must precede generic grok: first-match-wins in detectHeuristicModelFamily.
+    family: "grok",
+    pattern: /grok-.*multi-agent/i,
+    variants: ["low", "medium", "high", "xhigh"],
+    reasoningEfforts: ["low", "medium", "high", "xhigh"],
+    supportsThinking: false,
+  },
+  {
     family: "grok",
     includes: ["grok"],
     variants: ["low", "medium", "high"],

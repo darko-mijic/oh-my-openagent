@@ -8,7 +8,9 @@ import {
   isClaudeOpus48Model,
   isGeminiModel,
   isGlmModel,
+  isGrok45Model,
   isGrokModel,
+  isGrokMultiAgentModel,
   isGptModel,
   isKimiK2Model,
   isKimiK27Model,
@@ -76,6 +78,36 @@ describe("model family detectors", () => {
     expect(isGrokModel("openai/gpt-5.5")).toBe(false)
     expect(isGrokModel("anthropic/claude-sonnet-4-6")).toBe(false)
     expect(isGrokModel("opencode/kimi-k2.6")).toBe(false)
+  })
+
+  test("#given Grok 4.5 model ids #then detects 4.5 and official aliases only", () => {
+    // given / when / then — true cases
+    expect(isGrok45Model("xai/grok-4.5")).toBe(true)
+    expect(isGrok45Model("opencode/grok-4.5")).toBe(true)
+    expect(isGrok45Model("grok-4-5")).toBe(true)
+    expect(isGrok45Model("grok-4.5-latest")).toBe(true)
+    expect(isGrok45Model("xai/grok-build-latest")).toBe(true)
+
+    // given / when / then — false cases
+    expect(isGrok45Model("xai/grok-4.3")).toBe(false)
+    expect(isGrok45Model("xai/grok-build-0.1")).toBe(false)
+    expect(isGrok45Model("animal-gateway-xai/grok-4-fast-non-reasoning")).toBe(false)
+    expect(isGrok45Model("xai/grok-4.20-multi-agent")).toBe(false)
+    expect(isGrok45Model("grok-4.5-multi-agent")).toBe(false)
+    expect(isGrok45Model("xai/grok-4-5-multi-agent")).toBe(false)
+    expect(isGrok45Model("openai/gpt-5.5")).toBe(false)
+  })
+
+  test("#given Grok multi-agent model ids #then detects multi-agent only", () => {
+    // given / when / then — true cases
+    expect(isGrokMultiAgentModel("xai/grok-4.20-multi-agent")).toBe(true)
+    expect(isGrokMultiAgentModel("grok-4.5-multi-agent")).toBe(true)
+    expect(isGrokMultiAgentModel("xai/grok-4-5-multi-agent")).toBe(true)
+
+    // given / when / then — false cases
+    expect(isGrokMultiAgentModel("xai/grok-4.5")).toBe(false)
+    expect(isGrokMultiAgentModel("grok-4.5-latest")).toBe(false)
+    expect(isGrokMultiAgentModel("openai/gpt-5.5")).toBe(false)
   })
 
   test("#given Claude Opus 4.6 model ids #then detects Opus 4.6 only", () => {

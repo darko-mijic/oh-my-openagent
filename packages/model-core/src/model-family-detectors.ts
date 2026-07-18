@@ -97,6 +97,30 @@ export function isGrokModel(model: string): boolean {
   return modelName.includes("grok")
 }
 
+const GROK_MULTI_AGENT_RE = /grok-.*multi-agent/i
+const GROK_45_RE = /grok-4-5(?:$|[^0-9])/
+const GROK_45_ALIASES = new Set(["grok-4-5-latest", "grok-build-latest"])
+
+/**
+ * Grok multi-agent SKUs (e.g. grok-4.20-multi-agent, grok-4.5-multi-agent).
+ * Checked before isGrok45 so multi-agent never inherits 4.5-only overlays.
+ */
+export function isGrokMultiAgentModel(model: string): boolean {
+  const modelName = extractModelName(model)
+  return GROK_MULTI_AGENT_RE.test(modelName)
+}
+
+/**
+ * Grok 4.5 family plus official aliases (grok-4.5-latest, grok-build-latest).
+ * Multi-agent ids are excluded even when they embed "4.5" / "4-5".
+ */
+export function isGrok45Model(model: string): boolean {
+  const modelName = extractModelName(model).toLowerCase().replaceAll(".", "-")
+  if (modelName.includes("multi-agent")) return false
+  if (GROK_45_ALIASES.has(modelName)) return true
+  return GROK_45_RE.test(modelName)
+}
+
 const GEMINI_PROVIDERS = ["google/", "google-vertex/"] as const
 
 export function isGeminiModel(model: string): boolean {
