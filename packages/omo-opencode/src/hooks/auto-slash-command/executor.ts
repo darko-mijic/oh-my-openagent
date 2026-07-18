@@ -12,6 +12,7 @@ interface SkillCommandInfo {
   metadata: CommandMetadata
   content?: string
   scope: "skill"
+  sourceScope: LoadedSkill["scope"]
   lazyContentLoader?: LazyContentLoader
 }
 
@@ -40,6 +41,7 @@ function skillToCommandInfo(skill: LoadedSkill): SkillCommandInfo {
     },
     content: skill.definition.template,
     scope: "skill",
+    sourceScope: skill.scope,
     lazyContentLoader: skill.lazyContent,
   }
 }
@@ -71,10 +73,20 @@ async function discoverAllCommands(options?: ExecutorOptions): Promise<CommandIn
     grouped.set(cmd.scope, list)
   }
   const orderedCommands = scopeOrder.flatMap((scope) => grouped.get(scope) ?? [])
+  const fallbackCommandIndex = orderedCommands.findIndex(
+    (command) => command.scope === "builtin" || command.scope === "plugin",
+  )
+  const commandOverrideBoundary = fallbackCommandIndex >= 0 ? fallbackCommandIndex : orderedCommands.length
+  const overridingCommands = orderedCommands.slice(0, commandOverrideBoundary)
+  const fallbackCommands = orderedCommands.slice(commandOverrideBoundary)
+  const sharedSkillCommands = skillCommands.filter((command) => command.sourceScope === "shared")
+  const overridingSkillCommands = skillCommands.filter((command) => command.sourceScope !== "shared")
 
   return [
-    ...skillCommands,
-    ...orderedCommands,
+    ...overridingCommands,
+    ...overridingSkillCommands,
+    ...fallbackCommands,
+    ...sharedSkillCommands,
   ]
 }
 

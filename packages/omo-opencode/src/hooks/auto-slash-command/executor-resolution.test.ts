@@ -59,6 +59,18 @@ function createRestrictedSkill(): LoadedSkill {
   }
 }
 
+function createShadowingSkill(): LoadedSkill {
+  return {
+    name: "shadowed",
+    definition: {
+      name: "shadowed",
+      description: "skill",
+      template: "skill template",
+    },
+    scope: "shared",
+  }
+}
+
 describe("executeSlashCommand resolution semantics", () => {
   it("returns project command when project and builtin names collide", async () => {
     //#given
@@ -77,6 +89,25 @@ describe("executeSlashCommand resolution semantics", () => {
     expect(result.replacementText).toContain("**Scope**: project")
     expect(result.replacementText).toContain("project template")
     expect(result.replacementText).not.toContain("builtin template")
+  })
+
+  it("returns project command when a shared skill has the same name", async () => {
+    //#given
+    setupExecutorSpies()
+    const parsed = {
+      command: "shadowed",
+      args: "",
+      raw: "/shadowed",
+    }
+
+    //#when
+    const result = await executeSlashCommand(parsed, { skills: [createShadowingSkill()] })
+
+    //#then
+    expect(result.success).toBe(true)
+    expect(result.replacementText).toContain("**Scope**: project")
+    expect(result.replacementText).toContain("project template")
+    expect(result.replacementText).not.toContain("skill template")
   })
 
   it("blocks slash skill invocation when invoking agent is missing", async () => {
