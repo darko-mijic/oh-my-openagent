@@ -8,6 +8,7 @@ import {
   isClaudeOpus48Model,
   isGeminiModel,
   isGlmModel,
+  isGrokModel,
   isGptModel,
   isKimiK2Model,
   isKimiK27Model,
@@ -64,6 +65,17 @@ describe("model family detectors", () => {
     expect(isGlmModel("z-ai/glm-5.1")).toBe(true)
     expect(isGlmModel("opencode/glm-4.6v")).toBe(true)
     expect(isGlmModel("google/gemini-3.1-pro")).toBe(false)
+  })
+
+  test("#given Grok model ids #then detects Grok family only", () => {
+    expect(isGrokModel("xai/grok-4.5")).toBe(true)
+    expect(isGrokModel("opencode/grok-4.5")).toBe(true)
+    expect(isGrokModel("xai/grok-4.3")).toBe(true)
+    expect(isGrokModel("xai/grok-build-0.1")).toBe(true)
+    expect(isGrokModel("animal-gateway-xai/grok-4-fast-non-reasoning")).toBe(true)
+    expect(isGrokModel("openai/gpt-5.5")).toBe(false)
+    expect(isGrokModel("anthropic/claude-sonnet-4-6")).toBe(false)
+    expect(isGrokModel("opencode/kimi-k2.6")).toBe(false)
   })
 
   test("#given Claude Opus 4.6 model ids #then detects Opus 4.6 only", () => {

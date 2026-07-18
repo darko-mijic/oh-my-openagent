@@ -54,6 +54,8 @@ export const HEURISTIC_MODEL_FAMILY_REGISTRY: ReadonlyArray<HeuristicModelFamily
     includes: ["grok"],
     variants: ["low", "medium", "high"],
     reasoningEfforts: ["low", "medium", "high"],
+    // Grok uses reasoningEffort, not Anthropic extended-thinking blocks.
+    supportsThinking: false,
   },
   {
     family: "kimi-thinking",

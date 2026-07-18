@@ -49,6 +49,18 @@ export function buildGlmSisyphusAgentConfig(
   return buildBaseSisyphusAgentConfig(mode, model, prompt);
 }
 
+/** Grok/xAI: reasoningEffort path (not Anthropic thinking). */
+export function buildGrokSisyphusAgentConfig(
+  mode: AgentMode,
+  model: string,
+  prompt: string,
+): AgentConfig {
+  return {
+    ...buildBaseSisyphusAgentConfig(mode, model, prompt),
+    reasoningEffort: "medium",
+  };
+}
+
 export function buildClaudeSisyphusAgentConfig(
   mode: AgentMode,
   model: string,

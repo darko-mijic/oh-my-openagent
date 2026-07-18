@@ -254,6 +254,7 @@ describe("resolveCompatibleModelSettings", () => {
     }> = [
       { name: "Gemini", modelID: "gemini-3.1-pro", expectedVariants: ["low", "medium", "high"], hasReasoningEffort: false },
       { name: "Grok", modelID: "grok-4.3", expectedVariants: ["low", "medium", "high"], hasReasoningEffort: true },
+      { name: "Grok 4.5", modelID: "grok-4.5", expectedVariants: ["low", "medium", "high"], hasReasoningEffort: true },
       { name: "Kimi (kimi)", modelID: "kimi-k2.5", expectedVariants: ["low", "medium", "high"], hasReasoningEffort: false },
       { name: "Kimi (k2)", modelID: "k2-v2", expectedVariants: ["low", "medium", "high"], hasReasoningEffort: false },
       { name: "GLM", modelID: "glm-5", expectedVariants: ["low", "medium", "high"], hasReasoningEffort: false },
@@ -569,6 +570,30 @@ describe("resolveCompatibleModelSettings", () => {
         reason: "unsupported-by-model-metadata",
       },
     ])
+  })
+
+  test("drops thinking for Grok capabilities resolved from heuristics", () => {
+    // given
+    const capabilities = getModelCapabilities({
+      providerID: "xai",
+      modelID: "grok-4.5",
+    })
+
+    // when
+    const result = resolveCompatibleModelSettings({
+      providerID: "xai",
+      modelID: "grok-4.5",
+      desired: {
+        reasoningEffort: "high",
+        thinking: { type: "enabled", budgetTokens: 32000 },
+      },
+      capabilities,
+    })
+
+    // then
+    expect(result.reasoningEffort).toBe("high")
+    expect(result.thinking).toBeUndefined()
+    expect(result.changes.some((change) => change.field === "thinking")).toBe(true)
   })
 
   test("drops thinking for MiniMax M2.7 capabilities resolved from heuristics", () => {

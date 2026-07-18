@@ -88,6 +88,15 @@ export function isGlmModel(model: string): boolean {
   return modelName.includes("glm")
 }
 
+/**
+ * Grok / xAI family (e.g. xai/grok-4.5, opencode/grok-4.5, gateway renames
+ * that keep "grok" in the model id). Provider-agnostic: match the model name.
+ */
+export function isGrokModel(model: string): boolean {
+  const modelName = extractModelName(model).toLowerCase()
+  return modelName.includes("grok")
+}
+
 const GEMINI_PROVIDERS = ["google/", "google-vertex/"] as const
 
 export function isGeminiModel(model: string): boolean {

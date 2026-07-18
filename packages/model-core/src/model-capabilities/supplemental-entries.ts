@@ -1,6 +1,38 @@
 import type { ModelCapabilitiesSnapshotEntry } from "./types"
 
 export const SUPPLEMENTAL_MODEL_CAPABILITIES: Record<string, ModelCapabilitiesSnapshotEntry> = {
+	// Live OpenCode catalogs expose grok-4.5 before models.dev snapshot refresh.
+	// Keep conservative limits; runtime metadata overrides when present.
+	"xai/grok-4.5": {
+		id: "xai/grok-4.5",
+		family: "grok",
+		reasoning: true,
+		temperature: true,
+		toolCall: true,
+		modalities: {
+			input: ["text", "image"],
+			output: ["text"],
+		},
+		limit: {
+			context: 1000000,
+			output: 128000,
+		},
+	},
+	"grok-4.5": {
+		id: "grok-4.5",
+		family: "grok",
+		reasoning: true,
+		temperature: true,
+		toolCall: true,
+		modalities: {
+			input: ["text", "image"],
+			output: ["text"],
+		},
+		limit: {
+			context: 1000000,
+			output: 128000,
+		},
+	},
 	"kimi-k3": {
 		id: "kimi-k3",
 		family: "kimi",

@@ -8,6 +8,7 @@ import type {
 import {
   buildClaudeSisyphusAgentConfig,
   buildGlmSisyphusAgentConfig,
+  buildGrokSisyphusAgentConfig,
   buildGptSisyphusAgentConfig,
 } from "./sisyphus-agent-config";
 import { buildFallbackSisyphusPrompt } from "./sisyphus-dynamic-prompt";
@@ -26,6 +27,7 @@ import {
   isClaudeOpus47Model,
   isClaudeOpus48Model,
   isGlmModel,
+  isGrokModel,
   isGpt5_5Model,
   isGpt5_6Model,
   isGptModel,
@@ -54,6 +56,7 @@ export type SisyphusPromptFamily =
   | "claude-opus-4-8"
   | "claude-opus-4-7"
   | "glm-5-2"
+  | "grok"
   | "fallback";
 
 export function resolveSisyphusPromptFamily(model: string): SisyphusPromptFamily {
@@ -66,6 +69,8 @@ export function resolveSisyphusPromptFamily(model: string): SisyphusPromptFamily
   if (isClaudeOpus48Model(model)) return "claude-opus-4-8";
   if (isClaudeOpus47Model(model)) return "claude-opus-4-7";
   if (isGlmModel(model)) return "glm-5-2";
+  // Grok uses the fallback prompt body for now, but must not take Claude thinking config.
+  if (isGrokModel(model)) return "grok";
   return "fallback";
 }
 
@@ -137,6 +142,17 @@ export function createSisyphusAgent(
         model,
         buildGlm52SisyphusPrompt(model, agents, tools, skills, categories, useTaskSystem),
       );
+    case "grok": {
+      const prompt = buildFallbackSisyphusPrompt(
+        model,
+        agents,
+        tools,
+        skills,
+        categories,
+        useTaskSystem,
+      );
+      return buildGrokSisyphusAgentConfig(MODE, model, prompt);
+    }
     case "fallback": {
       const prompt = buildFallbackSisyphusPrompt(
         model,
