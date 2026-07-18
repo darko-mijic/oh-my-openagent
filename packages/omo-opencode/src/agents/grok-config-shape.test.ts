@@ -31,11 +31,11 @@ describe("Grok agent config shape", () => {
     expect(agent.prompt).toContain("Grok Sisyphus-Junior overlay")
   })
 
-  test("#given xai/grok-4.5 #when creating Atlas #then appends orchestration overlay", () => {
+  test("#given xai/grok-4.5 #when creating Atlas #then appends overlay without overriding effort", () => {
     const model = "xai/grok-4.5"
     const agent = createAtlasAgent({ model })
     expect(agent.prompt).toContain("Grok Atlas orchestration overlay")
-    expect((agent as { reasoningEffort?: string }).reasoningEffort).toBe("medium")
+    expect((agent as { reasoningEffort?: string }).reasoningEffort).toBeUndefined()
   })
 
   test("#given xai/grok-4.5 #when loading Prometheus #then process law is present", () => {

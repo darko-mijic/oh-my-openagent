@@ -132,7 +132,6 @@ export function createAtlasAgent(ctx: OrchestratorContext): AgentConfig {
     temperature: 0.1,
     prompt: buildDynamicOrchestratorPrompt(ctx),
     color: "#10B981",
-    ...(ctx.model && isGrokModel(ctx.model) ? { reasoningEffort: "medium" as const } : {}),
   }
 
   return baseConfig
