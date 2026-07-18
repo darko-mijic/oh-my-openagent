@@ -204,12 +204,7 @@ task(category="quick", load_skills=[], run_in_background=false, prompt="...task 
 <workflow>
 ## Step 0: Register Tracking
 
-```
-TodoWrite([
-  { id: "orchestrate-plan", content: "Complete ALL implementation tasks", status: "in_progress", priority: "high" },
-  { id: "pass-final-wave", content: "Pass Final Verification Wave - ALL reviewers APPROVE", status: "pending", priority: "high" }
-])
-```
+After analyzing the plan, decompose every remaining top-level checkbox in `## TODOs` into concrete implementation-level substeps and register every substep with `todowrite`. Include the matching `## Final Verification Wave` reviewer tasks, preserve plan order, keep exactly one item `in_progress`, and update each item immediately when its work completes. Do not create summary todos that replace granular work tracking.
 
 ## Step 1: Analyze Plan
 
