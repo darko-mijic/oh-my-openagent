@@ -77,11 +77,20 @@ export function getModelCapabilities(input: GetModelCapabilitiesInput): ModelCap
 		providerOverride?.reasoningEfforts ? "override" : override?.reasoningEfforts ? "override" : heuristicFamily?.reasoningEfforts ? "heuristic" : "none"
 	const reasoningSource: ModelCapabilitiesDiagnostics["reasoning"]["source"] =
 		runtimeReasoning === undefined ? snapshotEntry?.reasoning === undefined ? "none" : snapshotSource : "runtime"
+	// Snapshot "reasoning" means the model can reason. It does not always mean Anthropic-style
+	// thinking blocks. Grok uses reasoningEffort; its family heuristic opts out of supportsThinking.
+	const preferGrokHeuristicThinkingOptOut =
+		override?.supportsThinking === undefined
+		&& runtimeThinking === undefined
+		&& heuristicFamily?.family === "grok"
+		&& heuristicFamily.supportsThinking === false
 	const supportsThinkingSource: ModelCapabilitiesDiagnostics["supportsThinking"]["source"] =
 		override?.supportsThinking !== undefined
 			? "override"
 			: runtimeThinking !== undefined
 			? "runtime"
+			: preferGrokHeuristicThinkingOptOut
+			? "heuristic"
 			: snapshotEntry?.reasoning !== undefined
 			? snapshotSource
 			: heuristicFamily?.supportsThinking !== undefined
@@ -123,7 +132,11 @@ export function getModelCapabilities(input: GetModelCapabilitiesInput): ModelCap
 		variants: runtimeVariants ?? providerOverride?.variants ?? override?.variants ?? heuristicFamily?.variants,
 		reasoningEfforts: providerOverride?.reasoningEfforts ?? override?.reasoningEfforts ?? heuristicFamily?.reasoningEfforts,
 		reasoning: runtimeReasoning ?? snapshotEntry?.reasoning,
-		supportsThinking: override?.supportsThinking ?? runtimeThinking ?? snapshotEntry?.reasoning ?? heuristicFamily?.supportsThinking,
+		supportsThinking: override?.supportsThinking
+			?? runtimeThinking
+			?? (preferGrokHeuristicThinkingOptOut
+				? false
+				: snapshotEntry?.reasoning ?? heuristicFamily?.supportsThinking),
 		supportsTemperature: runtimeTemperature ?? override?.supportsTemperature ?? snapshotEntry?.temperature,
 		supportsTopP: runtimeTopP ?? override?.supportsTopP,
 		maxOutputTokens: runtimeMaxOutputTokens ?? snapshotEntry?.limit?.output,

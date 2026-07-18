@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test"
 
-import { getModelCapabilities } from "./model-capabilities"
+import { getBundledModelCapabilitiesSnapshot, getModelCapabilities } from "./model-capabilities"
 import { resolveCompatibleModelSettings } from "./model-settings-compatibility"
+import bundledModelCapabilitiesSnapshotJson from "../../../packages/omo-opencode/src/generated/model-capabilities.generated.json"
 
 describe("resolveCompatibleModelSettings", () => {
   test("keeps supported Claude Opus variant unchanged", () => {
@@ -594,6 +595,38 @@ describe("resolveCompatibleModelSettings", () => {
     expect(result.reasoningEffort).toBe("high")
     expect(result.thinking).toBeUndefined()
     expect(result.changes.some((change) => change.field === "thinking")).toBe(true)
+  })
+
+  test("drops thinking for Grok on production bundled-snapshot path (supplemental reasoning must not re-enable Anthropic thinking)", () => {
+    // given: production OpenCode path always injects getBundledModelCapabilitiesSnapshot(),
+    // which merges supplemental grok-4.5 entries with reasoning: true.
+    const bundledSnapshot = getBundledModelCapabilitiesSnapshot(bundledModelCapabilitiesSnapshotJson)
+
+    for (const modelID of ["grok-4.5", "xai/grok-4.5"]) {
+      // when
+      const capabilities = getModelCapabilities({
+        providerID: "xai",
+        modelID,
+        bundledSnapshot,
+      })
+      const result = resolveCompatibleModelSettings({
+        providerID: "xai",
+        modelID,
+        desired: {
+          reasoningEffort: "high",
+          thinking: { type: "enabled", budgetTokens: 32000 },
+        },
+        capabilities,
+      })
+
+      // then: Grok keeps reasoning metadata + reasoningEffort, but never Anthropic thinking blocks
+      expect(capabilities.reasoning).toBe(true)
+      expect(capabilities.supportsThinking).toBe(false)
+      expect(capabilities.diagnostics.supportsThinking.source).toBe("heuristic")
+      expect(result.reasoningEffort).toBe("high")
+      expect(result.thinking).toBeUndefined()
+      expect(result.changes.some((change) => change.field === "thinking")).toBe(true)
+    }
   })
 
   test("drops thinking for MiniMax M2.7 capabilities resolved from heuristics", () => {
