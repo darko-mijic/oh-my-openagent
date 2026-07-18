@@ -34,8 +34,8 @@ describe("applyToolConfig with custom display names", () => {
 			permission: Record<string, unknown>;
 		};
 		expect(agent.permission.bash).toEqual({
-			"*scaffold-plan.mjs*": "allow",
 			"*": "deny",
+			"*scaffold-plan.mjs*": "allow",
 		});
 		expect(agent.permission.bash).not.toBe("deny");
 		expect(agent.permission.interactive_bash).toBe("deny");

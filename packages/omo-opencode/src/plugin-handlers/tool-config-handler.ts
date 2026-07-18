@@ -130,6 +130,7 @@ export function applyToolConfig(params: {
       ...denyTodoTools,
     };
   }
+  const prometheusMdOnlyDisabled = (params.pluginConfig.disabled_hooks ?? []).includes("prometheus-md-only")
   const prometheus = agentByKey(params.agentResult, "prometheus", params.pluginConfig);
   if (prometheus) {
     prometheus.permission = {
@@ -140,7 +141,7 @@ export function applyToolConfig(params: {
       "task_*": "allow",
       teammate: "allow",
       ...denyTodoTools,
-      bash: PROMETHEUS_BASH_PERMISSION,
+      bash: prometheusMdOnlyDisabled ? "deny" : PROMETHEUS_BASH_PERMISSION,
       interactive_bash: "deny",
     };
   }

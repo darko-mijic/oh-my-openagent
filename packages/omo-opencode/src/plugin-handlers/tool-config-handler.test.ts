@@ -7,6 +7,7 @@ function createParams(overrides: {
   taskSystem?: boolean
   agents?: string[]
   disabledTools?: string[]
+  disabledHooks?: string[]
 }) {
   const agentResult: Record<string, { permission?: Record<string, unknown> }> = {}
   for (const agent of overrides.agents ?? []) {
@@ -18,6 +19,7 @@ function createParams(overrides: {
     pluginConfig: {
       experimental: overrides.taskSystem === undefined ? undefined : { task_system: overrides.taskSystem },
       disabled_tools: overrides.disabledTools,
+      disabled_hooks: overrides.disabledHooks,
     } as OhMyOpenCodeConfig,
     agentResult: agentResult as Record<string, unknown>,
   }
@@ -307,8 +309,8 @@ describe("applyToolConfig", () => {
   })
 
   describe("#given default prometheus key", () => {
-    describe("#when applying tool config", () => {
-      it("#then bash is scaffold-plan map with wildcard deny and interactive_bash stays denied", () => {
+    describe("#when applying tool config with prometheus-md-only enabled", () => {
+      it("#then bash is the PROMETHEUS_BASH_PERMISSION pattern map and interactive_bash stays denied", () => {
         // given
         const params = createParams({ agents: ["prometheus"] })
 
@@ -320,9 +322,29 @@ describe("applyToolConfig", () => {
           permission: Record<string, unknown>
         }
         expect(agent.permission.bash).toEqual({
-          "*scaffold-plan.mjs*": "allow",
           "*": "deny",
+          "*scaffold-plan.mjs*": "allow",
         })
+        expect(agent.permission.interactive_bash).toBe("deny")
+      })
+    })
+
+    describe("#when disabled_hooks includes prometheus-md-only", () => {
+      it("#then prometheus bash permission is exactly deny", () => {
+        // given
+        const params = createParams({
+          agents: ["prometheus"],
+          disabledHooks: ["prometheus-md-only"],
+        })
+
+        // when
+        applyToolConfig(params)
+
+        // then
+        const agent = params.agentResult.prometheus as {
+          permission: Record<string, unknown>
+        }
+        expect(agent.permission.bash).toBe("deny")
         expect(agent.permission.interactive_bash).toBe("deny")
       })
     })

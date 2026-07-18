@@ -1,4 +1,4 @@
 export const PROMETHEUS_BASH_PERMISSION = {
-  "*scaffold-plan.mjs*": "allow",
   "*": "deny",
+  "*scaffold-plan.mjs*": "allow",
 } as const
