@@ -54,35 +54,43 @@ ${createSystemDirective(SystemDirectiveTypes.PROMETHEUS_READ_ONLY)}
 **You are writing a work plan. STOP AND VERIFY you completed ALL steps:**
 
 ┌─────────────────────────────────────────────────────────────────────┐
-│                     PROMETHEUS WORKFLOW                             │
+│                     PROMETHEUS WORKFLOW (ulw-plan)                  │
 ├──────┬──────────────────────────────────────────────────────────────┤
-│  1   │ INTERVIEW: Full consultation with user                       │
-│      │    - Gather ALL requirements                                 │
-│      │    - Clarify ambiguities                                     │
-│      │    - Record decisions to .omo/drafts/                   │
+│  1   │ SKILL FIRST — skill(name="ulw-plan"), full-workflow          │
+│      │    - Load ulw-plan before any planning action                │
+│      │    - Classify Intent CLEAR / UNCLEAR                         │
 ├──────┼──────────────────────────────────────────────────────────────┤
-│  2   │ METIS CONSULTATION: Pre-generation gap analysis              │
-│      │    - task(agent="Metis - Plan Consultant", ...)     │
-│      │    - Identify missed questions, guardrails, assumptions      │
+│  2   │ GROUND + ROUTE — explore; announce Intent CLEAR|UNCLEAR      │
+│      │    - Explore codebase first                                  │
+│      │    - Announce Intent CLEAR|UNCLEAR + review_required         │
 ├──────┼──────────────────────────────────────────────────────────────┤
-│  3   │ PLAN GENERATION: Write to .omo/plans/*.md               │
-│      │    <- YOU ARE HERE                                           │
+│  3   │ SCAFFOLD DRAFT — scaffold-plan.mjs --draft-only              │
+│      │    - Do NOT hand-write the draft; do NOT use category        │
+│      │    - Scaffold only via scaffold-plan.mjs --draft-only        │
 ├──────┼──────────────────────────────────────────────────────────────┤
-│  4   │ MOMUS REVIEW (if high accuracy requested)                    │
-│      │    - task(agent="Momus - Plan Critic", ...)         │
-│      │    - Loop until OKAY verdict                                 │
+│  4   │ CLEAR INTERVIEW / UNCLEAR DEFAULTS                           │
+│      │    - CLEAR: interview forks WITH WHY                         │
+│      │    - UNCLEAR: announced defaults (no silent inventing)       │
 ├──────┼──────────────────────────────────────────────────────────────┤
-│  5   │ SUMMARY: Present to user                                     │
-│      │    - Key decisions made                                      │
-│      │    - Scope IN/OUT                                            │
-│      │    - Offer: "Start Work" vs "High Accuracy Review"           │
-│      │    - Guide to /start-work                                    │
+│  5   │ APPROVAL GATE — awaiting-approval; wait                      │
+│      │    - Hold at awaiting-approval until user approves           │
+│      │    - approval ≠ implementation                               │
+├──────┼──────────────────────────────────────────────────────────────┤
+│  6   │ POST-APPROVE: PLAN + METIS + APPEND                          │
+│      │    <- YOU ARE HERE (plan write)                              │
+│      │    - After approve: scaffold plan (no --draft-only)          │
+│      │    - task(subagent_type="metis", ...)                        │
+│      │    - APPEND \`- [ ] N.\` todos; TL;DR last                     │
+├──────┼──────────────────────────────────────────────────────────────┤
+│  7   │ DUAL REVIEW — Momus + Oracle when required                   │
+│      │    - task(subagent_type="momus", ...)                        │
+│      │    - task(subagent_type="oracle", ...)                       │
 └──────┴──────────────────────────────────────────────────────────────┘
 
-**DID YOU COMPLETE STEPS 1-2 BEFORE WRITING THIS PLAN?**
-**AFTER WRITING, WILL YOU DO STEPS 4-5?**
+**YOU ARE HERE on plan write: must already have completed steps 1-5.**
+**Finish step 6 (PLAN + METIS + APPEND), then step 7 (DUAL REVIEW) if needed.**
 
-If you skipped steps, STOP NOW. Go back and complete them.
+If you skipped steps 1-5, STOP NOW. Go back and complete them.
 
 ---
 

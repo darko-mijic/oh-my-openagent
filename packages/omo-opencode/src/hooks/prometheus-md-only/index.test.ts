@@ -294,9 +294,13 @@ describe("prometheus-md-only", () => {
 
       // then
       expect(output.message).toContain("PROMETHEUS MANDATORY WORKFLOW REMINDER")
-      expect(output.message).toContain("INTERVIEW")
-      expect(output.message).toContain("METIS CONSULTATION")
-      expect(output.message).toContain("MOMUS REVIEW")
+      expect(output.message).toContain("SKILL FIRST")
+      expect(output.message).toContain("SCAFFOLD")
+      expect(output.message).toContain("APPROVAL")
+      expect(output.message).toContain("APPEND")
+      expect(output.message).toContain("Momus")
+      expect(output.message).toContain("Oracle")
+      expect(output.message).toContain('task(subagent_type="metis"')
     })
 
     test("should NOT inject workflow reminder for .omo/drafts/", async () => {
@@ -390,7 +394,7 @@ describe("prometheus-md-only", () => {
       ).rejects.toThrow("File operations restricted to .omo/*.md plan files only")
     })
 
-    test("should allow bash commands from Prometheus", async () => {
+    test("#given Prometheus bash with scaffold-plan.mjs #when hook runs #then allows", async () => {
       // given
       const hook = createPrometheusMdOnlyHook(createMockPluginInput())
       const input = {
@@ -399,7 +403,51 @@ describe("prometheus-md-only", () => {
         callID: "call-1",
       }
       const output = {
-        args: { command: "echo test" },
+        args: { command: "node path/to/scaffold-plan.mjs foo --draft-only" },
+      }
+
+      // when / #then
+      await expect(
+        hook["tool.execute.before"](input, output)
+      ).resolves.toBeUndefined()
+    })
+
+    test("#given Prometheus bash with rm #when hook runs #then denies with scaffold-plan.mjs guidance", async () => {
+      // given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const input = {
+        tool: "bash",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-rm",
+      }
+      const output = {
+        args: { command: "rm -rf /" },
+      }
+
+      // when
+      let blockedMessage = ""
+      try {
+        await hook["tool.execute.before"](input, output)
+      } catch (error) {
+        blockedMessage = error instanceof Error ? error.message : String(error)
+      }
+
+      // then
+      expect(blockedMessage).toContain("scaffold-plan.mjs")
+      expect(blockedMessage).toContain("ulw-plan")
+      expect(blockedMessage).toContain("rm -rf /")
+    })
+
+    test("#given Prometheus Bash tool with cmd arg scaffold #when hook runs #then allows", async () => {
+      // given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const input = {
+        tool: "Bash",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-bash-cmd",
+      }
+      const output = {
+        args: { cmd: "bun /x/scaffold-plan.mjs slug --clear" },
       }
 
       // when / #then
