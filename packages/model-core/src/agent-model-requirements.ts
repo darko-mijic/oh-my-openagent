@@ -25,6 +25,8 @@ export const AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
         model: "kimi-k2.5",
       },
       { providers: ["openai", "github-copilot", "opencode", "vercel"], model: "gpt-5.5", variant: "medium" },
+      // Experimental opt-in when xAI is connected — not a maintainer-supported Sisyphus primary.
+      { providers: ["xai", "opencode"], model: "grok-4.5", variant: "high" },
       { providers: ["zai-coding-plan", "opencode", "bailian-coding-plan", "vercel"], model: "glm-5" },
       { providers: ["opencode"], model: "big-pickle" },
     ],
@@ -110,6 +112,8 @@ export const AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
         model: "gpt-5.5",
         variant: "high",
       },
+      // Experimental: Grok 4.5 planning — process overlay + category ban required.
+      { providers: ["xai", "opencode"], model: "grok-4.5", variant: "high" },
       { providers: ["opencode-go", "vercel"], model: "glm-5.2" },
       {
         providers: ["google", "github-copilot", "opencode", "vercel"],
@@ -176,6 +180,8 @@ export const AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
         model: "gpt-5.5",
         variant: "medium",
       },
+      // Experimental: Grok 4.5 orchestration (user-pin preferred for evaluation).
+      { providers: ["xai", "opencode"], model: "grok-4.5", variant: "medium" },
       { providers: ["opencode-go", "vercel"], model: "minimax-m3" },
       { providers: ["minimax-coding-plan", "minimax-cn-coding-plan"], model: "MiniMax-M3" },
       { providers: ["opencode-go", "vercel"], model: "minimax-m2.7" },
@@ -190,6 +196,8 @@ export const AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
         model: "gpt-5.5",
         variant: "medium",
       },
+      // Experimental: Grok 4.5 category executor (best evaluation surface).
+      { providers: ["xai", "opencode"], model: "grok-4.5", variant: "medium" },
       { providers: ["opencode-go", "vercel"], model: "minimax-m3" },
       { providers: ["minimax-coding-plan", "minimax-cn-coding-plan"], model: "MiniMax-M3" },
       { providers: ["opencode-go", "vercel"], model: "minimax-m2.7" },

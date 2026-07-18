@@ -25,6 +25,23 @@ export function createPrometheusMdOnlyHook(ctx: PluginInput) {
 
       // Inject planning-only warning for task tools called by Prometheus
        if (TASK_TOOLS.includes(toolName)) {
+         // Hard ban: category= spawns implementers (Junior). Observed Grok failure mode.
+         const categoryArg = output.args.category
+         if (typeof categoryArg === "string" && categoryArg.trim().length > 0) {
+           log(`[${HOOK_NAME}] Blocked: Prometheus must not use task(category=...)`, {
+             sessionID: input.sessionID,
+             tool: toolName,
+             agent: agentName,
+             category: categoryArg,
+           })
+           throw new Error(
+             `[${HOOK_NAME}] Prometheus must not use task(category="${categoryArg}"). ` +
+             `Categories spawn implementers (Sisyphus-Junior). Allowed subagents only: ` +
+             `explore, librarian, metis, momus, oracle (review). ` +
+             `For drafts/plans run ulw-plan scaffold-plan.mjs — never category scaffolding.`,
+           )
+         }
+
          const prompt = output.args.prompt as string | undefined
          if (prompt && !prompt.includes(PLANNING_CONTEXT_OPEN)) {
            replaceToolArgs(output, { prompt: PLANNING_CONSULT_WARNING + prompt })

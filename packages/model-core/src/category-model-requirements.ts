@@ -35,6 +35,8 @@ export const CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
         model: "gpt-5.5",
         variant: "xhigh",
       },
+      // Experimental: Grok 4.5 deep autonomous work.
+      { providers: ["xai", "opencode"], model: "grok-4.5", variant: "high" },
       {
         providers: ["google", "github-copilot", "opencode", "vercel"],
         model: "gemini-3.1-pro",
@@ -70,6 +72,8 @@ export const CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
         model: "gpt-5.5",
         variant: "medium",
       },
+      // Experimental: Grok 4.5 multi-file reasoning.
+      { providers: ["xai", "opencode"], model: "grok-4.5", variant: "high" },
       {
         providers: ["anthropic", "github-copilot", "opencode", "vercel"],
         model: "claude-opus-4-7",
@@ -164,6 +168,8 @@ export const CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
         model: "gpt-5.5",
         variant: "high",
       },
+      // Experimental: Grok 4.5 general high-effort implementation.
+      { providers: ["xai", "opencode"], model: "grok-4.5", variant: "high" },
       { providers: ["zai-coding-plan", "opencode", "bailian-coding-plan", "vercel"], model: "glm-5" },
       { providers: ["kimi-for-coding"], model: "k2p5" },
       { providers: ["opencode-go", "vercel"], model: "glm-5.2" },
@@ -189,6 +195,8 @@ export const CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
         providers: ["google", "github-copilot", "opencode", "vercel"],
         model: "gemini-3-flash",
       },
+      // Experimental: Grok 4.5 prose / docs.
+      { providers: ["xai", "opencode"], model: "grok-4.5", variant: "medium" },
       { providers: ["opencode-go", "vercel"], model: "kimi-k2.6" },
       {
         providers: ["anthropic", "github-copilot", "opencode", "vercel"],

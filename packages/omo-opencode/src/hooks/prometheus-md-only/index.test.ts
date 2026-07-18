@@ -73,6 +73,53 @@ describe("prometheus-md-only", () => {
     }
   })
 
+  describe("category task ban", () => {
+    test("#given Prometheus #when task has category #then blocks implementer spawn", async () => {
+      //#given
+      setupMessageStorage(TEST_SESSION_ID, "prometheus")
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const input = {
+        tool: "task",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-category",
+      }
+      const output = {
+        args: {
+          category: "writing",
+          prompt: "scaffold the plan",
+        },
+      }
+
+      //#when //#then
+      await expect(
+        hook["tool.execute.before"](input, output)
+      ).rejects.toThrow("must not use task(category=")
+    })
+
+    test("#given Prometheus #when task uses subagent only #then allows with planning warning", async () => {
+      //#given
+      setupMessageStorage(TEST_SESSION_ID, "prometheus")
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const input = {
+        tool: "task",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-explore",
+      }
+      const output = {
+        args: {
+          subagent_type: "explore",
+          prompt: "Map the surface",
+        },
+      }
+
+      //#when
+      await hook["tool.execute.before"](input, output)
+
+      //#then
+      expect(String(output.args.prompt)).toContain("planning-context")
+    })
+  })
+
   describe("agent name matching", () => {
     test("should enforce md-only restriction for exact prometheus agent name", async () => {
       //#given

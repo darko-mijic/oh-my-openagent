@@ -21,6 +21,7 @@ import { buildGpt55SisyphusPrompt } from "./sisyphus/gpt-5-5";
 import { buildKimiK26SisyphusPrompt } from "./sisyphus/kimi-k2-6";
 import { buildKimiK27SisyphusPrompt } from "./sisyphus/kimi-k2-7";
 import { buildKimiK3SisyphusPrompt } from "./sisyphus/kimi-k3";
+import { appendGrokSisyphusOverlay } from "./sisyphus/grok";
 import type { AgentMode } from "./types";
 import {
   isClaudeFable5Model,
@@ -143,13 +144,15 @@ export function createSisyphusAgent(
         buildGlm52SisyphusPrompt(model, agents, tools, skills, categories, useTaskSystem),
       );
     case "grok": {
-      const prompt = buildFallbackSisyphusPrompt(
-        model,
-        agents,
-        tools,
-        skills,
-        categories,
-        useTaskSystem,
+      const prompt = appendGrokSisyphusOverlay(
+        buildFallbackSisyphusPrompt(
+          model,
+          agents,
+          tools,
+          skills,
+          categories,
+          useTaskSystem,
+        ),
       );
       return buildGrokSisyphusAgentConfig(MODE, model, prompt);
     }

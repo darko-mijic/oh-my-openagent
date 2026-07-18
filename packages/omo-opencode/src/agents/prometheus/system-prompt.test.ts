@@ -36,7 +36,7 @@ describe("getPrometheusPrompt thin prompt contract", () => {
         expect(prompt).toContain("no subagent you dispatch is ever that worker")
       })
 
-      it("#then returns the same single prompt for every model family", () => {
+      it("#then returns the same thin shell for non-Grok model families", () => {
         const prompts = MODEL_IDS.map((model) => getPrometheusPrompt(model, []))
         const [firstPrompt, ...remainingPrompts] = prompts
 
@@ -44,6 +44,17 @@ describe("getPrometheusPrompt thin prompt contract", () => {
         for (const prompt of remainingPrompts) {
           expect(prompt).toBe(firstPrompt)
         }
+      })
+
+      it("#then appends the Grok process overlay only for Grok models", () => {
+        const base = getPrometheusPrompt("anthropic/claude-opus-4-8", [])
+        const grok = getPrometheusPrompt("xai/grok-4.5", [])
+
+        expect(grok.startsWith(base)).toBe(true)
+        expect(grok).toContain("Grok Prometheus process law")
+        expect(grok).toContain("scaffold-plan.mjs")
+        expect(grok).toContain('Never `task(category=...)`')
+        expect(base).not.toContain("Grok Prometheus process law")
       })
 
       it("#then omits removed tuning and tool-example blocks", () => {

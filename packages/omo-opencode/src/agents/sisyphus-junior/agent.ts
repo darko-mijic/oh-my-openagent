@@ -33,6 +33,7 @@ import { buildGpt54SisyphusJuniorPrompt } from "./gpt-5-4"
 import { buildGpt55SisyphusJuniorPrompt } from "./gpt-5-5"
 import { buildGeminiSisyphusJuniorPrompt } from "./gemini"
 import { buildGlm52SisyphusJuniorPrompt } from "./glm-5-2"
+import { appendGrokJuniorOverlay } from "./grok-overlay"
 
 const MODE: AgentMode = "subagent"
 
@@ -55,11 +56,14 @@ export type SisyphusJuniorPromptSource =
   | "gpt-5-4"
   | "gemini"
   | "glm-5-2"
+  | "grok"
 
 export function getSisyphusJuniorPromptSource(model?: string): SisyphusJuniorPromptSource {
   if (model && isKimiK3Model(model)) return "kimi-k3"
   if (model && isKimiK27Model(model)) return "kimi-k2-7"
   if (model && isKimiK2Model(model)) return "kimi-k2"
+  // Grok follows principle-driven GPT-5.5 Junior body + Grok executor overlay.
+  if (model && isGrokModel(model)) return "grok"
   if (model && isGptModel(model)) {
     if (isGpt5_5Model(model) || isGpt5_6Model(model)) return "gpt-5-5"
     const lower = model.toLowerCase()
@@ -100,6 +104,10 @@ export function buildSisyphusJuniorPrompt(
       return buildGeminiSisyphusJuniorPrompt(useTaskSystem, promptAppend)
     case "glm-5-2":
       return buildGlm52SisyphusJuniorPrompt(useTaskSystem, promptAppend)
+    case "grok":
+      return appendGrokJuniorOverlay(
+        buildGpt55SisyphusJuniorPrompt(useTaskSystem, promptAppend),
+      )
     case "default":
     default:
       return buildDefaultSisyphusJuniorPrompt(useTaskSystem, promptAppend)

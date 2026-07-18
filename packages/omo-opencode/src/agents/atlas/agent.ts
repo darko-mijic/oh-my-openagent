@@ -34,6 +34,8 @@ import {
   buildSkillsSection,
   buildDecisionMatrix,
 } from "./prompt-section-builder"
+import { isGrokModel } from "../types"
+import { appendGrokAtlasOverlay } from "./grok-overlay"
 
 const MODE: AgentMode = "primary"
 
@@ -114,7 +116,11 @@ function buildDynamicOrchestratorPrompt(ctx?: OrchestratorContext): string {
     inject: runtimeInjections,
   }).body
 
-  return agentIdentity + "\n" + basePrompt
+  const assembled = agentIdentity + "\n" + basePrompt
+  if (model && isGrokModel(model)) {
+    return appendGrokAtlasOverlay(assembled)
+  }
+  return assembled
 }
 
 export function createAtlasAgent(ctx: OrchestratorContext): AgentConfig {
@@ -126,6 +132,7 @@ export function createAtlasAgent(ctx: OrchestratorContext): AgentConfig {
     temperature: 0.1,
     prompt: buildDynamicOrchestratorPrompt(ctx),
     color: "#10B981",
+    ...(ctx.model && isGrokModel(ctx.model) ? { reasoningEffort: "medium" as const } : {}),
   }
 
   return baseConfig
