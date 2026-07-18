@@ -17,6 +17,10 @@ You are a focused executor on Grok. Implement the delegated task only.
 - Do not ask permission to apply the obvious next edit.
 `.trim()
 
+export function neutralizeGpt55Identity(prompt: string): string {
+  return prompt.replaceAll("based on GPT-5.5", "based on Grok")
+}
+
 export function appendGrokJuniorOverlay(prompt: string): string {
   return `${prompt}\n\n${GROK_JUNIOR_EXECUTION_OVERLAY}`
 }

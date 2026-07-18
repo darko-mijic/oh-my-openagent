@@ -16,7 +16,7 @@
 
 import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentMode } from "../types"
-import { isGlmModel, isGrokModel, isGpt5_5Model, isGpt5_6Model, isGptModel, isGeminiModel, isKimiK2Model, isKimiK27Model, isKimiK3Model, buildClaudeThinkingConfig } from "../types"
+import { isGlmModel, isGrok45Model, isGrokModel, isGpt5_5Model, isGpt5_6Model, isGptModel, isGeminiModel, isKimiK2Model, isKimiK27Model, isKimiK3Model, buildClaudeThinkingConfig } from "../types"
 import type { AgentOverrideConfig } from "../../config/schema"
 import {
   createAgentToolRestrictions,
@@ -33,7 +33,7 @@ import { buildGpt54SisyphusJuniorPrompt } from "./gpt-5-4"
 import { buildGpt55SisyphusJuniorPrompt } from "./gpt-5-5"
 import { buildGeminiSisyphusJuniorPrompt } from "./gemini"
 import { buildGlm52SisyphusJuniorPrompt } from "./glm-5-2"
-import { appendGrokJuniorOverlay } from "./grok-overlay"
+import { appendGrokJuniorOverlay, neutralizeGpt55Identity } from "./grok-overlay"
 
 const MODE: AgentMode = "subagent"
 
@@ -104,10 +104,15 @@ export function buildSisyphusJuniorPrompt(
       return buildGeminiSisyphusJuniorPrompt(useTaskSystem, promptAppend)
     case "glm-5-2":
       return buildGlm52SisyphusJuniorPrompt(useTaskSystem, promptAppend)
-    case "grok":
-      return appendGrokJuniorOverlay(
+    case "grok": {
+      const body = neutralizeGpt55Identity(
         buildGpt55SisyphusJuniorPrompt(useTaskSystem, promptAppend),
       )
+      if (model && isGrok45Model(model)) {
+        return appendGrokJuniorOverlay(body)
+      }
+      return body
+    }
     case "default":
     default:
       return buildDefaultSisyphusJuniorPrompt(useTaskSystem, promptAppend)
