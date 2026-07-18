@@ -1,4 +1,4 @@
-import { isGrokModel } from "@oh-my-opencode/model-core"
+import { isGrok45Model } from "@oh-my-opencode/model-core"
 import { parseModelString } from "../../shared/model-string-parser"
 
 export function buildRetryModelPayload(
@@ -13,7 +13,7 @@ export function buildRetryModelPayload(
   const variant = parsedModel.variant ?? agentSettings?.variant
   const reasoningEffort =
     agentSettings?.reasoningEffort
-    ?? (isGrokModel(`${parsedModel.providerID}/${parsedModel.modelID}`) ? "high" : undefined)
+    ?? (isGrok45Model(`${parsedModel.providerID}/${parsedModel.modelID}`) ? "high" : undefined)
 
   const payload: { model: { providerID: string; modelID: string }; variant?: string; reasoningEffort?: string } = {
     model: {

@@ -34,7 +34,7 @@ import {
   buildSkillsSection,
   buildDecisionMatrix,
 } from "./prompt-section-builder"
-import { isGrokModel } from "../types"
+import { isGrok45Model } from "../types"
 import { appendGrokAtlasOverlay } from "./grok-overlay"
 
 const MODE: AgentMode = "primary"
@@ -117,7 +117,7 @@ function buildDynamicOrchestratorPrompt(ctx?: OrchestratorContext): string {
   }).body
 
   const assembled = agentIdentity + "\n" + basePrompt
-  if (model && isGrokModel(model)) {
+  if (model && isGrok45Model(model)) {
     return appendGrokAtlasOverlay(assembled)
   }
   return assembled

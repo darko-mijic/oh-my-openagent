@@ -126,4 +126,37 @@ describe("buildRetryModelPayload", () => {
       reasoningEffort: "high",
     })
   })
+
+  test("should default reasoningEffort high for xai/grok-build-latest with empty agent settings", () => {
+    // given
+    const model = "xai/grok-build-latest"
+    const agentSettings = {}
+
+    // when
+    const result = buildRetryModelPayload(model, agentSettings)
+
+    // then
+    expect(result).toEqual({
+      model: { providerID: "xai", modelID: "grok-build-latest" },
+      reasoningEffort: "high",
+    })
+  })
+
+  test("should not default reasoningEffort high for non-4.5 Grok models", () => {
+    // given
+    const models = [
+      "xai/grok-4.3",
+      "xai/grok-build-0.1",
+      "xai/grok-4-fast-non-reasoning",
+    ] as const
+
+    for (const model of models) {
+      // when
+      const result = buildRetryModelPayload(model, {})
+
+      // then
+      expect(result?.reasoningEffort).toBeUndefined()
+      expect(result?.model.providerID).toBe("xai")
+    }
+  })
 })

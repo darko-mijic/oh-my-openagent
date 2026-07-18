@@ -3,7 +3,9 @@
  *
  * Base orchestration stays on the Sisyphus fallback body. This file only
  * tightens execution around observed Grok stall and over-prose modes.
- * Applies to Grok 4.x / build / 4.5 ids via isGrokModel routing.
+ * Applies to Grok 4.5 and official aliases only (isGrok45Model).
+ * Other Grok ids still use the grok prompt family (no Claude thinking)
+ * but do not receive this process overlay.
  */
 
 export const GROK_SISYPHUS_EXECUTION_OVERLAY = `

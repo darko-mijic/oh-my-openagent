@@ -28,6 +28,7 @@ import {
   isClaudeOpus47Model,
   isClaudeOpus48Model,
   isGlmModel,
+  isGrok45Model,
   isGrokModel,
   isGpt5_5Model,
   isGpt5_6Model,
@@ -144,16 +145,17 @@ export function createSisyphusAgent(
         buildGlm52SisyphusPrompt(model, agents, tools, skills, categories, useTaskSystem),
       );
     case "grok": {
-      const prompt = appendGrokSisyphusOverlay(
-        buildFallbackSisyphusPrompt(
-          model,
-          agents,
-          tools,
-          skills,
-          categories,
-          useTaskSystem,
-        ),
+      const basePrompt = buildFallbackSisyphusPrompt(
+        model,
+        agents,
+        tools,
+        skills,
+        categories,
+        useTaskSystem,
       );
+      const prompt = isGrok45Model(model)
+        ? appendGrokSisyphusOverlay(basePrompt)
+        : basePrompt;
       return buildGrokSisyphusAgentConfig(MODE, model, prompt);
     }
     case "fallback": {

@@ -46,15 +46,25 @@ describe("getPrometheusPrompt thin prompt contract", () => {
         }
       })
 
-      it("#then appends the Grok process overlay only for Grok models", () => {
+      it("#then appends the Grok process overlay only for Grok 4.5 models", () => {
+        // given
         const base = getPrometheusPrompt("anthropic/claude-opus-4-8", [])
-        const grok = getPrometheusPrompt("xai/grok-4.5", [])
+        const grok45 = getPrometheusPrompt("xai/grok-4.5", [])
+        const grokBuildLatest = getPrometheusPrompt("xai/grok-build-latest", [])
+        const grok43 = getPrometheusPrompt("xai/grok-4.3", [])
+        const grokBuild01 = getPrometheusPrompt("xai/grok-build-0.1", [])
 
-        expect(grok.startsWith(base)).toBe(true)
-        expect(grok).toContain("Grok Prometheus process law")
-        expect(grok).toContain("scaffold-plan.mjs")
-        expect(grok).toContain('Never `task(category=...)`')
+        // then
+        expect(grok45.startsWith(base)).toBe(true)
+        expect(grok45).toContain("Grok Prometheus process law")
+        expect(grok45).toContain("scaffold-plan.mjs")
+        expect(grok45).toContain('Never `task(category=...)`')
+        expect(grokBuildLatest).toContain("Grok Prometheus process law")
         expect(base).not.toContain("Grok Prometheus process law")
+        expect(grok43).toBe(base)
+        expect(grok43).not.toContain("Grok Prometheus process law")
+        expect(grokBuild01).toBe(base)
+        expect(grokBuild01).not.toContain("Grok Prometheus process law")
       })
 
       it("#then omits removed tuning and tool-example blocks", () => {

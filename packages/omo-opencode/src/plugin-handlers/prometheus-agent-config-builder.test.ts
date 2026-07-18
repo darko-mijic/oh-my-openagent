@@ -378,4 +378,30 @@ describe("buildPrometheusAgentConfig", () => {
       }
     });
   });
+
+  describe("#given pipeline resolves xai/grok-4.3", () => {
+    test("does not default reasoningEffort high or attach Grok process overlay", async () => {
+      // given
+      resolveModelPipelineSpy.mockReturnValue({
+        model: "xai/grok-4.3",
+        variant: undefined,
+        provenance: "override",
+      });
+
+      // when
+      const result = await buildPrometheusAgentConfig({
+        configAgentPlan: undefined,
+        pluginPrometheusOverride: undefined,
+        userCategories: undefined,
+        currentModel: undefined,
+      });
+
+      // then
+      expect(result.reasoningEffort).toBeUndefined();
+      expect(typeof result.prompt).toBe("string");
+      if (typeof result.prompt === "string") {
+        expect(result.prompt).not.toContain("Grok Prometheus process law");
+      }
+    });
+  });
 });

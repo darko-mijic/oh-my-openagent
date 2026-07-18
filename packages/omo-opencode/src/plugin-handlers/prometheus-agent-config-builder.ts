@@ -9,7 +9,7 @@ import {
   readConnectedProvidersCache,
   resolveModelPipeline,
 } from "../shared";
-import { isGrokModel } from "@oh-my-opencode/model-core";
+import { isGrok45Model } from "@oh-my-opencode/model-core";
 import { resolveCategoryConfig } from "./category-config-resolver";
 
 type PrometheusOverride = Record<string, unknown> & {
@@ -88,7 +88,7 @@ export async function buildPrometheusAgentConfig(params: {
 
   const variantToUse = params.pluginPrometheusOverride?.variant ?? resolvedVariant;
   const grokDefaultEffort =
-    resolvedModel && isGrokModel(resolvedModel) ? "high" : undefined;
+    resolvedModel && isGrok45Model(resolvedModel) ? "high" : undefined;
   const reasoningEffortToUse =
     params.pluginPrometheusOverride?.reasoningEffort
     ?? categoryConfig?.reasoningEffort

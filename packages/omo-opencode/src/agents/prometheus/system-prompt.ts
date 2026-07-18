@@ -1,4 +1,4 @@
-import { isGrokModel } from "@oh-my-opencode/model-core"
+import { isGrok45Model } from "@oh-my-opencode/model-core"
 import { loadPromptSync, prometheusPromptVariants } from "@oh-my-opencode/prompts-core"
 import { PROMETHEUS_BASH_PERMISSION } from "./bash-permission"
 import { PROMETHEUS_GROK_PROCESS_OVERLAY } from "./grok-process-overlay"
@@ -23,12 +23,13 @@ function loadDefaultPrometheusPrompt(): string {
 export const PROMETHEUS_SYSTEM_PROMPT = loadDefaultPrometheusPrompt()
 
 /**
- * Thin Prometheus shell for all models. Grok gets an additive process overlay
- * so multi-phase ulw-plan discipline is restated without replacing the skill.
+ * Thin Prometheus shell for all models. Grok 4.5 (+ official aliases) gets an
+ * additive process overlay so multi-phase ulw-plan discipline is restated
+ * without replacing the skill. Other Grok ids keep the thin shell only.
  */
 export function getPrometheusPrompt(model?: string, disabledTools?: readonly string[]): string {
   void disabledTools
-  if (model && isGrokModel(model)) {
+  if (model && isGrok45Model(model)) {
     return `${PROMETHEUS_SYSTEM_PROMPT}\n\n${PROMETHEUS_GROK_PROCESS_OVERLAY}`
   }
   return PROMETHEUS_SYSTEM_PROMPT
