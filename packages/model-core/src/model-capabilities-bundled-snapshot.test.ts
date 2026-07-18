@@ -32,4 +32,42 @@ describe("bundled model capabilities snapshot", () => {
       })
     }
   })
+
+  test("keeps Grok reasoning true without Anthropic thinking support on production bundled path", () => {
+    // given: supplemental grok-4.5 + catalog grok-4.3 mark reasoning-capable
+    const bundledSnapshot = getBundledModelCapabilitiesSnapshot(bundledModelCapabilitiesSnapshotJson)
+
+    for (const modelID of ["grok-4.5", "xai/grok-4.5", "grok-4.3"]) {
+      // when
+      const result = getModelCapabilities({
+        providerID: "xai",
+        modelID,
+        bundledSnapshot,
+      })
+
+      // then: snapshot reasoning stays true, but Anthropic thinking stays off via Grok heuristic
+      expect(result.family).toBe("grok")
+      expect(result.reasoning).toBe(true)
+      expect(result.supportsThinking).toBe(false)
+      expect(result.diagnostics.supportsThinking.source).toBe("heuristic")
+      expect(result.reasoningEfforts).toEqual(["low", "medium", "high"])
+    }
+  })
+
+  test("does not enable Anthropic thinking for Grok catalog entries on production bundled path", () => {
+    // given
+    const bundledSnapshot = getBundledModelCapabilitiesSnapshot(bundledModelCapabilitiesSnapshotJson)
+
+    // when
+    const result = getModelCapabilities({
+      providerID: "xai",
+      modelID: "xai/grok-4",
+      bundledSnapshot,
+    })
+
+    // then
+    expect(result.family).toBe("grok")
+    expect(result.supportsThinking).toBe(false)
+    expect(result.diagnostics.supportsThinking.source).toBe("heuristic")
+  })
 })
