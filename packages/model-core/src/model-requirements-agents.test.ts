@@ -145,6 +145,22 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
     })
   })
 
+  test("prometheus grok-4.5 fallback carries reasoningEffort high", () => {
+    // given
+    const prometheus = AGENT_MODEL_REQUIREMENTS["prometheus"]
+
+    // when
+    const grokEntry = prometheus.fallbackChain.find((entry) => entry.model === "grok-4.5")
+
+    // then
+    expect(grokEntry).toEqual({
+      providers: ["xai", "opencode"],
+      model: "grok-4.5",
+      variant: "high",
+      reasoningEffort: "high",
+    })
+  })
+
   test("metis has sonnet primary, opus fallback, and OpenAI high fallback", () => {
     // given
     const metis = AGENT_MODEL_REQUIREMENTS["metis"]

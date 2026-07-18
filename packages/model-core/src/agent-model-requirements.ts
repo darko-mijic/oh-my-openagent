@@ -113,7 +113,7 @@ export const AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
         variant: "high",
       },
       // Experimental: Grok 4.5 planning — process overlay + category ban required.
-      { providers: ["xai", "opencode"], model: "grok-4.5", variant: "high" },
+      { providers: ["xai", "opencode"], model: "grok-4.5", variant: "high", reasoningEffort: "high" },
       { providers: ["opencode-go", "vercel"], model: "glm-5.2" },
       {
         providers: ["google", "github-copilot", "opencode", "vercel"],

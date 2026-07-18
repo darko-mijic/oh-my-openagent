@@ -1,11 +1,23 @@
 import { log } from "../../shared/logger"
 import { getTaskToastManager } from "../../features/task-toast-manager"
+import { applySessionPromptParams } from "../../shared/session-prompt-params-helpers"
 import type { ChatMessageHandlerOutput, ChatMessageInput } from "../../plugin/chat-message"
+
+type FallbackModelSelection = {
+  providerID: string
+  modelID: string
+  variant?: string
+  reasoningEffort?: string
+  temperature?: number
+  top_p?: number
+  maxTokens?: number
+  thinking?: { type: "enabled" | "disabled"; budgetTokens?: number }
+}
 
 export async function applyFallbackToChatMessage(params: {
   input: ChatMessageInput
   output: ChatMessageHandlerOutput
-  fallback: { providerID: string; modelID: string; variant?: string }
+  fallback: FallbackModelSelection
   toast?: (input: {
     title: string
     message: string
@@ -32,6 +44,25 @@ export async function applyFallbackToChatMessage(params: {
     output.message["variant"] = fallback.variant
   } else {
     delete output.message["variant"]
+  }
+
+  const hasEffortFields =
+    fallback.reasoningEffort !== undefined ||
+    fallback.temperature !== undefined ||
+    fallback.top_p !== undefined ||
+    fallback.maxTokens !== undefined ||
+    fallback.thinking !== undefined
+
+  if (hasEffortFields) {
+    applySessionPromptParams(sessionID, {
+      reasoningEffort: fallback.reasoningEffort,
+      temperature: fallback.temperature,
+      top_p: fallback.top_p,
+      maxTokens: fallback.maxTokens,
+      thinking: fallback.thinking,
+    })
+  } else {
+    applySessionPromptParams(sessionID, undefined)
   }
 
   if (toast) {

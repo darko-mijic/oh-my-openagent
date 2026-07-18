@@ -111,4 +111,19 @@ describe("buildRetryModelPayload", () => {
       variant: "medium",
     })
   })
+
+  test("should default reasoningEffort high for xai/grok-4.5 with empty agent settings", () => {
+    // given
+    const model = "xai/grok-4.5"
+    const agentSettings = {}
+
+    // when
+    const result = buildRetryModelPayload(model, agentSettings)
+
+    // then
+    expect(result).toEqual({
+      model: { providerID: "xai", modelID: "grok-4.5" },
+      reasoningEffort: "high",
+    })
+  })
 })
