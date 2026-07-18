@@ -1,11 +1,17 @@
 import { afterAll, describe, expect, test, beforeEach, afterEach, mock } from "bun:test"
-import { mkdirSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, realpathSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
 import { randomUUID } from "node:crypto"
+import { sharedSkillsRootPath } from "@oh-my-opencode/shared-skills"
 import { SYSTEM_DIRECTIVE_PREFIX } from "../../shared/system-directive"
 import { PLANNING_CONTEXT_OPEN } from "./constants"
 import { clearSessionAgent, setSessionAgent } from "../../features/claude-code-session-state"
+
+const TRUSTED_SCAFFOLD_REALPATH = realpathSync.native(
+  join(sharedSkillsRootPath(), "ulw-plan", "scripts", "scaffold-plan.mjs"),
+)
+const SCAFFOLD_DENY_PATTERN = /prometheus-md-only|scaffold-plan/i
 // Force stable (JSON) mode for tests that rely on message file storage
 mock.module("../../shared/opencode-storage-detection", () => ({
   isSqliteBackend: () => false,
@@ -394,7 +400,7 @@ describe("prometheus-md-only", () => {
       ).rejects.toThrow("File operations restricted to .omo/*.md plan files only")
     })
 
-    test("#given Prometheus bash with scaffold-plan.mjs #when hook runs #then allows", async () => {
+    test("#given Prometheus bash with trusted scaffold realpath #when hook runs #then allows", async () => {
       // given
       const hook = createPrometheusMdOnlyHook(createMockPluginInput())
       const input = {
@@ -403,7 +409,29 @@ describe("prometheus-md-only", () => {
         callID: "call-1",
       }
       const output = {
-        args: { command: "node path/to/scaffold-plan.mjs foo --draft-only" },
+        args: {
+          command: `node "${TRUSTED_SCAFFOLD_REALPATH}" my-slug --draft-only`,
+        },
+      }
+
+      // when / #then
+      await expect(
+        hook["tool.execute.before"](input, output)
+      ).resolves.toBeUndefined()
+    })
+
+    test("#given Prometheus Bash tool with trusted scaffold realpath via cmd #when hook runs #then allows", async () => {
+      // given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const input = {
+        tool: "Bash",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-bash-cmd",
+      }
+      const output = {
+        args: {
+          cmd: `bun "${TRUSTED_SCAFFOLD_REALPATH}" my-slug --clear`,
+        },
       }
 
       // when / #then
@@ -433,27 +461,66 @@ describe("prometheus-md-only", () => {
       }
 
       // then
-      expect(blockedMessage).toContain("scaffold-plan.mjs")
+      expect(blockedMessage).toMatch(SCAFFOLD_DENY_PATTERN)
       expect(blockedMessage).toContain("ulw-plan")
       expect(blockedMessage).toContain("rm -rf /")
     })
 
-    test("#given Prometheus Bash tool with cmd arg scaffold #when hook runs #then allows", async () => {
+    test("#given Prometheus bash with node -e before trusted path #when hook runs #then denies", async () => {
       // given
       const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const command = `node -e "console.log(1)" ${TRUSTED_SCAFFOLD_REALPATH}`
       const input = {
-        tool: "Bash",
+        tool: "bash",
         sessionID: TEST_SESSION_ID,
-        callID: "call-bash-cmd",
+        callID: "call-node-e",
       }
       const output = {
-        args: { cmd: "bun /x/scaffold-plan.mjs slug --clear" },
+        args: { command },
       }
 
       // when / #then
       await expect(
         hook["tool.execute.before"](input, output)
-      ).resolves.toBeUndefined()
+      ).rejects.toThrow(SCAFFOLD_DENY_PATTERN)
+    })
+
+    test("#given Prometheus bash with untrusted /tmp scaffold path #when hook runs #then denies", async () => {
+      // given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const command = "node /tmp/scaffold-plan.mjs slug"
+      const input = {
+        tool: "bash",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-tmp-scaffold",
+      }
+      const output = {
+        args: { command },
+      }
+
+      // when / #then
+      await expect(
+        hook["tool.execute.before"](input, output)
+      ).rejects.toThrow(SCAFFOLD_DENY_PATTERN)
+    })
+
+    test("#given Prometheus bash with $HOME trailing arg #when hook runs #then denies", async () => {
+      // given
+      const hook = createPrometheusMdOnlyHook(createMockPluginInput())
+      const command = `node ${TRUSTED_SCAFFOLD_REALPATH} $HOME`
+      const input = {
+        tool: "bash",
+        sessionID: TEST_SESSION_ID,
+        callID: "call-dollar-home",
+      }
+      const output = {
+        args: { command },
+      }
+
+      // when / #then
+      await expect(
+        hook["tool.execute.before"](input, output)
+      ).rejects.toThrow(SCAFFOLD_DENY_PATTERN)
     })
 
     test("should not affect non-blocked tools", async () => {
