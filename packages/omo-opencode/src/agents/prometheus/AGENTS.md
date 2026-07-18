@@ -5,7 +5,7 @@ description: Developer reference for the Prometheus strategic planner agent thin
 
 # src/agents/prometheus/ -- Strategic Planner
 
-**Generated:** 2026-05-24 | **Updated:** 2026-06-15 (single thin prompt)
+**Generated:** 2026-05-24 | **Updated:** 2026-07-18 (Grok process overlay + scaffold bash policy)
 
 ## OVERVIEW
 
@@ -21,16 +21,20 @@ This shape follows the package layering refactor in [`ROADMAP.md`](../../../../.
 | File | Purpose |
 |------|---------|
 | `index.ts` | Barrel exports |
-| `system-prompt.ts` | Thin loader using `loadPromptSync()` from `@oh-my-opencode/prompts-core`; `getPrometheusPrompt()` always loads the same `default.md` prompt body |
-| `system-prompt.test.ts` | Runtime behavior tests for the single-prompt loader contract |
-| `packages/prompts-core/prompts/prometheus/default.md` | The single Prometheus markdown prompt asset |
+| `system-prompt.ts` | Thin loader using `loadPromptSync()` from `@oh-my-opencode/prompts-core`; `getPrometheusPrompt()` always loads `default.md`, then optionally appends the Grok process overlay |
+| `system-prompt.test.ts` | Runtime behavior tests for the thin-shell loader and Grok overlay contract |
+| `grok-process-overlay.ts` | Additive Grok process-law overlay (scaffold, CLEAR, anti-compression) |
+| `bash-permission.ts` | `PROMETHEUS_BASH_PERMISSION` pattern map (`scaffold-plan.mjs` allow, `*` deny) |
+| `packages/prompts-core/prompts/prometheus/default.md` | Shared thin Prometheus markdown prompt asset |
 | `packages/shared-skills/skills/ulw-plan/SKILL.md` | Path-backed skill containing the full planning workflow |
 
 ## PROMPT LOADING
 
-`getPrometheusPrompt(model, disabledTools)` ignores model family for prompt selection and always loads `packages/prompts-core/prompts/prometheus/default.md`. The `model` parameter is accepted for compatibility with the agent config path, but it does not choose different prompt text.
+`getPrometheusPrompt(model, disabledTools)` always loads the shared thin shell from `packages/prompts-core/prompts/prometheus/default.md` via `loadPromptSync`.
 
-Keep prompt edits in `default.md`. Do not add model-specific markdown files, copied prompt bodies, or adapter-side routing. If the planning workflow changes, update the `ulw-plan` skill and its references rather than expanding the Prometheus prompt.
+When `isGrokModel(model)` is true, it appends `PROMETHEUS_GROK_PROCESS_OVERLAY` from `grok-process-overlay.ts`. That overlay is additive only. `ulw-plan` remains the source of truth for planning mechanics. If overlay and skill disagree, follow the skill and the stricter process reading.
+
+Keep `default.md` as the shared thin shell for all models. Do not grow a family of model-specific markdown prompt files or copy full prompt bodies into the adapter. The Grok overlay is an intentional exception for process compression failures (Grok skipping scaffold, CLEAR interview, and decision-complete plan output). Prefer skill/reference updates for workflow changes; use adapter-side routing only for this kind of model-specific process restatement.
 
 ## ULW-PLAN DEPENDENCY
 
@@ -45,6 +49,13 @@ The prompt requires Prometheus to load `ulw-plan` as its first action with the s
 
 Prometheus itself stays a planner. It reads, searches, and writes planning artifacts only; implementation belongs to downstream workers after explicit start-work approval.
 
+## BASH POLICY
+
+- `PROMETHEUS_BASH_PERMISSION` is a pattern map: allow only commands matching `*scaffold-plan.mjs*`; deny `*`.
+- `interactive_bash` is denied for Prometheus.
+- `prometheus-md-only` also enforces the bash allowlist for `scaffold-plan.mjs` (scaffold via the ulw-plan script, not free-form shell).
+- Category task ban remains: Prometheus must not use `task(category=...)`. Allowed children are explore, librarian, metis, momus, and oracle (review).
+
 ## KEY CONSTRAINTS
 
 - May ONLY create/edit `.md` files (enforced by hook)
@@ -54,6 +65,8 @@ Prometheus itself stays a planner. It reads, searches, and writes planning artif
 - Acceptance criteria requiring "user manually tests" are FORBIDDEN
 - Prompt edits belong in [`packages/prompts-core/prompts/prometheus/default.md`](../../../../prompts-core/prompts/prometheus/default.md), not in TypeScript section files
 - Planning mechanics belong in the path-backed [`ulw-plan`](../../../../shared-skills/skills/ulw-plan/SKILL.md) skill
+- Grok-only process restatement lives in `grok-process-overlay.ts` (additive; does not replace ulw-plan)
+- Bash is limited to the scaffold-plan script; see BASH POLICY
 
 ## PLAN OUTPUT FORMAT
 
