@@ -1,8 +1,7 @@
 import type { ModelCapabilitiesSnapshotEntry } from "./types"
 
 export const SUPPLEMENTAL_MODEL_CAPABILITIES: Record<string, ModelCapabilitiesSnapshotEntry> = {
-	// Live OpenCode catalogs expose grok-4.5 before models.dev snapshot refresh.
-	// Keep conservative limits; runtime metadata overrides when present.
+	// Official xAI grok-4.5 context is 500k; runtime metadata overrides when live catalog is present.
 	"xai/grok-4.5": {
 		id: "xai/grok-4.5",
 		family: "grok",
@@ -14,7 +13,7 @@ export const SUPPLEMENTAL_MODEL_CAPABILITIES: Record<string, ModelCapabilitiesSn
 			output: ["text"],
 		},
 		limit: {
-			context: 1000000,
+			context: 500000,
 			output: 128000,
 		},
 	},
@@ -29,7 +28,7 @@ export const SUPPLEMENTAL_MODEL_CAPABILITIES: Record<string, ModelCapabilitiesSn
 			output: ["text"],
 		},
 		limit: {
-			context: 1000000,
+			context: 500000,
 			output: 128000,
 		},
 	},

@@ -54,6 +54,15 @@ describe("bundled model capabilities snapshot", () => {
     }
   })
 
+  test("keeps supplemental grok-4.5 context limit at official 500k", () => {
+    // given
+    const bundled = getBundledModelCapabilitiesSnapshot(bundledModelCapabilitiesSnapshotJson)
+
+    // when / then
+    expect(bundled.models["xai/grok-4.5"]?.limit?.context).toBe(500_000)
+    expect(bundled.models["grok-4.5"]?.limit?.context).toBe(500_000)
+  })
+
   test("does not enable Anthropic thinking for Grok catalog entries on production bundled path", () => {
     // given
     const bundledSnapshot = getBundledModelCapabilitiesSnapshot(bundledModelCapabilitiesSnapshotJson)
