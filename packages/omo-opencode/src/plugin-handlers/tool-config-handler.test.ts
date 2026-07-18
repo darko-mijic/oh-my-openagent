@@ -306,6 +306,28 @@ describe("applyToolConfig", () => {
     })
   })
 
+  describe("#given default prometheus key", () => {
+    describe("#when applying tool config", () => {
+      it("#then bash is scaffold-plan map with wildcard deny and interactive_bash stays denied", () => {
+        // given
+        const params = createParams({ agents: ["prometheus"] })
+
+        // when
+        applyToolConfig(params)
+
+        // then
+        const agent = params.agentResult.prometheus as {
+          permission: Record<string, unknown>
+        }
+        expect(agent.permission.bash).toEqual({
+          "*scaffold-plan.mjs*": "allow",
+          "*": "deny",
+        })
+        expect(agent.permission.interactive_bash).toBe("deny")
+      })
+    })
+  })
+
   describe("#given sisyphus-junior with permission.task=deny from factory", () => {
     describe("#when applyToolConfig runs", () => {
       it("#then should NOT clobber task:deny to allow (sub-bug of #5193)", () => {

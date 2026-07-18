@@ -1,10 +1,13 @@
 import { isGrokModel } from "@oh-my-opencode/model-core"
 import { loadPromptSync, prometheusPromptVariants } from "@oh-my-opencode/prompts-core"
+import { PROMETHEUS_BASH_PERMISSION } from "./bash-permission"
 import { PROMETHEUS_GROK_PROCESS_OVERLAY } from "./grok-process-overlay"
+
+export { PROMETHEUS_BASH_PERMISSION } from "./bash-permission"
 
 export const PROMETHEUS_PERMISSION = {
   edit: "allow" as const,
-  bash: "allow" as const,
+  bash: PROMETHEUS_BASH_PERMISSION,
   webfetch: "allow" as const,
   question: "allow" as const,
 }
