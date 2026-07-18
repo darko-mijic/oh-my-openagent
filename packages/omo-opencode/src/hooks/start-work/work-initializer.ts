@@ -1,6 +1,10 @@
 import {
   addBoulderWork,
   createBoulderState,
+  getPlanName,
+  getWorkByPlanName,
+  readBoulderState,
+  selectActiveWork,
   writeBoulderState,
 } from "../../features/boulder-state"
 import { buildAutoSelectedPlanContextInfoOnly } from "./context-info-formatters"
@@ -13,17 +17,24 @@ export function createNewWorkOrInitialize(params: {
   readonly worktreePath: string | undefined
 }): void {
   const { directory, planPath, sessionId, activeAgent, worktreePath } = params
-  const created = addBoulderWork(directory, {
+  const existingWork = getWorkByPlanName(directory, getPlanName(planPath), { worktreePath })
+  if (existingWork && existingWork.status !== "completed" && existingWork.status !== "abandoned") {
+    selectActiveWork(directory, existingWork.work_id)
+    return
+  }
+
+  if (!readBoulderState(directory)) {
+    const initializedState = createBoulderState(planPath, sessionId, activeAgent, worktreePath)
+    writeBoulderState(directory, initializedState)
+    return
+  }
+
+  addBoulderWork(directory, {
     planPath,
     sessionId,
     agent: activeAgent,
     worktreePath,
   })
-
-  if (!created) {
-    const initializedState = createBoulderState(planPath, sessionId, activeAgent, worktreePath)
-    writeBoulderState(directory, initializedState)
-  }
 }
 
 export function buildAutoSelectedPlanContextWithStateInit(params: {

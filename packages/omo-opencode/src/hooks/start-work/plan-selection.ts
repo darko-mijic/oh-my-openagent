@@ -13,8 +13,10 @@ function normalizePlanLookupValue(value: string): string {
 }
 
 export function findPlanByName(plans: readonly string[], requestedName: string): string | null {
-  const lowerName = requestedName.toLowerCase()
-  const normalizedRequestedName = normalizePlanLookupValue(requestedName)
+  const unquotedRequestedName = requestedName.trim().replace(/^["'`]+|["'`]+$/g, "")
+  const requestedPlanName = getPlanName(unquotedRequestedName)
+  const lowerName = requestedPlanName.toLowerCase()
+  const normalizedRequestedName = normalizePlanLookupValue(requestedPlanName)
   const exactMatch = plans.find((planPath) => getPlanName(planPath).toLowerCase() === lowerName)
   if (exactMatch) return exactMatch
 

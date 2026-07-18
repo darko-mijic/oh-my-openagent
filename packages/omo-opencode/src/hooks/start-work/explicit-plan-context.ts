@@ -24,7 +24,11 @@ export function buildExplicitPlanContext(params: {
     params
   log(`[${HOOK_NAME}] Explicit plan name requested: ${explicitPlanName}`, { sessionID: sessionId })
 
-  const matchedWork = getWorkByPlanName(directory, explicitPlanName, { worktreePath })
+  const allPlans = findPrometheusPlans(directory)
+  const matchedPlan = findPlanByName(allPlans, explicitPlanName)
+  const matchedWork = matchedPlan
+    ? getWorkByPlanName(directory, getPlanName(matchedPlan), { worktreePath })
+    : null
   if (matchedWork) {
     const matchedWorkProgress = getPlanProgress(matchedWork.active_plan)
     if (matchedWorkProgress.isComplete) {
@@ -47,8 +51,6 @@ export function buildExplicitPlanContext(params: {
     }
   }
 
-  const allPlans = findPrometheusPlans(directory)
-  const matchedPlan = findPlanByName(allPlans, explicitPlanName)
   if (!matchedPlan) {
     const incompletePlans = allPlans.filter((planPath) => !getPlanProgress(planPath).isComplete)
     if (incompletePlans.length === 1) {
