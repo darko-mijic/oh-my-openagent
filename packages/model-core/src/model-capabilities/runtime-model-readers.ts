@@ -144,25 +144,30 @@ export function readRuntimeModelReasoningSupport(
 	return readRuntimeModelBoolean(runtimeModel, ["reasoning"])
 }
 
+/** Where a runtime thinking boolean came from. */
+export type RuntimeThinkingSupportSource = "explicit-thinking" | "reasoning-derived"
+
+/**
+ * Runtime thinking support with provenance.
+ * Explicit `thinking` / `supportsThinking` wins over `reasoning` when both are present.
+ * `reasoning` alone is tagged reasoning-derived so consumers (e.g. Grok) can opt out.
+ */
+export type RuntimeThinkingSupport = {
+	readonly value: boolean
+	readonly source: RuntimeThinkingSupportSource
+}
+
 export function readRuntimeModelThinkingSupport(
 	runtimeModel: Record<string, unknown> | undefined,
-): boolean | undefined {
-	const capabilityValue = readRuntimeModelReasoningSupport(runtimeModel)
-	if (capabilityValue !== undefined) {
-		return capabilityValue
+): RuntimeThinkingSupport | undefined {
+	const explicitThinking = readRuntimeModelBoolean(runtimeModel, ["thinking", "supportsThinking"])
+	if (explicitThinking !== undefined) {
+		return { value: explicitThinking, source: "explicit-thinking" }
 	}
 
-	const thinkingSupport = readRuntimeModelBoolean(runtimeModel, ["thinking", "supportsThinking"])
-	if (thinkingSupport !== undefined) {
-		return thinkingSupport
-	}
-
-	const runtimeCapabilities = readRuntimeModelCapabilities(runtimeModel)
-	for (const key of ["thinking", "supportsThinking"] as const) {
-		const value = runtimeCapabilities?.[key]
-		if (typeof value === "boolean") {
-			return value
-		}
+	const reasoningSupport = readRuntimeModelReasoningSupport(runtimeModel)
+	if (reasoningSupport !== undefined) {
+		return { value: reasoningSupport, source: "reasoning-derived" }
 	}
 
 	return undefined

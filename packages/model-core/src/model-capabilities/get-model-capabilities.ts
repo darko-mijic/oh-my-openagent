@@ -57,6 +57,10 @@ export function getModelCapabilities(input: GetModelCapabilitiesInput): ModelCap
 	const runtimeVariants = readRuntimeModelVariants(runtimeModel)
 	const runtimeReasoning = readRuntimeModelReasoningSupport(runtimeModel)
 	const runtimeThinking = readRuntimeModelThinkingSupport(runtimeModel)
+	const explicitRuntimeThinking =
+		runtimeThinking?.source === "explicit-thinking" ? runtimeThinking.value : undefined
+	const reasoningDerivedThinking =
+		runtimeThinking?.source === "reasoning-derived" ? runtimeThinking.value : undefined
 	const runtimeTemperature = readRuntimeModelTemperatureSupport(runtimeModel)
 	const runtimeTopP = readRuntimeModelTopPSupport(runtimeModel)
 	const runtimeMaxOutputTokens = readRuntimeModelLimitOutput(runtimeModel)
@@ -77,20 +81,23 @@ export function getModelCapabilities(input: GetModelCapabilitiesInput): ModelCap
 		providerOverride?.reasoningEfforts ? "override" : override?.reasoningEfforts ? "override" : heuristicFamily?.reasoningEfforts ? "heuristic" : "none"
 	const reasoningSource: ModelCapabilitiesDiagnostics["reasoning"]["source"] =
 		runtimeReasoning === undefined ? snapshotEntry?.reasoning === undefined ? "none" : snapshotSource : "runtime"
-	// Snapshot "reasoning" means the model can reason. It does not always mean Anthropic-style
-	// thinking blocks. Grok uses reasoningEffort; its family heuristic opts out of supportsThinking.
+	// Snapshot/runtime "reasoning" means the model can reason. It does not always mean Anthropic-style
+	// thinking blocks. Grok uses reasoningEffort; opt out only of reasoning-derived thinking.
+	// Explicit runtime thinking / supportsThinking still wins when co-present with reasoning.
 	const preferGrokHeuristicThinkingOptOut =
 		override?.supportsThinking === undefined
-		&& runtimeThinking === undefined
+		&& explicitRuntimeThinking === undefined
 		&& heuristicFamily?.family === "grok"
 		&& heuristicFamily.supportsThinking === false
 	const supportsThinkingSource: ModelCapabilitiesDiagnostics["supportsThinking"]["source"] =
 		override?.supportsThinking !== undefined
 			? "override"
-			: runtimeThinking !== undefined
+			: explicitRuntimeThinking !== undefined
 			? "runtime"
 			: preferGrokHeuristicThinkingOptOut
 			? "heuristic"
+			: reasoningDerivedThinking !== undefined
+			? "runtime"
 			: snapshotEntry?.reasoning !== undefined
 			? snapshotSource
 			: heuristicFamily?.supportsThinking !== undefined
@@ -133,10 +140,10 @@ export function getModelCapabilities(input: GetModelCapabilitiesInput): ModelCap
 		reasoningEfforts: providerOverride?.reasoningEfforts ?? override?.reasoningEfforts ?? heuristicFamily?.reasoningEfforts,
 		reasoning: runtimeReasoning ?? snapshotEntry?.reasoning,
 		supportsThinking: override?.supportsThinking
-			?? runtimeThinking
+			?? explicitRuntimeThinking
 			?? (preferGrokHeuristicThinkingOptOut
 				? false
-				: snapshotEntry?.reasoning ?? heuristicFamily?.supportsThinking),
+				: reasoningDerivedThinking ?? snapshotEntry?.reasoning ?? heuristicFamily?.supportsThinking),
 		supportsTemperature: runtimeTemperature ?? override?.supportsTemperature ?? snapshotEntry?.temperature,
 		supportsTopP: runtimeTopP ?? override?.supportsTopP,
 		maxOutputTokens: runtimeMaxOutputTokens ?? snapshotEntry?.limit?.output,

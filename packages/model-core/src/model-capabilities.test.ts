@@ -473,4 +473,73 @@ describe("getModelCapabilities", () => {
     expect(capabilities.supportsThinking).toBe(true)
     expect(capabilities.diagnostics.supportsThinking.source).toBe("runtime")
   })
+
+  test("Grok opts out of reasoning-derived runtime thinking while keeping reasoning true", () => {
+    // given: Grok runtime only reports reasoning (not Anthropic thinking blocks)
+    findProviderModelMetadataSpy = spyOn(
+      connectedProvidersCache,
+      "findProviderModelMetadata",
+    ).mockReturnValue(undefined)
+
+    // when
+    const capabilities = getModelCapabilities({
+      providerID: "xai",
+      modelID: "grok-4.5",
+      runtimeModel: {
+        reasoning: true,
+      },
+    })
+
+    // then: reasoning stays true; supportsThinking stays false via Grok heuristic
+    expect(capabilities.reasoning).toBe(true)
+    expect(capabilities.supportsThinking).toBe(false)
+    expect(capabilities.diagnostics.reasoning.source).toBe("runtime")
+    expect(capabilities.diagnostics.supportsThinking.source).toBe("heuristic")
+  })
+
+  test("Grok honors explicit supportsThinking when co-present with reasoning", () => {
+    // given: Grok runtime has both reasoning and explicit supportsThinking
+    findProviderModelMetadataSpy = spyOn(
+      connectedProvidersCache,
+      "findProviderModelMetadata",
+    ).mockReturnValue(undefined)
+
+    // when
+    const capabilities = getModelCapabilities({
+      providerID: "xai",
+      modelID: "grok-4.5",
+      runtimeModel: {
+        reasoning: true,
+        supportsThinking: true,
+      },
+    })
+
+    // then: explicit thinking wins; reasoning remains true
+    expect(capabilities.reasoning).toBe(true)
+    expect(capabilities.supportsThinking).toBe(true)
+    expect(capabilities.diagnostics.supportsThinking.source).toBe("runtime")
+  })
+
+  test("Grok honors explicit thinking: false when co-present with reasoning", () => {
+    // given: Grok runtime has reasoning true and explicit thinking false
+    findProviderModelMetadataSpy = spyOn(
+      connectedProvidersCache,
+      "findProviderModelMetadata",
+    ).mockReturnValue(undefined)
+
+    // when
+    const capabilities = getModelCapabilities({
+      providerID: "xai",
+      modelID: "grok-4.5",
+      runtimeModel: {
+        reasoning: true,
+        thinking: false,
+      },
+    })
+
+    // then: explicit thinking false wins; reasoning remains true
+    expect(capabilities.reasoning).toBe(true)
+    expect(capabilities.supportsThinking).toBe(false)
+    expect(capabilities.diagnostics.supportsThinking.source).toBe("runtime")
+  })
 })
