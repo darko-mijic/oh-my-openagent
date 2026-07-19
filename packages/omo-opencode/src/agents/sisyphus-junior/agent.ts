@@ -179,9 +179,10 @@ export function createSisyphusJuniorAgentWithOverrides(
   }
 
   if (isGrokModel(model)) {
-    const effort =
-      (override as { reasoningEffort?: string } | undefined)?.reasoningEffort ?? "medium"
-    return { ...base, reasoningEffort: effort } as AgentConfig
+    if (override?.reasoningEffort !== undefined) {
+      return { ...base, reasoningEffort: override.reasoningEffort } as AgentConfig
+    }
+    return base as AgentConfig
   }
 
   if (isGlmModel(model)) {

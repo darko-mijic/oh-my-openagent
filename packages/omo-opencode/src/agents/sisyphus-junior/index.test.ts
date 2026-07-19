@@ -179,6 +179,30 @@ describe("createSisyphusJuniorAgentWithOverrides", () => {
       expect(result.reasoningEffort).toBeUndefined()
       expect(result.thinking).toBeUndefined()
     })
+
+    test("#given Grok model without effort override #when agent is created #then omits reasoningEffort", () => {
+      // given
+      const override = { model: "xai/grok-4.5" }
+
+      // when
+      const result = createSisyphusJuniorAgentWithOverrides(override)
+
+      // then
+      expect(result.reasoningEffort).toBeUndefined()
+      expect(result.thinking).toBeUndefined()
+    })
+
+    test("#given Grok model with reasoningEffort high #when agent is created #then uses override effort", () => {
+      // given
+      const override = { model: "xai/grok-4.5", reasoningEffort: "high" as const }
+
+      // when
+      const result = createSisyphusJuniorAgentWithOverrides(override)
+
+      // then
+      expect(result.reasoningEffort).toBe("high")
+      expect(result.thinking).toBeUndefined()
+    })
   })
 
   describe("GPT-5.4 file-edit protocol", () => {

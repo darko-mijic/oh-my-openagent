@@ -52,26 +52,37 @@ describe("Grok agent config shape", () => {
     expect(agent.prompt).not.toContain("Grok Harness Overlay")
   })
 
-  test("#given xai/grok-4.5 #when creating Sisyphus-Junior #then uses Grok body + overlay without GPT-5.5 identity", () => {
+  test("#given xai/grok-4.5 #when creating Sisyphus-Junior without effort override #then omits factory reasoningEffort", () => {
     // given
     const model = "xai/grok-4.5"
 
     // when
     const source = getSisyphusJuniorPromptSource(model)
+    const agent = createSisyphusJuniorAgentWithOverrides({ model })
+
+    // then
+    expect(source).toBe("grok")
+    expect(agent.model).toBe(model)
+    expect((agent as { thinking?: unknown }).thinking).toBeUndefined()
+    expect((agent as { reasoningEffort?: string }).reasoningEffort).toBeUndefined()
+    expect(agent.prompt).toContain("Grok")
+    expect(agent.prompt).toContain("Grok Sisyphus-Junior overlay")
+    expect(agent.prompt).toContain("based on Grok")
+    expect(agent.prompt).not.toContain("based on GPT-5.5")
+  })
+
+  test("#given xai/grok-4.5 #when creating Sisyphus-Junior with reasoningEffort high #then override wins", () => {
+    // given
+    const model = "xai/grok-4.5"
+
+    // when
     const agent = createSisyphusJuniorAgentWithOverrides({
       model,
       reasoningEffort: "high",
     })
 
     // then
-    expect(source).toBe("grok")
-    expect(agent.model).toBe(model)
-    expect((agent as { thinking?: unknown }).thinking).toBeUndefined()
     expect((agent as { reasoningEffort?: string }).reasoningEffort).toBe("high")
-    expect(agent.prompt).toContain("Grok")
-    expect(agent.prompt).toContain("Grok Sisyphus-Junior overlay")
-    expect(agent.prompt).toContain("based on Grok")
-    expect(agent.prompt).not.toContain("based on GPT-5.5")
   })
 
   test("#given xai/grok-4.3 #when creating Sisyphus-Junior #then neutralizes GPT-5.5 identity without 4.5 overlay", () => {
