@@ -6,6 +6,7 @@ import {
 } from "./sisyphus-junior/agent"
 import { createAtlasAgent } from "./atlas/agent"
 import { getPrometheusPrompt } from "./prometheus/system-prompt"
+import { applyOverrides } from "./builtin-agents/agent-overrides"
 
 describe("Grok agent config shape", () => {
   test("#given xai/grok-4.5 #when creating Sisyphus #then uses grok family without Claude thinking", () => {
@@ -20,11 +21,23 @@ describe("Grok agent config shape", () => {
     expect(family).toBe("grok")
     expect(agent.model).toBe(model)
     expect((agent as { thinking?: unknown }).thinking).toBeUndefined()
-    expect((agent as { reasoningEffort?: string }).reasoningEffort).toBe("medium")
+    expect((agent as { reasoningEffort?: string }).reasoningEffort).toBeUndefined()
     expect(agent.prompt).toContain("Grok Harness Overlay")
   })
 
-  test("#given xai/grok-build-latest #when creating Sisyphus #then still receives Grok Harness Overlay", () => {
+  test("#given xai/grok-4.5 #when applying sisyphus reasoningEffort override #then override wins", () => {
+    // given
+    const model = "xai/grok-4.5"
+    const agent = createSisyphusAgent(model)
+
+    // when
+    const merged = applyOverrides(agent, { reasoningEffort: "high" }, {})
+
+    // then
+    expect((merged as { reasoningEffort?: string }).reasoningEffort).toBe("high")
+  })
+
+  test("#given xai/grok-build-latest #when creating Sisyphus #then grok family without 4.5 harness overlay", () => {
     // given
     const model = "xai/grok-build-latest"
 
@@ -35,7 +48,8 @@ describe("Grok agent config shape", () => {
     // then
     expect(family).toBe("grok")
     expect((agent as { thinking?: unknown }).thinking).toBeUndefined()
-    expect(agent.prompt).toContain("Grok Harness Overlay")
+    expect((agent as { reasoningEffort?: string }).reasoningEffort).toBeUndefined()
+    expect(agent.prompt).not.toContain("Grok Harness Overlay")
   })
 
   test("#given xai/grok-4.5 #when creating Sisyphus-Junior #then uses Grok body + overlay without GPT-5.5 identity", () => {
@@ -124,7 +138,7 @@ describe("Grok agent config shape", () => {
     expect(prompt).toContain("scaffold-plan.mjs")
   })
 
-  test("#given grok-build-latest #when loading Prometheus #then process law is present", () => {
+  test("#given grok-build-latest #when loading Prometheus #then process law is absent", () => {
     // given
     const model = "xai/grok-build-latest"
 
@@ -132,7 +146,7 @@ describe("Grok agent config shape", () => {
     const prompt = getPrometheusPrompt(model)
 
     // then
-    expect(prompt).toContain("Grok Prometheus process law")
+    expect(prompt).not.toContain("Grok Prometheus process law")
   })
 
   test("#given non-4.5 Grok ids #when creating Sisyphus #then family is grok without harness overlay", () => {
@@ -151,7 +165,7 @@ describe("Grok agent config shape", () => {
       // then
       expect(family).toBe("grok")
       expect((agent as { thinking?: unknown }).thinking).toBeUndefined()
-      expect((agent as { reasoningEffort?: string }).reasoningEffort).toBe("medium")
+      expect((agent as { reasoningEffort?: string }).reasoningEffort).toBeUndefined()
       expect(agent.prompt).not.toContain("Grok Harness Overlay")
     }
   })
@@ -185,7 +199,7 @@ describe("Grok agent config shape", () => {
     // then
     expect(family).toBe("grok")
     expect((agent as { thinking?: unknown }).thinking).toBeUndefined()
-    expect((agent as { reasoningEffort?: string }).reasoningEffort).toBe("medium")
+    expect((agent as { reasoningEffort?: string }).reasoningEffort).toBeUndefined()
     expect(agent.prompt).toContain("Grok Harness Overlay")
   })
 })
