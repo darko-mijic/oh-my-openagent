@@ -86,12 +86,15 @@ describe("model family detectors", () => {
     expect(isGrok45Model("opencode/grok-4.5")).toBe(true)
     expect(isGrok45Model("grok-4-5")).toBe(true)
     expect(isGrok45Model("grok-4.5-latest")).toBe(true)
-    expect(isGrok45Model("xai/grok-build-latest")).toBe(true)
+    expect(isGrok45Model("xai/grok-4.5-latest")).toBe(true)
 
     // given / when / then — false cases
     expect(isGrok45Model("xai/grok-4.3")).toBe(false)
     expect(isGrok45Model("xai/grok-build-0.1")).toBe(false)
+    expect(isGrok45Model("xai/grok-build-latest")).toBe(false)
     expect(isGrok45Model("animal-gateway-xai/grok-4-fast-non-reasoning")).toBe(false)
+    expect(isGrok45Model("xai/grok-4.5-fast-non-reasoning")).toBe(false)
+    expect(isGrok45Model("xai/grok-4.5-non-reasoning")).toBe(false)
     expect(isGrok45Model("xai/grok-4.20-multi-agent")).toBe(false)
     expect(isGrok45Model("grok-4.5-multi-agent")).toBe(false)
     expect(isGrok45Model("xai/grok-4-5-multi-agent")).toBe(false)
