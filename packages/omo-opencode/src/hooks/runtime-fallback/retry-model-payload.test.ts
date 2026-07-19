@@ -48,6 +48,7 @@ describe("buildRetryModelPayload", () => {
     expect(result).toEqual({
       model: { providerID: "anthropic", modelID: "claude-sonnet-4-5" },
       variant: "high",
+      reasoningEffort: "high",
     })
   })
 
@@ -57,12 +58,13 @@ describe("buildRetryModelPayload", () => {
     const agentSettings = { variant: "max" }
 
     // when
-    const result = buildRetryModelPayload(model, agentSettings)
+    const result = buildRetryModelPayload(model, undefined, agentSettings)
 
     // then
     expect(result).toEqual({
       model: { providerID: "chutes", modelID: "kimi-k2.5" },
       variant: "max",
+      reasoningEffort: "max",
     })
   })
 
@@ -72,12 +74,13 @@ describe("buildRetryModelPayload", () => {
     const agentSettings = { variant: "max" }
 
     // when
-    const result = buildRetryModelPayload(model, agentSettings)
+    const result = buildRetryModelPayload(model, undefined, agentSettings)
 
     // then
     expect(result).toEqual({
       model: { providerID: "anthropic", modelID: "claude-sonnet-4-5" },
       variant: "high",
+      reasoningEffort: "high",
     })
   })
 
@@ -87,7 +90,7 @@ describe("buildRetryModelPayload", () => {
     const agentSettings = { variant: "high", reasoningEffort: "xhigh" }
 
     // when
-    const result = buildRetryModelPayload(model, agentSettings)
+    const result = buildRetryModelPayload(model, undefined, agentSettings)
 
     // then
     expect(result).toEqual({
@@ -97,18 +100,19 @@ describe("buildRetryModelPayload", () => {
     })
   })
 
-  test("should not include reasoningEffort when agent settings has none", () => {
+  test("should derive reasoningEffort from agent variant when explicit effort is absent", () => {
     // given
     const model = "chutes/kimi-k2.5"
     const agentSettings = { variant: "medium" }
 
     // when
-    const result = buildRetryModelPayload(model, agentSettings)
+    const result = buildRetryModelPayload(model, undefined, agentSettings)
 
     // then
     expect(result).toEqual({
       model: { providerID: "chutes", modelID: "kimi-k2.5" },
       variant: "medium",
+      reasoningEffort: "medium",
     })
   })
 
@@ -127,18 +131,47 @@ describe("buildRetryModelPayload", () => {
     })
   })
 
-  test("should default reasoningEffort high for xai/grok-build-latest with empty agent settings", () => {
+  test("#given selected Grok fallback effort is low #when agent effort is high #then selected effort wins", () => {
     // given
-    const model = "xai/grok-build-latest"
-    const agentSettings = {}
+    const model = "xai/grok-4.5"
+    const selectedEntry = { reasoningEffort: "low" as const }
+    const agentSettings = { reasoningEffort: "high" }
 
     // when
-    const result = buildRetryModelPayload(model, agentSettings)
+    const result = buildRetryModelPayload(model, selectedEntry, agentSettings)
+
+    // then
+    expect(result).toEqual({
+      model: { providerID: "xai", modelID: "grok-4.5" },
+      reasoningEffort: "low",
+    })
+  })
+
+  test("#given Grok fallback has a low inline variant #when payload is built #then low is preserved and high is not injected", () => {
+    // given
+    const model = "xai/grok-4.5(low)"
+
+    // when
+    const result = buildRetryModelPayload(model)
+
+    // then
+    expect(result).toEqual({
+      model: { providerID: "xai", modelID: "grok-4.5" },
+      variant: "low",
+      reasoningEffort: "low",
+    })
+  })
+
+  test("#given grok-build-latest without effort #when payload is built #then Grok 4.5 high default is not applied", () => {
+    // given
+    const model = "xai/grok-build-latest"
+
+    // when
+    const result = buildRetryModelPayload(model, {})
 
     // then
     expect(result).toEqual({
       model: { providerID: "xai", modelID: "grok-build-latest" },
-      reasoningEffort: "high",
     })
   })
 

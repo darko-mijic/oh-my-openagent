@@ -117,6 +117,11 @@ function createRuntimeFallbackDeps(operations: string[]): HookDeps {
     },
     options: undefined,
     pluginConfig: {
+      git_master: {
+        commit_footer: true,
+        include_co_authored_by: true,
+        git_env_prefix: "GIT_MASTER=1",
+      },
       categories: {
         test: {
           fallback_models: ["litellm/openai.eu.gpt-5.5"],
@@ -143,8 +148,8 @@ function createRuntimeFallbackHelpers(deps: HookDeps, operations: string[]): Aut
     },
     clearSessionFallbackTimeout: () => {},
     scheduleSessionFallbackTimeout: () => {},
-    autoRetryWithFallback: async (_sessionID: string, model: string) => {
-      operations.push(`retry:${model}`)
+    autoRetryWithFallback: async (_sessionID, selectedFallback) => {
+      operations.push(`retry:${selectedFallback.selectedIndex}:${selectedFallback.entry.model}`)
       return { accepted: true, status: "dispatched" }
     },
     resolveAgentForSessionFromContext: async () => undefined,
@@ -181,7 +186,7 @@ describe("createMessageUpdateHandler runtime fallback dispatch", () => {
     // then
     expect(operations).toEqual([
       "abort:message.updated.quota-fallback",
-      "retry:litellm/openai.eu.gpt-5.5",
+      "retry:0:litellm/openai.eu.gpt-5.5",
       "toast",
     ])
     expect(deps.internallyAbortedSessions.has(sessionID)).toBe(true)

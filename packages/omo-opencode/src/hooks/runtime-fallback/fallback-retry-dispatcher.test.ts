@@ -48,13 +48,18 @@ function createDeps(toastMessages: string[]): HookDeps {
   }
 }
 
-function createRejectedDispatchHelpers(dispatchCalls: string[]): AutoRetryHelpers {
+function createRejectedDispatchHelpers(
+  dispatchCalls: Array<{ selectedIndex: number; model: string }>,
+): AutoRetryHelpers {
   return {
     abortSessionRequest: async () => {},
     clearSessionFallbackTimeout: () => {},
     scheduleSessionFallbackTimeout: () => {},
-    autoRetryWithFallback: async (_sessionID, model) => {
-      dispatchCalls.push(model)
+    autoRetryWithFallback: async (_sessionID, selectedFallback) => {
+      dispatchCalls.push({
+        selectedIndex: selectedFallback.selectedIndex,
+        model: selectedFallback.entry.model,
+      })
       return { accepted: false, status: "blocked", reason: "test gate blocked dispatch" }
     },
     resolveAgentForSessionFromContext: async () => undefined,
@@ -66,7 +71,7 @@ describe("dispatchFallbackRetry", () => {
   test("#given fallback dispatch is blocked #when fallback retry runs #then state is restored and no success toast is shown", async () => {
     // given
     const toastMessages: string[] = []
-    const dispatchCalls: string[] = []
+    const dispatchCalls: Array<{ selectedIndex: number; model: string }> = []
     const deps = createDeps(toastMessages)
     const helpers = createRejectedDispatchHelpers(dispatchCalls)
     const sessionID = "session-dispatch-rejected"
@@ -82,7 +87,10 @@ describe("dispatchFallbackRetry", () => {
     })
 
     // then
-    expect(dispatchCalls).toEqual(["litellm/openai.eu.gpt-5.5"])
+    expect(dispatchCalls).toEqual([{
+      selectedIndex: 0,
+      model: "litellm/openai.eu.gpt-5.5",
+    }])
     expect(toastMessages).toEqual([])
     expect(state.currentModel).toBe("openai/gpt-5.4")
     expect(state.fallbackIndex).toBe(-1)

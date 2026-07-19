@@ -2878,7 +2878,7 @@ describe("runtime-fallback", () => {
   })
 
   describe("cooldown mechanism", () => {
-    test("should respect cooldown period before retrying failed model", async () => {
+    test("should treat a configured fallback entry as distinct from an identical primary model", async () => {
       const hook = createRuntimeFallbackHook(createMockPluginInput(), {
         config: createMockConfig({ cooldown_seconds: 60, notify_on_fallback: false }),
         pluginConfig: createMockPluginConfigWithCategoryFallback([
@@ -2907,7 +2907,7 @@ describe("runtime-fallback", () => {
       // Simulate the fallback session completing before the next error arrives
       await hook.event({ event: { type: "session.idle", properties: { sessionID } } })
 
-      //#when - second error occurs immediately; tries to switch back to original model but should be in cooldown
+      //#when - second error occurs immediately and selects the distinct configured entry
       await hook.event({
         event: {
           type: "session.error",
@@ -2917,7 +2917,7 @@ describe("runtime-fallback", () => {
       })
 
       const cooldownSkipLog = logCalls.find((c) => c.msg.includes("Skipping fallback model in cooldown"))
-      expect(cooldownSkipLog).toBeDefined()
+      expect(cooldownSkipLog).toBeUndefined()
     })
   })
 

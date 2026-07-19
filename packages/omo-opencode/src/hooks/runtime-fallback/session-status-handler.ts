@@ -4,7 +4,7 @@ import { HOOK_NAME, RETRYABLE_ERROR_PATTERNS } from "./constants"
 import { log } from "../../shared/logger"
 import { extractAutoRetrySignal } from "./error-classifier"
 import { createFallbackState } from "./fallback-state"
-import { getFallbackModelsForSession } from "./fallback-models"
+import { getRawFallbackModels } from "./fallback-models"
 import { normalizeRetryStatusMessage, extractRetryAttempt } from "../../shared/retry-status-utils"
 import { resolveFallbackBootstrapModel } from "./fallback-bootstrap-model"
 import { dispatchFallbackRetry } from "./fallback-retry-dispatcher"
@@ -75,7 +75,7 @@ export function createSessionStatusHandler(
     }
 
     const resolvedAgent = await helpers.resolveAgentForSessionFromContext(sessionID, agent)
-    const fallbackModels = getFallbackModelsForSession(sessionID, resolvedAgent, pluginConfig)
+    const fallbackModels = getRawFallbackModels(sessionID, resolvedAgent, pluginConfig) ?? []
     if (fallbackModels.length === 0) {
       if (!sessionStates.has(sessionID)) {
         sessionStatusRetryKeys.delete(sessionID)
@@ -117,6 +117,7 @@ export function createSessionStatusHandler(
           sessionID,
           pendingFallbackModel: state.pendingFallbackModel,
         })
+        state.pendingFallback = undefined
         state.pendingFallbackModel = undefined
         state.pendingFallbackPromptMayHaveBeenAccepted = false
       } else {

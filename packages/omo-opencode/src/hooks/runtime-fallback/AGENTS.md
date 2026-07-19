@@ -44,15 +44,16 @@ interface FallbackState {
   originalModel: string
   currentModel: string
   fallbackIndex: number
-  failedModels: Map<string, number>  // model → cooldown-until timestamp
+  selectedFallback?: SelectedFallback
+  failedModels: Map<string, number>  // selected index + entry → cooldown timestamp
   attemptCount: number
-  pendingFallbackModel?: string
+  pendingFallback?: SelectedFallback
 }
 ```
 
 ## FALLBACK CHAIN RESOLUTION (fallback-models.ts)
 
-Priority order (`getRawFallbackModelsForSession`):
+Priority order (`getRawFallbackModels`):
 1. **Session category** `fallback_models` (via SessionCategoryRegistry)
 2. **Agent config** `fallback_models`, then the agent's own category `fallback_models` (`tryGetFallbackFromAgent`)
 3. **Session ID pattern match** (detect agent from session ID, then step 2 logic)
@@ -64,7 +65,7 @@ When the resolved agent is `plan` and `sisyphus_agent` is enabled (`disabled !==
 ```
 session.error / message.updated (with error) / session.status (retry signal)
   → isRetryableError(error)?
-  → getFallbackModelsForSession(sessionID, agent)
+  → getRawFallbackModels(sessionID, agent)
   → findNextAvailableFallback(): skip cooldown models
   → prepareFallback(): update state, mark current failed
   → dispatchFallbackRetry(): toast notification + promptAsync with new model

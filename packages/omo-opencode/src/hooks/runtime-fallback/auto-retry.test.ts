@@ -4,6 +4,10 @@ import { createAutoRetryHelpers } from "./auto-retry"
 import { createFallbackState } from "./fallback-state"
 import type { HookDeps, RuntimeFallbackPluginInput } from "./types"
 
+function selectFallback(model: string, selectedIndex = 0) {
+  return { selectedIndex, entry: { model } }
+}
+
 function createContext(promptCalls: { count: number }): RuntimeFallbackPluginInput {
   const session = {
     abort: async () => ({}),
@@ -72,7 +76,7 @@ describe("createAutoRetryHelpers", () => {
     deps.sessionStates.set(sessionID, state)
 
     // when
-    await helpers.autoRetryWithFallback(sessionID, "openai/gpt-5.4", undefined, "session.error")
+    await helpers.autoRetryWithFallback(sessionID, selectFallback("openai/gpt-5.4"), undefined, "session.error")
 
     // then
     expect(promptCalls.count).toBe(1)
@@ -93,7 +97,7 @@ describe("createAutoRetryHelpers", () => {
     deps.sessionAwaitingFallbackResult.add(sessionID)
 
     // when
-    await helpers.autoRetryWithFallback(sessionID, "google/gemini-2.5-pro", undefined, "session.status")
+    await helpers.autoRetryWithFallback(sessionID, selectFallback("google/gemini-2.5-pro", 1), undefined, "session.status")
 
     // then
     expect(promptCalls.count).toBe(0)
@@ -119,7 +123,7 @@ describe("createAutoRetryHelpers", () => {
     deps.sessionStates.set(sessionID, state)
 
     // when
-    await helpers.autoRetryWithFallback(sessionID, "openai/gpt-5.4", undefined, "session.error")
+    await helpers.autoRetryWithFallback(sessionID, selectFallback("openai/gpt-5.4"), undefined, "session.error")
 
     // then
     expect(promptCalls.count).toBe(1)
@@ -160,7 +164,7 @@ describe("createAutoRetryHelpers", () => {
     deps.sessionStates.set(sessionID, state)
 
     // when
-    await helpers.autoRetryWithFallback(sessionID, "openai/gpt-5.4", undefined, "session.error")
+    await helpers.autoRetryWithFallback(sessionID, selectFallback("openai/gpt-5.4"), undefined, "session.error")
 
     // then
     expect(promptCalls.count).toBe(1)

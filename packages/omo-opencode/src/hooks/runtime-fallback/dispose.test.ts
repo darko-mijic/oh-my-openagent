@@ -5,14 +5,14 @@ import type { HookDeps, RuntimeFallbackPluginInput } from "./types"
 
 let capturedDeps: HookDeps | undefined
 
-const mockCreateAutoRetryHelpers = mock((deps: HookDeps) => {
+const mockCreateAutoRetryHelpers = mock((deps: HookDeps): AutoRetryHelpers => {
   capturedDeps = deps
 
   return {
     abortSessionRequest: async () => {},
     clearSessionFallbackTimeout: () => {},
     scheduleSessionFallbackTimeout: () => {},
-    autoRetryWithFallback: async () => {},
+    autoRetryWithFallback: async () => ({ accepted: true, status: "dispatched" }),
     resolveAgentForSessionFromContext: async () => undefined,
     cleanupStaleSessions: () => {},
   }
@@ -23,7 +23,13 @@ const mockCreateMessageUpdateHandler = mock((_deps: HookDeps, _helpers: AutoRetr
 const mockCreateChatMessageHandler = mock((_deps: HookDeps) => async () => {})
 
 function createHookWithMocks() {
-  return createRuntimeFallbackHook(createMockContext(), { pluginConfig: {} }, {
+  return createRuntimeFallbackHook(createMockContext(), { pluginConfig: {
+    git_master: {
+      commit_footer: true,
+      include_co_authored_by: true,
+      git_env_prefix: "GIT_MASTER=1",
+    },
+  } }, {
     createAutoRetryHelpers: mockCreateAutoRetryHelpers,
     createEventHandler: mockCreateEventHandler,
     createMessageUpdateHandler: mockCreateMessageUpdateHandler,
@@ -120,6 +126,7 @@ describe("createRuntimeFallbackHook dispose", () => {
       fallbackIndex: 1,
       failedModels: new Map([["anthropic/claude-opus-4-7", 1]]),
       attemptCount: 1,
+      runtimePromptParamsApplied: false,
     })
     capturedDeps?.sessionLastAccess.set("session-1", Date.now())
     capturedDeps?.sessionRetryInFlight.add("session-1")

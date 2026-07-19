@@ -1,5 +1,6 @@
 import type { AutoRetryHelpers } from "./auto-retry"
 import type { AutoRetryDispatchOutcome, HookDeps, FallbackState } from "./types"
+import type { FallbackModelObject } from "../../config/schema/fallback-models"
 import { HOOK_NAME } from "./constants"
 import { log } from "../../shared/logger"
 import { prepareFallback } from "./fallback-state"
@@ -8,7 +9,7 @@ import { restoreFallbackState, snapshotFallbackState } from "./fallback-state-sn
 type DispatchFallbackRetryOptions = {
   sessionID: string
   state: FallbackState
-  fallbackModels: string[]
+  fallbackModels: readonly (string | FallbackModelObject)[]
   resolvedAgent?: string
   source: string
 }
@@ -33,10 +34,10 @@ export async function dispatchFallbackRetry(
     deps.config,
   )
 
-  if (result.success && result.newModel) {
+  if (result.success && result.selectedFallback && result.newModel) {
     const rawDispatchOutcome = await helpers.autoRetryWithFallback(
       options.sessionID,
-      result.newModel,
+      result.selectedFallback,
       options.resolvedAgent,
       options.source,
     )

@@ -117,7 +117,14 @@ function createDeps(pluginConfig: HookDeps["pluginConfig"] = undefined): HookDep
 
 interface RecordedCalls {
   abort: Array<{ sessionID: string; source: string }>
-  autoRetry: Array<{ sessionID: string; newModel: string; resolvedAgent: string | undefined; source: string }>
+  autoRetry: Array<{
+    sessionID: string
+    selectedIndex: number
+    model: string
+    reasoningEffort: string | undefined
+    resolvedAgent: string | undefined
+    source: string
+  }>
 }
 
 function createHelpers(calls: RecordedCalls, resolvedAgentName?: string): AutoRetryHelpers {
@@ -127,8 +134,16 @@ function createHelpers(calls: RecordedCalls, resolvedAgentName?: string): AutoRe
     },
     clearSessionFallbackTimeout: () => {},
     scheduleSessionFallbackTimeout: () => {},
-    autoRetryWithFallback: async (sessionID, newModel, resolvedAgent, source) => {
-      calls.autoRetry.push({ sessionID, newModel, resolvedAgent, source })
+    autoRetryWithFallback: async (sessionID, selectedFallback, resolvedAgent, source) => {
+      calls.autoRetry.push({
+        sessionID,
+        selectedIndex: selectedFallback.selectedIndex,
+        model: selectedFallback.entry.model,
+        reasoningEffort: selectedFallback.entry.reasoningEffort,
+        resolvedAgent,
+        source,
+      })
+      return { accepted: true, status: "dispatched" }
     },
     resolveAgentForSessionFromContext: async () => resolvedAgentName,
     cleanupStaleSessions: () => {},
@@ -190,7 +205,8 @@ describe("first-prompt-watchdog", () => {
     expect(calls.abort).toEqual([{ sessionID, source: "first-prompt-watchdog" }])
     expect(calls.autoRetry).toHaveLength(1)
     expect(calls.autoRetry[0].sessionID).toBe(sessionID)
-    expect(calls.autoRetry[0].newModel).toBe(FALLBACK_MODEL)
+    expect(calls.autoRetry[0].selectedIndex).toBe(0)
+    expect(calls.autoRetry[0].model).toBe(FALLBACK_MODEL)
     expect(calls.autoRetry[0].source).toBe("first-prompt-watchdog")
 
     watchdog.dispose()
@@ -398,29 +414,31 @@ describe("observeEventForWatchdog", () => {
     ["file", { type: "file" }],
   ]
 
-  it.each(assistantProgressParts)("#given a message.updated assistant event whose only part is type=%s #when observed #then onAssistantProgress is called (model is *working*, not silent)", (_label: string, part: { readonly type: string; readonly text?: string; readonly id?: string; readonly name?: string; readonly tool_use_id?: string }) => {
-    const calls = freshCalls()
-    observeEventForWatchdog(
-      {
-        type: "message.updated",
-        properties: { info: { sessionID, role: "assistant" }, parts: [part] },
-      },
-      createRecordingWatchdog(calls),
-    )
-    expect(calls.progress).toEqual([sessionID])
-  })
+  for (const [label, part] of assistantProgressParts) {
+    it(`#given a message.updated assistant event whose only part is type=${label} #when observed #then onAssistantProgress is called (model is *working*, not silent)`, () => {
+      const calls = freshCalls()
+      observeEventForWatchdog(
+        {
+          type: "message.updated",
+          properties: { info: { sessionID, role: "assistant" }, parts: [part] },
+        },
+        createRecordingWatchdog(calls),
+      )
+      expect(calls.progress).toEqual([sessionID])
+    })
 
-  it.each(assistantProgressParts)("#given a message.part.updated event whose part is type=%s #when observed #then onAssistantProgress is called", (_label: string, part: { readonly type: string; readonly text?: string; readonly id?: string; readonly name?: string; readonly tool_use_id?: string }) => {
-    const calls = freshCalls()
-    observeEventForWatchdog(
-      {
-        type: "message.part.updated",
-        properties: { sessionID, part },
-      },
-      createRecordingWatchdog(calls),
-    )
-    expect(calls.progress).toEqual([sessionID])
-  })
+    it(`#given a message.part.updated event whose part is type=${label} #when observed #then onAssistantProgress is called`, () => {
+      const calls = freshCalls()
+      observeEventForWatchdog(
+        {
+          type: "message.part.updated",
+          properties: { sessionID, part },
+        },
+        createRecordingWatchdog(calls),
+      )
+      expect(calls.progress).toEqual([sessionID])
+    })
+  }
 
   it("#given a message.updated assistant event with parts: [] and no error/finish #when observed #then no progress is signalled (no activity yet)", () => {
     const calls = freshCalls()
@@ -460,17 +478,16 @@ describe("observeEventForWatchdog", () => {
 
   const terminalEventTypes: ReadonlyArray<readonly [string]> = [["session.idle"], ["session.stop"], ["session.deleted"], ["session.error"]]
 
-  it.each(terminalEventTypes)(
-    "#given a %s event #when observed #then onSessionTerminal is called",
-    (eventType: string) => {
+  for (const [eventType] of terminalEventTypes) {
+    it(`#given a ${eventType} event #when observed #then onSessionTerminal is called`, () => {
       const calls = freshCalls()
       observeEventForWatchdog(
         { type: eventType, properties: { sessionID } },
         createRecordingWatchdog(calls),
       )
       expect(calls.terminal).toEqual([sessionID])
-    },
-  )
+    })
+  }
 
   it("#given a session.deleted event whose sessionID is carried under properties.info.id #when observed #then onSessionTerminal is still called (matches event-handler shape)", () => {
     const calls = freshCalls()

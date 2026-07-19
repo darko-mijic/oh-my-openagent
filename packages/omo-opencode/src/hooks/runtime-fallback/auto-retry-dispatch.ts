@@ -1,4 +1,4 @@
-import type { AutoRetryDispatchOutcome, HookDeps } from "./types"
+import type { AutoRetryDispatchOutcome, HookDeps, SelectedFallback } from "./types"
 import { HOOK_NAME } from "./constants"
 import { log } from "../../shared/logger"
 import { getSessionAgent, resolveRegisteredAgentName } from "../../features/claude-code-session-state"
@@ -12,6 +12,7 @@ import {
 } from "../shared/prompt-async-gate"
 import { isAmbiguousPostDispatchPromptFailure } from "../../shared/prompt-failure-classifier"
 import { resolveOriginalUserRetryMetadata } from "./auto-retry-metadata"
+import { getSelectedFallbackModel } from "./fallback-state"
 
 export function createAutoRetryDispatcher(
   deps: HookDeps,
@@ -29,7 +30,7 @@ export function createAutoRetryDispatcher(
 
   return async (
     sessionID: string,
-    newModel: string,
+    selectedFallback: SelectedFallback,
     resolvedAgent: string | undefined,
     source: string,
   ): Promise<AutoRetryDispatchOutcome> => {
@@ -41,7 +42,8 @@ export function createAutoRetryDispatcher(
     const agentSettings = resolvedAgent
       ? pluginConfig?.agents?.[resolvedAgent as keyof typeof pluginConfig.agents]
       : undefined
-    const retryModelPayload = buildRetryModelPayload(newModel, agentSettings ? {
+    const newModel = getSelectedFallbackModel(selectedFallback)
+    const retryModelPayload = buildRetryModelPayload(newModel, selectedFallback.entry, agentSettings ? {
       variant: agentSettings.variant,
       reasoningEffort: agentSettings.reasoningEffort,
     } : undefined)
@@ -49,6 +51,7 @@ export function createAutoRetryDispatcher(
       log(`[${HOOK_NAME}] Invalid model format (missing provider prefix): ${newModel}`)
       const state = sessionStates.get(sessionID)
       if (state?.pendingFallbackModel) {
+        state.pendingFallback = undefined
         state.pendingFallbackModel = undefined
       }
       if (state) {
@@ -59,6 +62,7 @@ export function createAutoRetryDispatcher(
 
     const hadAwaitingFallbackResult = sessionAwaitingFallbackResult.has(sessionID)
     const previousPendingFallbackModel = sessionStates.get(sessionID)?.pendingFallbackModel
+    const previousPendingFallback = sessionStates.get(sessionID)?.pendingFallback
     const previousPendingFallbackPromptMayHaveBeenAccepted = sessionStates.get(sessionID)?.pendingFallbackPromptMayHaveBeenAccepted
     sessionRetryInFlight.add(sessionID)
     let retryDispatched = false
@@ -230,8 +234,10 @@ export function createAutoRetryDispatcher(
         if (state) {
           if (hadAwaitingFallbackResult) {
             state.pendingFallbackModel = previousPendingFallbackModel
+            state.pendingFallback = previousPendingFallback
             state.pendingFallbackPromptMayHaveBeenAccepted = previousPendingFallbackPromptMayHaveBeenAccepted
           } else if (state.pendingFallbackModel) {
+            state.pendingFallback = undefined
             state.pendingFallbackModel = undefined
             state.pendingFallbackPromptMayHaveBeenAccepted = false
           }

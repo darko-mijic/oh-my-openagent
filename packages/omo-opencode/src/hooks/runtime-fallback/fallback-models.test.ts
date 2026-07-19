@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, test } from "bun:test"
 
-import { getFallbackModelsForSession } from "./fallback-models"
+import { getRawFallbackModels } from "./fallback-models"
 import { SessionCategoryRegistry } from "../../shared/session-category-registry"
 import { unsafeTestValue } from "../../../../../test-support/unsafe-test-value"
+import type { OhMyOpenCodeConfig } from "../../config"
 
 describe("runtime-fallback fallback-models", () => {
   afterEach(() => {
@@ -13,7 +14,7 @@ describe("runtime-fallback fallback-models", () => {
     //#given
     const sessionID = "ses_runtime_fallback_category"
     SessionCategoryRegistry.register(sessionID, "quick")
-    const pluginConfig = unsafeTestValue({
+    const pluginConfig = unsafeTestValue<OhMyOpenCodeConfig>({
       categories: {
         quick: {
           fallback_models: ["openai/gpt-5.5", "anthropic/claude-opus-4-7"],
@@ -22,7 +23,7 @@ describe("runtime-fallback fallback-models", () => {
     })
 
     //#when
-    const result = getFallbackModelsForSession(sessionID, undefined, pluginConfig)
+    const result = getRawFallbackModels(sessionID, undefined, pluginConfig)
 
     //#then
     expect(result).toEqual(["openai/gpt-5.5", "anthropic/claude-opus-4-7"])
@@ -30,7 +31,7 @@ describe("runtime-fallback fallback-models", () => {
 
   test("uses agent-specific fallback_models when agent is resolved", () => {
     //#given
-    const pluginConfig = unsafeTestValue({
+    const pluginConfig = unsafeTestValue<OhMyOpenCodeConfig>({
       agents: {
         oracle: {
           fallback_models: ["openai/gpt-5.5", "anthropic/claude-opus-4-7"],
@@ -39,7 +40,7 @@ describe("runtime-fallback fallback-models", () => {
     })
 
     //#when
-    const result = getFallbackModelsForSession("ses_runtime_fallback_agent", "oracle", pluginConfig)
+    const result = getRawFallbackModels("ses_runtime_fallback_agent", "oracle", pluginConfig)
 
     //#then
     expect(result).toEqual(["openai/gpt-5.5", "anthropic/claude-opus-4-7"])
@@ -47,7 +48,7 @@ describe("runtime-fallback fallback-models", () => {
 
   test("inherits prometheus fallback_models for a replaced plan agent by default", () => {
     //#given
-    const pluginConfig = unsafeTestValue({
+    const pluginConfig = unsafeTestValue<OhMyOpenCodeConfig>({
       agents: {
         plan: {},
         prometheus: {
@@ -57,7 +58,7 @@ describe("runtime-fallback fallback-models", () => {
     })
 
     //#when
-    const result = getFallbackModelsForSession("ses_runtime_fallback_plan", "plan", pluginConfig)
+    const result = getRawFallbackModels("ses_runtime_fallback_plan", "plan", pluginConfig)
 
     //#then
     expect(result).toEqual(["openai/gpt-5.5", "anthropic/claude-opus-4-7"])
@@ -65,7 +66,7 @@ describe("runtime-fallback fallback-models", () => {
 
   test("uses explicit plan fallback_models before prometheus inheritance", () => {
     //#given
-    const pluginConfig = unsafeTestValue({
+    const pluginConfig = unsafeTestValue<OhMyOpenCodeConfig>({
       agents: {
         plan: {
           fallback_models: ["openai/gpt-5.4"],
@@ -77,7 +78,7 @@ describe("runtime-fallback fallback-models", () => {
     })
 
     //#when
-    const result = getFallbackModelsForSession("ses_runtime_fallback_plan", "plan", pluginConfig)
+    const result = getRawFallbackModels("ses_runtime_fallback_plan", "plan", pluginConfig)
 
     //#then
     expect(result).toEqual(["openai/gpt-5.4"])
@@ -85,7 +86,7 @@ describe("runtime-fallback fallback-models", () => {
 
   test("explicit empty plan fallback_models suppresses prometheus inheritance", () => {
     //#given
-    const pluginConfig = unsafeTestValue({
+    const pluginConfig = unsafeTestValue<OhMyOpenCodeConfig>({
       agents: {
         plan: {
           fallback_models: [],
@@ -97,7 +98,7 @@ describe("runtime-fallback fallback-models", () => {
     })
 
     //#when
-    const result = getFallbackModelsForSession("ses_runtime_fallback_plan", "plan", pluginConfig)
+    const result = getRawFallbackModels("ses_runtime_fallback_plan", "plan", pluginConfig)
 
     //#then
     expect(result).toEqual([])
@@ -109,7 +110,7 @@ describe("runtime-fallback fallback-models", () => {
     { disabled: true },
   ])("does not inherit prometheus fallback_models when plan replacement is disabled: %#", (sisyphusAgent) => {
     //#given
-    const pluginConfig = unsafeTestValue({
+    const pluginConfig = unsafeTestValue<OhMyOpenCodeConfig>({
       sisyphus_agent: sisyphusAgent,
       agents: {
         plan: {},
@@ -120,15 +121,15 @@ describe("runtime-fallback fallback-models", () => {
     })
 
     //#when
-    const result = getFallbackModelsForSession("ses_runtime_fallback_plan", "plan", pluginConfig)
+    const result = getRawFallbackModels("ses_runtime_fallback_plan", "plan", pluginConfig)
 
     //#then
-    expect(result).toEqual([])
+    expect(result).toBeUndefined()
   })
 
   test("does not fall back to another agent chain when agent cannot be resolved", () => {
     //#given
-    const pluginConfig = unsafeTestValue({
+    const pluginConfig = unsafeTestValue<OhMyOpenCodeConfig>({
       agents: {
         sisyphus: {
           fallback_models: ["quotio/gpt-5.5", "quotio/glm-5", "quotio/kimi-k2.5"],
@@ -140,9 +141,9 @@ describe("runtime-fallback fallback-models", () => {
     })
 
     //#when
-    const result = getFallbackModelsForSession("ses_runtime_fallback_unknown", undefined, pluginConfig)
+    const result = getRawFallbackModels("ses_runtime_fallback_unknown", undefined, pluginConfig)
 
     //#then
-    expect(result).toEqual([])
+    expect(result).toBeUndefined()
   })
 })

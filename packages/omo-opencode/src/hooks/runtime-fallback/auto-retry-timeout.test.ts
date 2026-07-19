@@ -4,6 +4,8 @@ import { createFallbackTimeoutHelpers } from "./auto-retry-timeout"
 import { createFallbackState } from "./fallback-state"
 import type { HookDeps, RuntimeFallbackPluginInput } from "./types"
 import { SessionCategoryRegistry } from "../../shared/session-category-registry"
+import { unsafeTestValue } from "../../../../../test-support/unsafe-test-value"
+import type { OhMyOpenCodeConfig } from "../../config"
 
 function createContext(): RuntimeFallbackPluginInput {
   return {
@@ -36,13 +38,13 @@ function createDeps(): HookDeps {
     options: {
       session_timeout_ms: 1,
     },
-    pluginConfig: {
+    pluginConfig: unsafeTestValue<OhMyOpenCodeConfig>({
       categories: {
         test: {
           fallback_models: ["litellm/openai.eu.gpt-5.5", "google/gemini-2.5-pro"],
         },
       },
-    },
+    }),
     sessionStates: new Map(),
     sessionLastAccess: new Map(),
     sessionRetryInFlight: new Set(),
@@ -66,7 +68,7 @@ describe("createFallbackTimeoutHelpers", () => {
     const state = createFallbackState("openai/gpt-5.4")
     deps.sessionStates.set(sessionID, state)
 
-    let retryModel: string | undefined
+    let retrySelection: { selectedIndex: number; model: string } | undefined
     let resolveRetry: (() => void) | undefined
     const retryCalled = new Promise<void>((resolve) => {
       resolveRetry = resolve
@@ -74,8 +76,11 @@ describe("createFallbackTimeoutHelpers", () => {
     const helpers = createFallbackTimeoutHelpers(
       deps,
       async () => {},
-      async (_sessionID, model) => {
-        retryModel = model
+      async (_sessionID, selectedFallback) => {
+        retrySelection = {
+          selectedIndex: selectedFallback.selectedIndex,
+          model: selectedFallback.entry.model,
+        }
         resolveRetry?.()
         return { accepted: false, status: "blocked", reason: "test gate blocked dispatch" }
       },
@@ -92,7 +97,10 @@ describe("createFallbackTimeoutHelpers", () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
 
     // then
-    expect(retryModel).toBe("litellm/openai.eu.gpt-5.5")
+    expect(retrySelection).toEqual({
+      selectedIndex: 0,
+      model: "litellm/openai.eu.gpt-5.5",
+    })
     expect(state.currentModel).toBe("openai/gpt-5.4")
     expect(state.fallbackIndex).toBe(-1)
     expect(state.attemptCount).toBe(0)
@@ -141,5 +149,68 @@ describe("createFallbackTimeoutHelpers", () => {
     expect(deps.sessionAwaitingFallbackResult.has(sessionID)).toBe(true)
     expect(deps.sessionFallbackTimeouts.has(sessionID)).toBe(true)
     helpers.clearSessionFallbackTimeout(sessionID)
+  })
+
+  test("#given duplicate fallback entries and a blocked timeout escalation #when timeout state is restored and retried #then index one remains selectable with its own effort", async () => {
+    // given
+    const sessionID = "session-timeout-duplicate-settings"
+    SessionCategoryRegistry.register(sessionID, "test")
+    const deps = createDeps()
+    deps.pluginConfig = unsafeTestValue<OhMyOpenCodeConfig>({
+      categories: {
+        test: {
+          fallback_models: [
+            { model: "xai/grok-4.5", reasoningEffort: "low" },
+            { model: "xai/grok-4.5", reasoningEffort: "high" },
+          ],
+        },
+      },
+    })
+    const state = createFallbackState("openai/gpt-5.4")
+    state.currentModel = "xai/grok-4.5"
+    state.fallbackIndex = 0
+    state.selectedFallback = {
+      selectedIndex: 0,
+      entry: { model: "xai/grok-4.5", reasoningEffort: "low" },
+    }
+    state.failedModels.set("-1:openai/gpt-5.4", Date.now())
+    deps.sessionStates.set(sessionID, state)
+    deps.sessionAwaitingFallbackResult.add(sessionID)
+    const retrySelections: Array<{ selectedIndex: number; reasoningEffort: string | undefined }> = []
+    let retryCount = 0
+    let resolveRetries: (() => void) | undefined
+    const retriesCalled = new Promise<void>((resolve) => {
+      resolveRetries = resolve
+    })
+    const helpers = createFallbackTimeoutHelpers(
+      deps,
+      async () => {},
+      async (_sessionID, selectedFallback) => {
+        retryCount += 1
+        retrySelections.push({
+          selectedIndex: selectedFallback.selectedIndex,
+          reasoningEffort: selectedFallback.entry.reasoningEffort,
+        })
+        if (retryCount === 2) {
+          resolveRetries?.()
+        }
+        return retryCount === 1
+          ? { accepted: false, status: "blocked", reason: "test restore" }
+          : { accepted: true, status: "dispatched" }
+      },
+    )
+
+    // when
+    helpers.scheduleSessionFallbackTimeout(sessionID)
+    await retriesCalled
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    // then
+    expect(retrySelections).toEqual([
+      { selectedIndex: 1, reasoningEffort: "high" },
+      { selectedIndex: 1, reasoningEffort: "high" },
+    ])
+    expect(state.selectedFallback?.selectedIndex).toBe(1)
+    expect(state.selectedFallback?.entry.reasoningEffort).toBe("high")
   })
 })

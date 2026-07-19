@@ -3,8 +3,8 @@ import type { AutoRetryHelpers } from "./auto-retry"
 import { HOOK_NAME } from "./constants"
 import { log } from "../../shared/logger"
 import { extractStatusCode, extractErrorName, classifyErrorType, isRetryableError, extractAutoRetrySignal, containsErrorContent } from "./error-classifier"
-import { createFallbackState } from "./fallback-state"
-import { getFallbackModelsForSession } from "./fallback-models"
+import { createFallbackState, getSelectedFallbackProviderModel } from "./fallback-state"
+import { getRawFallbackModels } from "./fallback-models"
 import { resolveFallbackBootstrapModel } from "./fallback-bootstrap-model"
 import { dispatchFallbackRetry } from "./fallback-retry-dispatcher"
 import { hasVisibleAssistantResponse } from "./visible-assistant-response"
@@ -61,6 +61,7 @@ export function createMessageUpdateHandler(deps: HookDeps, helpers: AutoRetryHel
       helpers.clearSessionFallbackTimeout(sessionID)
       let state = sessionStates.get(sessionID)
       if (state?.pendingFallbackModel) {
+        state.pendingFallback = undefined
         state.pendingFallbackModel = undefined
         state.pendingFallbackPromptMayHaveBeenAccepted = false
       }
@@ -70,7 +71,9 @@ export function createMessageUpdateHandler(deps: HookDeps, helpers: AutoRetryHel
 
     if (sessionID && role === "assistant" && error) {
       let state = sessionStates.get(sessionID)
-      const pendingFallbackModel = state?.pendingFallbackModel
+      const pendingFallbackModel = state?.pendingFallback
+        ? getSelectedFallbackProviderModel(state.pendingFallback)
+        : state?.pendingFallbackModel
       const wasAwaitingFallbackResult = sessionAwaitingFallbackResult.has(sessionID)
       if (
         wasAwaitingFallbackResult &&
@@ -130,7 +133,7 @@ export function createMessageUpdateHandler(deps: HookDeps, helpers: AutoRetryHel
 
       const agent = info?.agent as string | undefined
       const resolvedAgent = await helpers.resolveAgentForSessionFromContext(sessionID, agent)
-      const fallbackModels = getFallbackModelsForSession(sessionID, resolvedAgent, pluginConfig)
+      const fallbackModels = getRawFallbackModels(sessionID, resolvedAgent, pluginConfig) ?? []
 
       if (fallbackModels.length === 0) {
         if (
@@ -176,6 +179,7 @@ export function createMessageUpdateHandler(deps: HookDeps, helpers: AutoRetryHel
               sessionID,
               pendingFallbackModel: state.pendingFallbackModel,
             })
+            state.pendingFallback = undefined
             state.pendingFallbackModel = undefined
             state.pendingFallbackPromptMayHaveBeenAccepted = false
           } else {

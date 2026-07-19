@@ -7,6 +7,10 @@ import { createFallbackState } from "./fallback-state"
 import { installRuntimeFallbackTestClock, restoreRuntimeFallbackTestClock } from "./test-timeout-clock.test-support"
 import type { HookDeps, RuntimeFallbackPluginInput } from "./types"
 
+function selectFallback(model: string, selectedIndex = 0) {
+  return { selectedIndex, entry: { model } }
+}
+
 function createContext(promptCalls: { count: number }): RuntimeFallbackPluginInput {
   const session = {
     abort: async () => ({}),
@@ -94,7 +98,7 @@ describe("createAutoRetryDispatcher reserved-session retry (#5109)", () => {
     const clock = installRuntimeFallbackTestClock()
 
     // when
-    const retryPromise = helpers.autoRetryWithFallback(sessionID, "openai/gpt-5.4", undefined, "session.error")
+    const retryPromise = helpers.autoRetryWithFallback(sessionID, selectFallback("openai/gpt-5.4"), undefined, "session.error")
     await flushPromptGateMicrotasks()
     await clock.advanceBy(500)
     await retryPromise
@@ -122,7 +126,7 @@ describe("createAutoRetryDispatcher reserved-session retry (#5109)", () => {
     const clock = installRuntimeFallbackTestClock()
 
     // when
-    const retryPromise = helpers.autoRetryWithFallback(sessionID, "openai/gpt-5.4", undefined, "session.error")
+    const retryPromise = helpers.autoRetryWithFallback(sessionID, selectFallback("openai/gpt-5.4"), undefined, "session.error")
     await flushPromptGateMicrotasks()
     await clock.advanceBy(500)
     await retryPromise
@@ -173,7 +177,7 @@ describe("createAutoRetryDispatcher reserved-session retry (#5109)", () => {
     const clock = installRuntimeFallbackTestClock()
 
     // when
-    await helpers.autoRetryWithFallback(sessionID, "openai/gpt-5.4", undefined, "session.error")
+    await helpers.autoRetryWithFallback(sessionID, selectFallback("openai/gpt-5.4"), undefined, "session.error")
     expect(promptCalls.count).toBe(0)
     assistantIsActive = false
     await flushPromptGateMicrotasks()
@@ -210,7 +214,7 @@ describe("createAutoRetryDispatcher reserved-session retry (#5109)", () => {
     deps.sessionStates.set(sessionID, state)
 
     // when
-    await helpers.autoRetryWithFallback(sessionID, "anthropic/claude-opus-4-8", undefined, "session.status")
+    await helpers.autoRetryWithFallback(sessionID, selectFallback("anthropic/claude-opus-4-8"), undefined, "session.status")
 
     // then
     expect(promptCalls.count).toBe(1)
@@ -240,7 +244,7 @@ describe("createAutoRetryDispatcher reserved-session retry (#5109)", () => {
     deps.sessionStates.set(sessionID, state)
 
     // when
-    await helpers.autoRetryWithFallback(sessionID, "anthropic/claude-opus-4-8", undefined, "session.status")
+    await helpers.autoRetryWithFallback(sessionID, selectFallback("anthropic/claude-opus-4-8"), undefined, "session.status")
 
     // then
     expect(promptCalls.count).toBe(0)

@@ -5,6 +5,7 @@ import { createEventHandler } from "./event-handler"
 import { createFirstPromptWatchdog, observeEventForWatchdog } from "./first-prompt-watchdog"
 import { createMessageUpdateHandler } from "./message-update-handler"
 import type { HookDeps, RuntimeFallbackHook, RuntimeFallbackInterval, RuntimeFallbackOptions, RuntimeFallbackPluginInput, RuntimeFallbackTimeout } from "./types"
+import { clearSessionPromptParams } from "../../shared/session-prompt-params-state"
 
 declare function setInterval(callback: () => void, delay?: number): RuntimeFallbackInterval
 declare function clearInterval(interval: RuntimeFallbackInterval): void
@@ -105,6 +106,12 @@ export function createRuntimeFallbackHook(
     }
 
     firstPromptWatchdog.dispose()
+
+    for (const [sessionID, state] of deps.sessionStates) {
+      if (state.runtimePromptParamsApplied) {
+        clearSessionPromptParams(sessionID)
+      }
+    }
 
     deps.sessionStates.clear()
     deps.sessionLastAccess.clear()

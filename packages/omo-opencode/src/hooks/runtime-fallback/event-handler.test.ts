@@ -1,8 +1,10 @@
-import { describe, expect, it } from "bun:test"
+import { afterEach, describe, expect, it } from "bun:test"
 import type { HookDeps, RuntimeFallbackPluginInput } from "./types"
 import type { AutoRetryHelpers } from "./auto-retry"
 import { createFallbackState } from "./fallback-state"
 import { createEventHandler } from "./event-handler"
+import { applySessionPromptParams } from "../../shared/session-prompt-params-helpers"
+import { clearAllSessionPromptParams, getSessionPromptParams } from "../../shared/session-prompt-params-state"
 
 function createContext(): RuntimeFallbackPluginInput {
   return {
@@ -33,7 +35,13 @@ function createDeps(): HookDeps {
       restore_primary_after_cooldown: false,
     },
     options: undefined,
-    pluginConfig: {},
+    pluginConfig: {
+      git_master: {
+        commit_footer: true,
+        include_co_authored_by: true,
+        git_env_prefix: "GIT_MASTER=1",
+      },
+    },
     sessionStates: new Map(),
     sessionLastAccess: new Map(),
     sessionRetryInFlight: new Set(),
@@ -54,13 +62,34 @@ function createHelpers(deps: HookDeps, abortCalls: string[], clearCalls: string[
       deps.sessionFallbackTimeouts.delete(sessionID)
     },
     scheduleSessionFallbackTimeout: () => {},
-    autoRetryWithFallback: async () => {},
+    autoRetryWithFallback: async () => ({ accepted: true, status: "dispatched" }),
     resolveAgentForSessionFromContext: async () => undefined,
     cleanupStaleSessions: () => {},
   }
 }
 
 describe("createEventHandler", () => {
+  afterEach(() => {
+    clearAllSessionPromptParams()
+  })
+
+  it("#given runtime fallback prompt params exist #when the session is deleted #then the params are cleared with session state", async () => {
+    // given
+    const sessionID = "session-delete-prompt-params"
+    const deps = createDeps()
+    const state = createFallbackState("openai/gpt-5.4")
+    state.runtimePromptParamsApplied = true
+    deps.sessionStates.set(sessionID, state)
+    applySessionPromptParams(sessionID, { reasoningEffort: "high" })
+    const handler = createEventHandler(deps, createHelpers(deps, [], []))
+
+    // when
+    await handler({ event: { type: "session.deleted", properties: { sessionID } } })
+
+    // then
+    expect(getSessionPromptParams(sessionID)).toBeUndefined()
+  })
+
   it("#given a session retry dedupe key #when session.stop fires #then the retry dedupe key is cleared", async () => {
     // given
     const sessionID = "session-stop"
@@ -104,7 +133,7 @@ describe("createEventHandler", () => {
     expect(deps.sessionStatusRetryKeys.has(sessionID)).toBe(false)
     expect(clearCalls).toEqual([sessionID])
     expect(abortCalls).toEqual([])
-    expect(state.pendingFallbackModel).toBe(undefined)
+    expect(state.pendingFallbackModel).toBeUndefined()
   })
 
   it("#given a cancelled session #when session.error receives an abort error #then fallback retry state is reset", async () => {
@@ -239,7 +268,9 @@ describe("createEventHandler", () => {
     expect(deps.sessionStates.get(sessionID)?.attemptCount).toBe(1)
 
     // simulate the next retry signal advancing the counter
-    const advanced = deps.sessionStates.get(sessionID)!
+    const advanced = deps.sessionStates.get(sessionID)
+    expect(advanced).toBeDefined()
+    if (!advanced) return
     advanced.attemptCount = 2
 
     // iteration 2: another internal abort

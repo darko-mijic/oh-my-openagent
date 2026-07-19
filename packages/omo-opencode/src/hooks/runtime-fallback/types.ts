@@ -1,4 +1,5 @@
 import type { RuntimeFallbackConfig, OhMyOpenCodeConfig } from "../../config"
+import type { FallbackModelObject } from "../../config/schema/fallback-models"
 
 export interface RuntimeFallbackInterval {
   unref: () => void
@@ -43,12 +44,21 @@ export interface FallbackState {
   fallbackIndex: number
   failedModels: Map<string, number>
   attemptCount: number
+  selectedFallback?: SelectedFallback
+  pendingFallback?: SelectedFallback
   pendingFallbackModel?: string
   pendingFallbackPromptMayHaveBeenAccepted?: boolean
+  runtimePromptParamsApplied: boolean
+}
+
+export type SelectedFallback = {
+  readonly selectedIndex: number
+  readonly entry: FallbackModelObject
 }
 
 export interface FallbackResult {
   success: boolean
+  selectedFallback?: SelectedFallback
   newModel?: string
   error?: string
   maxAttemptsReached?: boolean
@@ -73,7 +83,7 @@ export interface RuntimeFallbackOptions {
 
 export interface RuntimeFallbackHook {
   event: (input: { event: { type: string; properties?: unknown } }) => Promise<void>
-  "chat.message"?: (input: { sessionID: string; agent?: string; model?: { providerID: string; modelID: string } }, output: { message: { model?: { providerID: string; modelID: string } }; parts?: Array<{ type: string; text?: string }> }) => Promise<void>
+  "chat.message"?: (input: { sessionID: string; agent?: string; model?: { providerID: string; modelID: string } }, output: { message: { model?: { providerID: string; modelID: string }; variant?: string }; parts?: Array<{ type: string; text?: string }> }) => Promise<void>
   dispose?: () => void
 }
 

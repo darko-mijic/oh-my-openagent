@@ -7,7 +7,7 @@ import { resolveMessageEventSessionID, resolveSessionEventID } from "../../share
 import { isRecord } from "../../shared/record-type-guard"
 import { normalizeModelToCanonicalString } from "./normalize-model"
 import { createFallbackState } from "./fallback-state"
-import { getFallbackModelsForSession } from "./fallback-models"
+import { getRawFallbackModels } from "./fallback-models"
 import { resolveFallbackBootstrapModel } from "./fallback-bootstrap-model"
 import { dispatchFallbackRetry } from "./fallback-retry-dispatcher"
 
@@ -143,7 +143,7 @@ export function createFirstPromptWatchdog(
     }
 
     const resolvedAgent = await helpers.resolveAgentForSessionFromContext(sessionID, agent)
-    const fallbackModels = getFallbackModelsForSession(sessionID, resolvedAgent, deps.pluginConfig)
+    const fallbackModels = getRawFallbackModels(sessionID, resolvedAgent, deps.pluginConfig) ?? []
 
     if (fallbackModels.length === 0) {
       log(`[${HOOK_NAME}] ${SOURCE}: subagent silent past ${watchdogMs}ms with no fallback configured`, {

@@ -35,6 +35,11 @@ function createDeps(): HookDeps {
     },
     options: undefined,
     pluginConfig: {
+      git_master: {
+        commit_footer: true,
+        include_co_authored_by: true,
+        git_env_prefix: "GIT_MASTER=1",
+      },
       categories: {
         test: {
           fallback_models: ["openai/gpt-5.4", "google/gemini-2.5-pro"],
@@ -47,18 +52,27 @@ function createDeps(): HookDeps {
     sessionAwaitingFallbackResult: new Set(),
     sessionFallbackTimeouts: new Map(),
     sessionStatusRetryKeys: new Map(),
+    internallyAbortedSessions: new Set(),
   }
 }
 
-function createHelpers(abortCalls: string[], retryCalls: Array<{ sessionID: string; model: string; source: string }>): AutoRetryHelpers {
+function createHelpers(
+  abortCalls: string[],
+  retryCalls: Array<{ sessionID: string; selectedIndex: number; model: string; source: string }>,
+): AutoRetryHelpers {
   return {
     abortSessionRequest: async (sessionID: string) => {
       abortCalls.push(sessionID)
     },
     clearSessionFallbackTimeout: () => {},
     scheduleSessionFallbackTimeout: () => {},
-    autoRetryWithFallback: async (sessionID: string, model: string, _resolvedAgent: string | undefined, source: string) => {
-      retryCalls.push({ sessionID, model, source })
+    autoRetryWithFallback: async (sessionID, selectedFallback, _resolvedAgent, source) => {
+      retryCalls.push({
+        sessionID,
+        selectedIndex: selectedFallback.selectedIndex,
+        model: selectedFallback.entry.model,
+        source,
+      })
       return { accepted: true, status: "dispatched" }
     },
     resolveAgentForSessionFromContext: async () => undefined,
@@ -75,7 +89,7 @@ describe("createSessionStatusHandler", () => {
 
     const deps = createDeps()
     const abortCalls: string[] = []
-    const retryCalls: Array<{ sessionID: string; model: string; source: string }> = []
+    const retryCalls: Array<{ sessionID: string; selectedIndex: number; model: string; source: string }> = []
     const state = createFallbackState("anthropic/claude-opus-4-7")
     state.currentModel = "openai/gpt-5.4"
     state.fallbackIndex = 0
@@ -114,7 +128,7 @@ describe("createSessionStatusHandler", () => {
 
     const deps = createDeps()
     const abortCalls: string[] = []
-    const retryCalls: Array<{ sessionID: string; model: string; source: string }> = []
+    const retryCalls: Array<{ sessionID: string; selectedIndex: number; model: string; source: string }> = []
     const state = createFallbackState("anthropic/claude-opus-4-7")
     state.currentModel = "openai/gpt-5.4"
     state.fallbackIndex = 0
@@ -141,6 +155,7 @@ describe("createSessionStatusHandler", () => {
     expect(retryCalls).toEqual([
       {
         sessionID,
+        selectedIndex: 1,
         model: "google/gemini-2.5-pro",
         source: "session.status",
       },
