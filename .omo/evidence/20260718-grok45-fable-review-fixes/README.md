@@ -1,8 +1,8 @@
 # Evidence: 20260718-grok45-fable-review-fixes
 
 Plan: grok45-fable-review-fixes on `feat/grok-4.5-basic-support`.
-Task 12 finalizes evidence gathered through todos 2-11. This pack is staged
-for a later evidence commit and is not committed by this task.
+Task 12 finalized evidence gathered through todos 2-11. The pack was committed
+in the later evidence-only commit `f3058f041`.
 
 ## WHAT WAS TESTED
 
@@ -33,6 +33,13 @@ for a later evidence commit and is not committed by this task.
   `gpt-fallback`, and the fallback `QA_FALLBACK_OK` response. The concise
   result is in `opencode-qa/runtime-fallback-low-effort.json` and the raw SSE
   event stream is in `opencode-qa/sse-session-error-and-message-updated.jsonl`.
+  That filename is historical and overstates the capture: it contains
+  `session.status` plus `message.updated`, not `session.error`. See
+  `opencode-qa/sse-filename-errata.txt`.
+- `opencode-qa/run-atlas-grok-fallback.jsonl` is empty because attach mode
+  emitted no stdout JSONL. It is not used as proof. The authoritative live-run
+  artifacts are the SSE stream, sanitized provider requests, and `qa-pass.txt`.
+  See `opencode-qa/run-atlas-grok-fallback.note.txt`.
 - The stale Atlas full-suite attribution is corrected in
   `../20260718-atlas-grok45-review/verification.txt`; the related claim fixes
   are in `../20260718-grok45-review-claim-fixes/`.
@@ -49,6 +56,9 @@ for a later evidence commit and is not committed by this task.
   not reapply the 4.5-only harness overlay; Prometheus scaffold still trusts
   bare-runtime PATH; absent user reasoningEffort and unmappable variant may
   leave effort unset; Grok Junior routes only through the GPT-5.5 template.
+- Fallback cooldown keys are entry-indexed. This permits a chain entry whose
+  model matches the just-failed model to be attempted once, consuming one
+  fallback attempt before the chain advances.
 - The fallback configuration carries `reasoningEffort: "low"`. The sanitized
   fake-provider record did not expose an effort-valued request field for this
   OpenCode provider path, so this pack proves configured propagation and model
@@ -64,3 +74,7 @@ for a later evidence commit and is not committed by this task.
   the scan result recorded in `secret-review.txt`.
 - Matrix C is not claimed complete. Generated `assets/oh-my-opencode.schema.json`
   and `packages/omo-codex/scripts/install-dist/install-local.mjs` are not staged.
+- Clean `dev` has a pre-existing installer-version mismatch: root
+  `package.json` is `4.19.0`, while committed `install-local.mjs` embeds
+  `4.18.2`. The resulting `script/codex-installer-version.test.ts` failure is
+  upstream drift and is outside this feature branch's product scope.

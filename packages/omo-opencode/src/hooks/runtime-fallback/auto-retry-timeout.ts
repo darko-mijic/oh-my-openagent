@@ -66,7 +66,7 @@ export function createFallbackTimeoutHelpers(
         state.pendingFallbackModel = undefined
       }
       state.pendingFallbackPromptMayHaveBeenAccepted = false
-      const stateSnapshot = snapshotFallbackState(state)
+      const stateSnapshot = snapshotFallbackState(state, sessionID)
 
       const fallbackModels = getRawFallbackModels(sessionID, resolvedAgent, pluginConfig) ?? []
       if (fallbackModels.length === 0) return
@@ -81,9 +81,13 @@ export function createFallbackTimeoutHelpers(
       if (result.success && result.selectedFallback) {
         const dispatchOutcome = await autoRetryWithFallback(sessionID, result.selectedFallback, resolvedAgent, "session.timeout")
         if (!dispatchOutcome.accepted) {
-          restoreFallbackState(state, stateSnapshot)
-          if (deps.sessionAwaitingFallbackResult.has(sessionID)) {
+          const restored = sessionStates.get(sessionID) === state
+            && restoreFallbackState(state, stateSnapshot, sessionID)
+          if (restored && deps.sessionAwaitingFallbackResult.has(sessionID)) {
             scheduleSessionFallbackTimeout(sessionID, resolvedAgent)
+          }
+          if (!restored) {
+            log(`[${HOOK_NAME}] Skipped stale timeout fallback rollback`, { sessionID })
           }
           log(`[${HOOK_NAME}] Session timeout fallback dispatch was not accepted`, {
             sessionID,

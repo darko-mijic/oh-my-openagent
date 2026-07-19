@@ -1,0 +1,8 @@
+run-atlas-grok-fallback.jsonl is a zero-byte attach-mode stdout capture.
+OpenCode emitted no JSONL on that surface, so the file is not cited as proof.
+
+Authoritative live-run proof:
+- sse-session-error-and-message-updated.jsonl
+- sanitized-model-requests.jsonl
+- runtime-fallback-low-effort.json
+- qa-pass.txt

@@ -15,7 +15,7 @@ import { dispatchFallbackRetry } from "./fallback-retry-dispatcher"
 import { createSessionStatusHandler } from "./session-status-handler"
 import { resolveMessageEventSessionID, resolveSessionEventID } from "../../shared/event-session-id"
 import { normalizeModelToCanonicalString } from "./normalize-model"
-import { clearSessionPromptParams } from "../../shared/session-prompt-params-state"
+import { clearRuntimeFallbackPromptParams } from "../../shared/session-prompt-params-state"
 import { createSessionCreatedHandler } from "./session-created-handler"
 
 function resolveEventModel(props: Record<string, unknown> | undefined): string | undefined {
@@ -43,7 +43,7 @@ export function createEventHandler(deps: HookDeps, helpers: AutoRetryHelpers) {
     const state = sessionStates.get(sessionID)
     if (state) {
       if (state.runtimePromptParamsApplied) {
-        clearSessionPromptParams(sessionID)
+        clearRuntimeFallbackPromptParams(sessionID)
       }
       sessionStates.set(sessionID, createFallbackState(state.originalModel))
     }
@@ -61,7 +61,7 @@ export function createEventHandler(deps: HookDeps, helpers: AutoRetryHelpers) {
     if (sessionID) {
       log(`[${HOOK_NAME}] Cleaning up session state`, { sessionID })
       if (sessionStates.get(sessionID)?.runtimePromptParamsApplied) {
-        clearSessionPromptParams(sessionID)
+        clearRuntimeFallbackPromptParams(sessionID)
       }
       cancelledSessions.delete(sessionID)
       sessionStates.delete(sessionID)

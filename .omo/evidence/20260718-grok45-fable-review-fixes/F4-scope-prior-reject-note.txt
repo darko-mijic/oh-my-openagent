@@ -1,0 +1,11 @@
+Prior F4 rejection note
+=======================
+
+The original F4 rejection body was overwritten when the scope check was
+corrected. Its rejection used merge-base(dev)..HEAD, which included
+Prometheus and documentation commits that predated the required
+3abbd3f1d..HEAD boundary.
+
+F4-scope.txt is the superseding review. It uses 3abbd3f1d..HEAD and records
+VERDICT: APPROVE. This note preserves the reason for the superseded rejection;
+it does not reconstruct or claim to preserve the original wording.

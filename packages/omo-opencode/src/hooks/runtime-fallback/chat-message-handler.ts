@@ -7,8 +7,8 @@ import {
   isModelInCooldown,
 } from "./fallback-state"
 import { buildRetryModelPayload } from "./retry-model-payload"
-import { applySessionPromptParams } from "../../shared/session-prompt-params-helpers"
-import { clearSessionPromptParams } from "../../shared/session-prompt-params-state"
+import { applyRuntimeFallbackPromptParams } from "../../shared/session-prompt-params-helpers"
+import { clearRuntimeFallbackPromptParams } from "../../shared/session-prompt-params-state"
 
 export function createChatMessageHandler(deps: HookDeps) {
   const { config, sessionStates, sessionLastAccess } = deps
@@ -59,7 +59,7 @@ export function createChatMessageHandler(deps: HookDeps) {
         to: requestedModel,
       })
       if (state.runtimePromptParamsApplied) {
-        clearSessionPromptParams(sessionID)
+        clearRuntimeFallbackPromptParams(sessionID)
       }
       state = createFallbackState(requestedModel)
       sessionStates.set(sessionID, state)
@@ -79,7 +79,7 @@ export function createChatMessageHandler(deps: HookDeps) {
         to: activeModel,
       })
       if (state.runtimePromptParamsApplied) {
-        clearSessionPromptParams(sessionID)
+        clearRuntimeFallbackPromptParams(sessionID)
       }
       sessionStates.set(sessionID, createFallbackState(activeModel))
 
@@ -113,10 +113,10 @@ export function createChatMessageHandler(deps: HookDeps) {
         delete output.message.variant
       }
       if (selectedPayload.reasoningEffort) {
-        applySessionPromptParams(sessionID, { reasoningEffort: selectedPayload.reasoningEffort })
+        applyRuntimeFallbackPromptParams(sessionID, { reasoningEffort: selectedPayload.reasoningEffort })
         state.runtimePromptParamsApplied = true
       } else if (state.runtimePromptParamsApplied) {
-        clearSessionPromptParams(sessionID)
+        clearRuntimeFallbackPromptParams(sessionID)
         state.runtimePromptParamsApplied = false
       }
     }

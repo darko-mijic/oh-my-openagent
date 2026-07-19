@@ -26,7 +26,7 @@ export async function dispatchFallbackRetry(
   helpers: AutoRetryHelpers,
   options: DispatchFallbackRetryOptions,
 ): Promise<void> {
-  const snapshot = snapshotFallbackState(options.state)
+  const snapshot = snapshotFallbackState(options.state, options.sessionID)
   const result = prepareFallback(
     options.sessionID,
     options.state,
@@ -52,7 +52,14 @@ export async function dispatchFallbackRetry(
       })
     }
     if (!dispatchOutcome.accepted) {
-      restoreFallbackState(options.state, snapshot)
+      const restored = deps.sessionStates.get(options.sessionID) === options.state
+        && restoreFallbackState(options.state, snapshot, options.sessionID)
+      if (!restored) {
+        log(`[${HOOK_NAME}] Skipped stale fallback rollback`, {
+          sessionID: options.sessionID,
+          source: options.source,
+        })
+      }
       log(`[${HOOK_NAME}] Fallback dispatch was not accepted`, {
         sessionID: options.sessionID,
         source: options.source,

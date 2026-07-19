@@ -3,7 +3,7 @@ import { HOOK_NAME } from "./constants"
 import { log } from "../../shared/logger"
 import { SessionCategoryRegistry } from "../../shared/session-category-registry"
 import { clearDelegatedChildSessionBootstrap } from "../../shared/delegated-child-session-bootstrap"
-import { clearSessionPromptParams } from "../../shared/session-prompt-params-state"
+import { clearRuntimeFallbackPromptParams } from "../../shared/session-prompt-params-state"
 
 const SESSION_TTL_MS = 30 * 60 * 1000
 
@@ -26,7 +26,7 @@ export function createStaleSessionCleanup(
     for (const [sessionID, lastAccess] of sessionLastAccess.entries()) {
       if (now - lastAccess > SESSION_TTL_MS) {
         if (sessionStates.get(sessionID)?.runtimePromptParamsApplied) {
-          clearSessionPromptParams(sessionID)
+          clearRuntimeFallbackPromptParams(sessionID)
         }
         sessionStates.delete(sessionID)
         sessionLastAccess.delete(sessionID)

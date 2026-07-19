@@ -1,3 +1,5 @@
+/// <reference types="bun-types" />
+
 import { afterEach, describe, expect, test } from "bun:test"
 
 import { createFallbackTimeoutHelpers } from "./auto-retry-timeout"
@@ -6,6 +8,11 @@ import type { HookDeps, RuntimeFallbackPluginInput } from "./types"
 import { SessionCategoryRegistry } from "../../shared/session-category-registry"
 import { unsafeTestValue } from "../../../../../test-support/unsafe-test-value"
 import type { OhMyOpenCodeConfig } from "../../config"
+import {
+  clearAllSessionPromptParams,
+  getRuntimeFallbackPromptParams,
+  setRuntimeFallbackPromptParams,
+} from "../../shared/session-prompt-params-state"
 
 function createContext(): RuntimeFallbackPluginInput {
   return {
@@ -58,6 +65,7 @@ function createDeps(): HookDeps {
 describe("createFallbackTimeoutHelpers", () => {
   afterEach(() => {
     SessionCategoryRegistry.clear()
+    clearAllSessionPromptParams()
   })
 
   test("#given timeout fallback dispatch is blocked #when the timeout fires #then fallback state is restored", async () => {
@@ -106,6 +114,40 @@ describe("createFallbackTimeoutHelpers", () => {
     expect(state.attemptCount).toBe(0)
     expect(state.pendingFallbackModel).toBe(undefined)
     expect(state.failedModels.size).toBe(0)
+  })
+
+  test("#given fallback params are applied during timeout dispatch #when dispatch is rejected #then the runtime overlay rolls back", async () => {
+    // given
+    const sessionID = "session-timeout-params-rejected"
+    SessionCategoryRegistry.register(sessionID, "test")
+    const deps = createDeps()
+    const state = createFallbackState("openai/gpt-5.4")
+    deps.sessionStates.set(sessionID, state)
+    let resolveRetry: (() => void) | undefined
+    const retryCalled = new Promise<void>((resolve) => {
+      resolveRetry = resolve
+    })
+    const helpers = createFallbackTimeoutHelpers(
+      deps,
+      async () => {},
+      async () => {
+        setRuntimeFallbackPromptParams(sessionID, {
+          options: { reasoningEffort: "high" },
+        })
+        state.runtimePromptParamsApplied = true
+        resolveRetry?.()
+        return { accepted: false, status: "blocked", reason: "test gate blocked dispatch" }
+      },
+    )
+
+    // when
+    helpers.scheduleSessionFallbackTimeout(sessionID)
+    await retryCalled
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    // then
+    expect(getRuntimeFallbackPromptParams(sessionID)).toBeUndefined()
+    expect(state.runtimePromptParamsApplied).toBe(false)
   })
 
   test("#given an accepted fallback is awaiting its result #when timeout escalation is blocked #then the restored awaiting state keeps a timeout armed", async () => {

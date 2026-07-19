@@ -49,6 +49,7 @@ export interface FallbackState {
   pendingFallbackModel?: string
   pendingFallbackPromptMayHaveBeenAccepted?: boolean
   runtimePromptParamsApplied: boolean
+  transitionVersion: number
 }
 
 export type SelectedFallback = {

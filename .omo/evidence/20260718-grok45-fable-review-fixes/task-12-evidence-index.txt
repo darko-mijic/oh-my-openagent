@@ -20,12 +20,15 @@ Live isolated OpenCode proof:
 - opencode-qa/system-transform-atlas-grok.json: experimental.chat.system.transform observed the Grok Atlas overlay for grok-4.5.
 - opencode-qa/sanitized-model-requests.jsonl: Grok request followed by gpt-fallback request, with raw bodies omitted.
 - opencode-qa/sse-session-error-and-message-updated.jsonl: 429 retry signal, message.updated, model switch, and QA_FALLBACK_OK response.
+- opencode-qa/sse-filename-errata.txt and sse-meta.txt: clarify the historical filename and the close/flush mtime lag.
+- opencode-qa/run-atlas-grok-fallback.note.txt: records that the zero-byte attach stdout file is not evidence and points to the authoritative artifacts.
 - opencode-qa/runtime-fallback-low-effort.json: session.status runtime fallback selected gpt-fallback; config carries reasoningEffort=low. The fake provider did not expose an effort-valued wire field.
 - opencode-qa/qa-pass.txt: final assertion summary.
 
 Review and scope records:
 - secret-review.txt: no credential-like content found across this and listed prior packs.
 - README.md: reviewer-readable test, observation, sufficiency, and omission record.
+- F4-scope-prior-reject-note.txt: preserves the reason for the superseded F4 rejection after its body was overwritten.
 - ../20260718-atlas-grok45-review/verification.txt: corrected prior full-suite attribution; no Matrix C claim.
 
 Staging requirements:

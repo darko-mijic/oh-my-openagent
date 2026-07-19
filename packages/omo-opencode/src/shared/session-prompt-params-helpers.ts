@@ -1,4 +1,9 @@
-import { clearSessionPromptParams, setSessionPromptParams } from "./session-prompt-params-state"
+import {
+  clearBaseSessionPromptParams,
+  clearRuntimeFallbackPromptParams,
+  setRuntimeFallbackPromptParams,
+  setSessionPromptParams,
+} from "./session-prompt-params-state"
 
 type PromptParamModel = {
   temperature?: number
@@ -13,7 +18,7 @@ export function applySessionPromptParams(
   model: PromptParamModel | undefined,
 ): void {
   if (!model) {
-    clearSessionPromptParams(sessionID)
+    clearBaseSessionPromptParams(sessionID)
     return
   }
 
@@ -27,5 +32,19 @@ export function applySessionPromptParams(
     ...(model.top_p !== undefined ? { topP: model.top_p } : {}),
     ...(model.maxTokens !== undefined ? { maxOutputTokens: model.maxTokens } : {}),
     ...(Object.keys(promptOptions).length > 0 ? { options: promptOptions } : {}),
+  })
+}
+
+export function applyRuntimeFallbackPromptParams(
+  sessionID: string,
+  model: Pick<PromptParamModel, "reasoningEffort"> | undefined,
+): void {
+  if (!model?.reasoningEffort) {
+    clearRuntimeFallbackPromptParams(sessionID)
+    return
+  }
+
+  setRuntimeFallbackPromptParams(sessionID, {
+    options: { reasoningEffort: model.reasoningEffort },
   })
 }

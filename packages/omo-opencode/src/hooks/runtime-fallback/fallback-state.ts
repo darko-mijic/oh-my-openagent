@@ -31,6 +31,7 @@ export function createFallbackState(originalModel: unknown): FallbackState {
     pendingFallback: undefined,
     pendingFallbackModel: undefined,
     runtimePromptParamsApplied: false,
+    transitionVersion: 0,
   }
 }
 
@@ -155,6 +156,7 @@ export function prepareFallback(
     : getPrimaryEntryKey(state.currentModel)
   const now = Date.now()
 
+  state.transitionVersion += 1
   state.fallbackIndex = selectedFallback.selectedIndex
   state.failedModels.set(failedEntryKey, now)
   state.attemptCount++

@@ -1,9 +1,14 @@
+/// <reference types="bun-types" />
+
 import { afterEach, describe, expect, test } from "bun:test"
 
 import {
   clearAllSessionPromptParams,
+  clearRuntimeFallbackPromptParams,
   clearSessionPromptParams,
   getSessionPromptParams,
+  getRuntimeFallbackPromptParams,
+  setRuntimeFallbackPromptParams,
   setSessionPromptParams,
 } from "./session-prompt-params-state"
 
@@ -40,9 +45,13 @@ describe("session-prompt-params-state", () => {
     })
 
     //#when
-    const result = getSessionPromptParams(sessionID)!
+    const result = getSessionPromptParams(sessionID)
+    expect(result).toBeDefined()
+    if (!result) return
     result.temperature = 0.9
-    result.options!.reasoningEffort = "max"
+    expect(result.options).toBeDefined()
+    if (!result.options) return
+    result.options.reasoningEffort = "max"
 
     //#then
     expect(getSessionPromptParams(sessionID)).toEqual({
@@ -61,5 +70,55 @@ describe("session-prompt-params-state", () => {
 
     //#then
     expect(getSessionPromptParams(sessionID)).toBeUndefined()
+  })
+
+  test("merges runtime fallback effort over base spawn params", () => {
+    //#given
+    const sessionID = "ses_prompt_params_runtime_overlay"
+    setSessionPromptParams(sessionID, {
+      temperature: 0.2,
+      topP: 0.6,
+      maxOutputTokens: 8192,
+      options: {
+        reasoningEffort: "high",
+        thinking: { type: "disabled" },
+      },
+    })
+
+    //#when
+    setRuntimeFallbackPromptParams(sessionID, {
+      options: { reasoningEffort: "low" },
+    })
+
+    //#then
+    expect(getSessionPromptParams(sessionID)).toEqual({
+      temperature: 0.2,
+      topP: 0.6,
+      maxOutputTokens: 8192,
+      options: {
+        reasoningEffort: "low",
+        thinking: { type: "disabled" },
+      },
+    })
+  })
+
+  test("clears only runtime fallback params while preserving base spawn params", () => {
+    //#given
+    const sessionID = "ses_prompt_params_runtime_clear"
+    const baseParams = {
+      temperature: 0.4,
+      options: { reasoningEffort: "high" },
+    }
+    setSessionPromptParams(sessionID, baseParams)
+    setRuntimeFallbackPromptParams(sessionID, {
+      options: { reasoningEffort: "low" },
+    })
+
+    //#when
+    clearRuntimeFallbackPromptParams(sessionID)
+
+    //#then
+    expect(getRuntimeFallbackPromptParams(sessionID)).toBeUndefined()
+    expect(getSessionPromptParams(sessionID)).toEqual(baseParams)
   })
 })

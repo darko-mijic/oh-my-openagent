@@ -4,6 +4,12 @@
 **Branch:** feat/grok-4.5-basic-support  
 **Goal:** Address validated review gaps (scaffold bash, workflow reminder, fallback effort, docs/tests)
 
+**Evidence status:** Narrative-only. This folder does not contain the raw unit,
+typecheck, or doctor outputs cited below. Treat
+`../20260718-prometheus-grok-reasoning-effort/` and
+`../20260718-grok45-review-claim-fixes/` as the retained machine evidence for
+the overlapping fallback-effort and Prometheus behavior.
+
 ## What was tested
 
 ### Unit (bun test)
@@ -60,6 +66,9 @@ Prior agent also left: `.omo/evidence/20260718-prometheus-grok-reasoning-effort/
 - Full Matrix C live Grok Prometheus session (still open; requires interactive Grok planning session scoring §8 checklist)
 - Public upstream PR (user deferred)
 - Unrelated dirty working-tree files left unstaged: `assets/oh-my-opencode.schema.json`, `packages/omo-codex/scripts/install-dist/install-local.mjs`, `.local-ignore/`
+- The installer artifact is also stale on clean `dev`: root version `4.19.0`
+  does not match its embedded `4.18.2`. This narrative pack does not claim to
+  repair that upstream generated-file drift.
 
 ## Residual risk
 

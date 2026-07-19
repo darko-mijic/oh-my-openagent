@@ -1,9 +1,14 @@
+/// <reference types="bun-types" />
+
 import { afterEach, describe, expect, test } from "bun:test"
 
 import { createChatMessageHandler } from "./chat-message-handler"
 import { createFallbackState } from "./fallback-state"
 import type { HookDeps } from "./types"
-import { applySessionPromptParams } from "../../shared/session-prompt-params-helpers"
+import {
+  applyRuntimeFallbackPromptParams,
+  applySessionPromptParams,
+} from "../../shared/session-prompt-params-helpers"
 import {
   clearAllSessionPromptParams,
   getSessionPromptParams,
@@ -110,6 +115,45 @@ describe("createChatMessageHandler runtime fallback model override", () => {
     expect(getSessionPromptParams(sessionID)?.options).toEqual({ reasoningEffort: "low" })
   })
 
+  test("#given a delegated session has spawn params #when runtime fallback applies effort #then spawn params survive under the runtime effort", async () => {
+    // given
+    const deps = createDeps()
+    const sessionID = "session-fallback-preserves-spawn-settings"
+    const state = createFallbackState("openai/gpt-5.4")
+    state.currentModel = "xai/grok-4.5(low)"
+    state.fallbackIndex = 0
+    state.selectedFallback = {
+      selectedIndex: 0,
+      entry: { model: "xai/grok-4.5", variant: "low", reasoningEffort: "low" },
+    }
+    deps.sessionStates.set(sessionID, state)
+    applySessionPromptParams(sessionID, {
+      temperature: 0.2,
+      top_p: 0.6,
+      maxTokens: 8192,
+      reasoningEffort: "high",
+      thinking: { type: "disabled" },
+    })
+    const handler = createChatMessageHandler(deps)
+
+    // when
+    await handler({
+      sessionID,
+      model: { providerID: "xai", modelID: "grok-4.5" },
+    }, { message: {} })
+
+    // then
+    expect(getSessionPromptParams(sessionID)).toEqual({
+      temperature: 0.2,
+      topP: 0.6,
+      maxOutputTokens: 8192,
+      options: {
+        reasoningEffort: "low",
+        thinking: { type: "disabled" },
+      },
+    })
+  })
+
   test("#given runtime fallback effort was applied #when the user manually changes models #then stale session prompt params are cleared", async () => {
     // given
     const deps = createDeps()
@@ -123,7 +167,8 @@ describe("createChatMessageHandler runtime fallback model override", () => {
     }
     state.runtimePromptParamsApplied = true
     deps.sessionStates.set(sessionID, state)
-    applySessionPromptParams(sessionID, { reasoningEffort: "low" })
+    applySessionPromptParams(sessionID, { temperature: 0.2 })
+    applyRuntimeFallbackPromptParams(sessionID, { reasoningEffort: "low" })
     const handler = createChatMessageHandler(deps)
 
     // when
@@ -133,7 +178,7 @@ describe("createChatMessageHandler runtime fallback model override", () => {
     }, { message: {} })
 
     // then
-    expect(getSessionPromptParams(sessionID)).toBeUndefined()
+    expect(getSessionPromptParams(sessionID)).toEqual({ temperature: 0.2 })
   })
 
   test("#given runtime fallback effort was applied #when the primary model is restored #then stale session prompt params are cleared", async () => {
@@ -150,7 +195,8 @@ describe("createChatMessageHandler runtime fallback model override", () => {
     }
     state.runtimePromptParamsApplied = true
     deps.sessionStates.set(sessionID, state)
-    applySessionPromptParams(sessionID, { reasoningEffort: "high" })
+    applySessionPromptParams(sessionID, { top_p: 0.6 })
+    applyRuntimeFallbackPromptParams(sessionID, { reasoningEffort: "high" })
     const handler = createChatMessageHandler(deps)
     const output: { message: Record<string, unknown> } = { message: {} }
 
@@ -162,6 +208,6 @@ describe("createChatMessageHandler runtime fallback model override", () => {
 
     // then
     expect(output.message.model).toEqual({ providerID: "openai", modelID: "gpt-5.4" })
-    expect(getSessionPromptParams(sessionID)).toBeUndefined()
+    expect(getSessionPromptParams(sessionID)).toEqual({ topP: 0.6 })
   })
 })

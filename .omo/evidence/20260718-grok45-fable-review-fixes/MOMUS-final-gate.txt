@@ -10,7 +10,7 @@ MUST-NOT REVIEW - THIS PLAN BOUNDARY ONLY
 - `git log --oneline 3abbd3f1d..HEAD` contains nine scoped implementation/test commits.
 - `git diff --name-only 3abbd3f1d..HEAD` contains no docs/**, README, Hephaestus registration, Prometheus bash/trusted-scaffold/scaffold-plan paths, schema.json, or install-local.mjs. It also contains no host configuration path.
 - No Matrix C claim, public-PR/work-with-pr work, or prohibited global fallback flattening is evidenced. `git diff --check 3abbd3f1d..HEAD` is clean.
-- The existing F4 REJECT is stale for this gate: it evaluated merge-base-with-dev..HEAD and therefore included pre-3abbd3f1d claim-fixes Prometheus/docs work. Those commits are outside the required boundary and are not a violation by this plan. On the required boundary, F4 scope fidelity is APPROVE.
+- The prior F4 REJECT, which was not preserved as a separate artifact, is stale for this gate: it evaluated merge-base-with-dev..HEAD and therefore included pre-3abbd3f1d claim-fixes Prometheus/docs work. Those commits are outside the required boundary and are not a violation by this plan. See F4-scope-prior-reject-note.txt. On the required boundary, F4 scope fidelity is APPROVE.
 
 EVIDENCE COMPLETENESS
 - task-01..13 are present; task 14 is correctly pending as the post-final-wave force-stage/commit step.

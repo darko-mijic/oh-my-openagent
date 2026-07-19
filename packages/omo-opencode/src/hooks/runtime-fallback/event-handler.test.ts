@@ -1,9 +1,11 @@
+/// <reference types="bun-types" />
+
 import { afterEach, describe, expect, it } from "bun:test"
 import type { HookDeps, RuntimeFallbackPluginInput } from "./types"
 import type { AutoRetryHelpers } from "./auto-retry"
 import { createFallbackState } from "./fallback-state"
 import { createEventHandler } from "./event-handler"
-import { applySessionPromptParams } from "../../shared/session-prompt-params-helpers"
+import { applyRuntimeFallbackPromptParams } from "../../shared/session-prompt-params-helpers"
 import { clearAllSessionPromptParams, getSessionPromptParams } from "../../shared/session-prompt-params-state"
 
 function createContext(): RuntimeFallbackPluginInput {
@@ -80,7 +82,7 @@ describe("createEventHandler", () => {
     const state = createFallbackState("openai/gpt-5.4")
     state.runtimePromptParamsApplied = true
     deps.sessionStates.set(sessionID, state)
-    applySessionPromptParams(sessionID, { reasoningEffort: "high" })
+    applyRuntimeFallbackPromptParams(sessionID, { reasoningEffort: "high" })
     const handler = createEventHandler(deps, createHelpers(deps, [], []))
 
     // when

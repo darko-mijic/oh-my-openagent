@@ -1,0 +1,5 @@
+The SSE event window is 2026-07-19T02:09:12.972Z through
+2026-07-19T02:09:15.833Z, corresponding to the July 18 local QA run. The file
+mtime is about four minutes later because the capture was closed or flushed
+after the assertion files were written. The body is the same committed capture,
+not a second or future-dated run.

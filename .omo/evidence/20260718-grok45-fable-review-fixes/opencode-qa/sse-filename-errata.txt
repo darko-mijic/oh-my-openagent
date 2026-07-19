@@ -1,0 +1,4 @@
+The historical filename sse-session-error-and-message-updated.jsonl is
+inaccurate. The capture contains session.status retry events and
+message.updated events, with zero session.error events. qa-pass.txt states the
+observed route correctly as session.status+message.updated.
