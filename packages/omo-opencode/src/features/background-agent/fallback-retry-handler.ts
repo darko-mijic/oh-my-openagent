@@ -163,6 +163,9 @@ export async function tryFallbackRetry(args: {
     providerID,
     modelID: transformedModelId,
     variant: nextFallback.variant,
+    ...(nextFallback.reasoningEffort !== undefined
+      ? { reasoningEffort: nextFallback.reasoningEffort }
+      : {}),
   }
   task.attemptCount = selectedAttemptCount
   const failedAttemptID = ensureCurrentAttempt(task, previousModel).attemptId

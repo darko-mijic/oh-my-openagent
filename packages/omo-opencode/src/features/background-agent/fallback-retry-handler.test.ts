@@ -158,6 +158,84 @@ describe("tryFallbackRetry", () => {
       expect(args.task.model?.providerID).toBe("provider-a")
     })
 
+    test("forwards fallback reasoningEffort onto nextModel when present", async () => {
+      // given
+      const args = createDefaultArgs({
+        model: { providerID: "xai", modelID: "grok-code-fast-1" },
+        concurrencyKey: "xai/grok-code-fast-1",
+        fallbackChain: [
+          {
+            model: "grok-4.5",
+            providers: ["xai"],
+            variant: "high",
+            reasoningEffort: "high",
+          },
+        ],
+      })
+
+      // when
+      await tryFallbackRetry(args)
+
+      // then
+      expect(args.task.model).toEqual({
+        providerID: "xai",
+        modelID: "grok-4.5",
+        variant: "high",
+        reasoningEffort: "high",
+      })
+      const key = `${args.task.model!.providerID}/${args.task.model!.modelID}`
+      expect(args.queuesByKey.get(key)?.[0]?.input.model).toEqual({
+        providerID: "xai",
+        modelID: "grok-4.5",
+        variant: "high",
+        reasoningEffort: "high",
+      })
+    })
+
+    test("omits reasoningEffort on nextModel when fallback entry has none", async () => {
+      // given
+      const args = createDefaultArgs({
+        fallbackChain: [
+          { model: "fallback-model-1", providers: ["provider-a"], variant: "max" },
+        ],
+      })
+
+      // when
+      await tryFallbackRetry(args)
+
+      // then
+      expect(args.task.model).toEqual({
+        providerID: "provider-a",
+        modelID: "fallback-model-1",
+        variant: "max",
+      })
+      expect(args.task.model).not.toHaveProperty("reasoningEffort")
+      const key = `${args.task.model!.providerID}/${args.task.model!.modelID}`
+      const queuedModel = args.queuesByKey.get(key)?.[0]?.input.model
+      expect(queuedModel).toEqual({
+        providerID: "provider-a",
+        modelID: "fallback-model-1",
+        variant: "max",
+      })
+      expect(queuedModel).not.toHaveProperty("reasoningEffort")
+    })
+
+    test("preserves variant on nextModel when present without inventing effort", async () => {
+      // given
+      const args = createDefaultArgs({
+        fallbackChain: [
+          { model: "fallback-model-1", providers: ["provider-b"], variant: "low" },
+        ],
+      })
+
+      // when
+      await tryFallbackRetry(args)
+
+      // then
+      expect(args.task.model?.variant).toBe("low")
+      expect(args.task.model).not.toHaveProperty("reasoningEffort")
+    })
+
     test("clears sessionID and startedAt", async () => {
       const args = createDefaultArgs({
         sessionId: "old-session",
