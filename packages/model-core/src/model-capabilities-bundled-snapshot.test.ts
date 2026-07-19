@@ -63,6 +63,25 @@ describe("bundled model capabilities snapshot", () => {
     expect(bundled.models["grok-4.5"]?.limit?.context).toBe(500_000)
   })
 
+  test("resolves opencode-go grok-4.5 context to 500k via bare-key snapshot fallback", () => {
+    // given: OpenCode Go serves bare model IDs; supplemental pins bare grok-4.5 at 500k
+    const bundledSnapshot = getBundledModelCapabilitiesSnapshot(bundledModelCapabilitiesSnapshotJson)
+
+    // when: production capability lookup for opencode-go/grok-4.5
+    const result = getModelCapabilities({
+      providerID: "opencode-go",
+      modelID: "grok-4.5",
+      bundledSnapshot,
+    })
+    const contextLimit = bundledSnapshot.models[result.canonicalModelID]?.limit?.context
+
+    // then: bare-key fallback yields official 500k context (no provider-prefixed supplemental required)
+    expect(result.canonicalModelID).toBe("grok-4.5")
+    expect(result.family).toBe("grok")
+    expect(contextLimit).toBe(500_000)
+    expect(result.diagnostics.snapshot.source).toBe("bundled-snapshot")
+  })
+
   test("does not enable Anthropic thinking for Grok catalog entries on production bundled path", () => {
     // given
     const bundledSnapshot = getBundledModelCapabilitiesSnapshot(bundledModelCapabilitiesSnapshotJson)
