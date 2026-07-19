@@ -7,6 +7,7 @@ import { log } from "../../shared/logger"
 import { applyOverrides } from "./agent-overrides"
 import { applyModelResolution } from "./model-resolution"
 import { createAtlasAgent } from "../atlas"
+import { setAtlasRuntimePromptContext } from "../atlas-runtime-prompt-reconciler"
 
 export function maybeCreateAtlasConfig(input: {
   disabledAgents: string[]
@@ -74,6 +75,24 @@ export function maybeCreateAtlasConfig(input: {
   }
 
   orchestratorConfig = applyOverrides(orchestratorConfig, orchestratorOverride, mergedCategories, directory)
+
+  // The body above is baked from the *configured* model. If the user switches to
+  // a different model family in the TUI, the system-transform hook rebuilds the
+  // prompt for the runtime model using this captured pipeline (post-override).
+  setAtlasRuntimePromptContext({
+    configuredModel: orchestratorConfig.model ?? atlasModel,
+    bakedPrompt: orchestratorConfig.prompt ?? "",
+    rebuildPromptForModel: (runtimeModel: string): string => {
+      let rebuilt = createAtlasAgent({
+        model: runtimeModel,
+        availableAgents,
+        availableSkills,
+        userCategories,
+      })
+      rebuilt = applyOverrides(rebuilt, orchestratorOverride, mergedCategories, directory)
+      return rebuilt.prompt ?? ""
+    },
+  })
 
   return orchestratorConfig
 }

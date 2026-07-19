@@ -1,4 +1,5 @@
 import type { DefaultModeConfig } from "../config/schema/default-mode"
+import { reconcileAtlasRuntimePrompt } from "../agents/atlas-runtime-prompt-reconciler"
 import { reconcileSisyphusRuntimePrompt } from "../agents/sisyphus-runtime-prompt-reconciler"
 
 const ULTRAWORK_MODE_TAG = "<ultrawork-mode>"
@@ -16,6 +17,7 @@ export function createSystemTransformHandler(
     // is the only seam that knows the model actually selected at runtime, so
     // rebuild the whole body for the runtime model family here (issue #5297).
     reconcileSisyphusRuntimePrompt(output.system, input.model?.id)
+    reconcileAtlasRuntimePrompt(output.system, input.model?.id)
 
     if (!defaultMode?.ultrawork || !getUltraworkMessage) return
 
