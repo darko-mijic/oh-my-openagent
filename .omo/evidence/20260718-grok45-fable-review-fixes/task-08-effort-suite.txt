@@ -1,0 +1,29 @@
+bun test v1.3.14 (0d9b296a)
+
+ 790 pass
+ 0 fail
+ 2076 expect() calls
+Ran 790 tests across 61 files. [24.37s]
+bun test v1.3.14 (0d9b296a)
+
+ 259 pass
+ 0 fail
+ 467 expect() calls
+Ran 259 tests across 28 files. [3.41s]
+
+=== TASK 08 SUMMARY 2026-07-19T01:19:48Z ===
+Branch: feat/grok-4.5-basic-support
+Commit: N (already clean — no test file edits)
+
+Sweep results:
+- model-family-detectors: isGrok45Model(xai/grok-build-latest) === false (pinned)
+- grok-config-shape: Sisyphus/Junior factory reasoningEffort undefined; no medium factory expect
+- retry-model-payload: build-latest no high default; low variant preserves low; selected low beats agent high
+- background-agent: forwards reasoningEffort; low variant without inventing high (fallback-retry-handler)
+- No remaining expect(isGrok45Model('…grok-build-latest')).toBe(true)
+- No Sisyphus Grok medium factory expect
+- spawner low+high is GPT forward-path (openai/gpt-5.4), not Grok policy contradiction
+
+Verification:
+1) acceptance bundle: 790 pass / 0 fail (61 files)
+2) runtime-fallback full: 259 pass / 0 fail (28 files)

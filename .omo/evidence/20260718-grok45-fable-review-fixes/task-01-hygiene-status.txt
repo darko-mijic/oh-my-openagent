@@ -1,0 +1,24 @@
+Task 01 — Hygiene gate
+timestamp_utc: 2026-07-19T00:38:10Z
+branch: feat/grok-4.5-basic-support
+HEAD_short: 3abbd3f1d
+
+Action:
+  git checkout -- assets/oh-my-opencode.schema.json \
+    packages/omo-codex/scripts/install-dist/install-local.mjs
+
+git status --porcelain (after revert):
+?? .local-ignore/
+?? .opencode/lsp.json
+
+CLEAN proof (generated paths must NOT appear as modified):
+- assets/oh-my-opencode.schema.json: NOT listed → clean vs HEAD
+- packages/omo-codex/scripts/install-dist/install-local.mjs: NOT listed → clean vs HEAD
+
+Intentionally left alone (not commit surface for this work):
+- ?? .local-ignore/
+- ?? .opencode/lsp.json
+
+Notes:
+- No git add / no commit for this todo.
+- Evidence under .omo/ is gitignored; force-add is a later todo.

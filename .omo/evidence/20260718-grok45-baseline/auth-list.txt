@@ -1,0 +1,13 @@
+[0m
+┌  Credentials [90m~/.local/share/opencode/auth.json
+│
+●  OpenCode Zen [90mapi
+│
+●  OpenAI [90moauth
+│
+●  Kimi For Coding [90mapi
+│
+●  xAI [90moauth
+│
+└  4 credentials
+

@@ -1,0 +1,33 @@
+Task 12 Evidence Index
+======================
+
+Status: PASS for the scoped isolated OpenCode evidence gate.
+Commit: N. No evidence commit was created.
+
+Prior gates retained from todos 2-11:
+- unit-targeted.txt: targeted detector, agent shape, fallback, background, and reconciler suites.
+- typecheck.txt: repository typecheck passed.
+- test-codex.txt: Codex gate passed (510 tests).
+- build.txt: local dist build used by the isolated server.
+- task-01-hygiene-status.txt through task-11-opencode-go-context.txt: per-todo records.
+
+Live isolated OpenCode proof:
+- opencode-qa/run-isolated.sh: reproducible driver sourced from opencode-qa common.sh.
+- opencode-qa/server-health.json and opencode-qa/opencode-serve.log: real isolated server booted.
+- opencode-qa/agent-list.json: full /agent response from a clean temporary project.
+- opencode-qa/atlas-registration.json: exact registered agent is Atlas - Plan Executor, baked on openai/gpt-fallback.
+- opencode-qa/isolation.txt: host session count 193 before and 193 after; unchanged=yes.
+- opencode-qa/system-transform-atlas-grok.json: experimental.chat.system.transform observed the Grok Atlas overlay for grok-4.5.
+- opencode-qa/sanitized-model-requests.jsonl: Grok request followed by gpt-fallback request, with raw bodies omitted.
+- opencode-qa/sse-session-error-and-message-updated.jsonl: 429 retry signal, message.updated, model switch, and QA_FALLBACK_OK response.
+- opencode-qa/runtime-fallback-low-effort.json: session.status runtime fallback selected gpt-fallback; config carries reasoningEffort=low. The fake provider did not expose an effort-valued wire field.
+- opencode-qa/qa-pass.txt: final assertion summary.
+
+Review and scope records:
+- secret-review.txt: no credential-like content found across this and listed prior packs.
+- README.md: reviewer-readable test, observation, sufficiency, and omission record.
+- ../20260718-atlas-grok45-review/verification.txt: corrected prior full-suite attribution; no Matrix C claim.
+
+Staging requirements:
+- Force-stage only the user-requested evidence packs.
+- Do not stage assets/oh-my-opencode.schema.json or packages/omo-codex/scripts/install-dist/install-local.mjs.

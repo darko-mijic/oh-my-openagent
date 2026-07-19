@@ -1,0 +1,12 @@
+{
+  "note": "pre-fix behavior was supportsThinking:true from bundled-snapshot when reasoning:true",
+  "after": {
+    "supportsThinking": false,
+    "supportsThinkingSource": "heuristic",
+    "reasoning": true,
+    "thinking": null,
+    "reasoningEffort": "high",
+    "thinkingDropped": true
+  },
+  "head": "cdb95d40c"
+}

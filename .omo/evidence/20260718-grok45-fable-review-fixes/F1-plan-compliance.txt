@@ -1,0 +1,89 @@
+F1 Plan Compliance Audit
+========================
+Plan: .omo/plans/grok45-fable-review-fixes.md
+Evidence root: .omo/evidence/20260718-grok45-fable-review-fixes/
+Date: 2026-07-18
+Scope: Must-have 1-9 mapped to todos 1-13 only (task-14 intentionally out of scope for F1)
+
+Naming note
+-----------
+Plan F1 command template listed bare task-0N.txt / task-1N.txt.
+On-disk artifacts use descriptive names (task-0N-<slug>.txt). Audit treats
+descriptive paths as the canonical green artifacts. Bare task-NN.txt are
+ABSENT by design; that is not a coverage failure.
+
+Pack inventory (test -e)
+------------------------
+PASS  README.md
+PASS  opencode-qa/ (directory)
+PASS  task-01-hygiene-status.txt
+PASS  task-02-detector.txt
+PASS  task-03-junior-guidance.txt
+PASS  task-04-sisyphus-omit-effort.txt
+PASS  task-05-junior-omit-effort.txt
+PASS  task-06-runtime-effort.txt
+PASS  task-07-bg-effort.txt
+PASS  task-08-effort-suite.txt
+PASS  task-09-thinking-live.txt
+PASS  task-10-atlas-runtime.txt
+PASS  task-11-opencode-go-context.txt
+PASS  task-12-evidence-index.txt
+PASS  task-13-reload.txt
+PASS  test-codex.txt
+PASS  typecheck.txt
+PASS  build.txt
+NOTE  task-14.txt ABSENT (expected until todo 14)
+NOTE  bare task-01.txt .. task-13.txt ABSENT (descriptive names used)
+
+Residual risks
+--------------
+Plan section "### Residual risks (document, do not silently fix)" PRESENT
+  - Sisyphus same-family mid-session 4.3→4.5 overlay short-circuit
+  - Bare-runtime PATH trust for Prometheus scaffold
+  - Omit may leave effort unset without user reasoningEffort / mappable variant
+  - Grok Junior routes only through GPT-5.5 template
+
+Pack README.md "WHY IT IS ENOUGH" echoes residual risks PRESENT:
+  - Sisyphus same-family 4.3 to 4.5 does not reapply 4.5-only harness overlay
+  - Prometheus scaffold still trusts bare-runtime PATH
+  - absent user reasoningEffort and unmappable variant may leave effort unset
+  - Grok Junior routes only through the GPT-5.5 template
+
+Must-have → todo → evidence matrix
+----------------------------------
+MH | Must-have summary              | Todo(s) | Evidence path(s)                                      | test -e | Status
+---|--------------------------------|---------|-------------------------------------------------------|---------|-------
+1  | Junior 3.1 GPT_FILE_EDIT       | 3       | task-03-junior-guidance.txt                           | PASS    | GREEN
+2  | Detector 3.2 non-reasoning     | 2       | task-02-detector.txt                                  | PASS    | GREEN
+3  | Alias 4.2 drop grok-build-latest| 2      | task-02-detector.txt                                  | PASS    | GREEN
+4  | Effort 3.3/3.5 plumbing        | 6,7,8   | task-06-runtime-effort.txt                             | PASS    | GREEN
+   |                                |         | task-07-bg-effort.txt                                 | PASS    | GREEN
+   |                                |         | task-08-effort-suite.txt                              | PASS    | GREEN
+5  | Thinking 3.4 reader/Grok opt-out| 9      | task-09-thinking-live.txt                             | PASS    | GREEN
+6  | Factory effort omit 3.6        | 4,5     | task-04-sisyphus-omit-effort.txt                       | PASS    | GREEN
+   |                                |         | task-05-junior-omit-effort.txt                        | PASS    | GREEN
+7  | Atlas 4.6 full family rebuild  | 10      | task-10-atlas-runtime.txt                             | PASS    | GREEN
+8  | opencode-go 500k TDD           | 11      | task-11-opencode-go-context.txt                       | PASS    | GREEN
+9  | Evidence hygiene               | 1,12,13 | task-01-hygiene-status.txt                            | PASS    | GREEN
+   |                                |         | task-12-evidence-index.txt                            | PASS    | GREEN
+   |                                |         | task-13-reload.txt                                    | PASS    | GREEN
+   |                                |         | opencode-qa/                                          | PASS    | GREEN
+   |                                |         | README.md                                             | PASS    | GREEN
+
+Supporting gates (hygiene pack, not separate Must-haves)
+--------------------------------------------------------
+PASS  typecheck.txt
+PASS  test-codex.txt
+PASS  build.txt
+PASS  unit-targeted.txt (and related unit-*.txt under pack)
+
+Coverage summary
+----------------
+Must-have rows green: 9/9
+Todos 1-13 artifacts present: 13/13 (descriptive names)
+opencode-qa + README: present
+task-14 required for F1: NO (correctly absent)
+Residual risks plan + README: both present
+This F1 file: written
+
+VERDICT: APPROVE

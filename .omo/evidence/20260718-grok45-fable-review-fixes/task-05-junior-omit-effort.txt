@@ -1,0 +1,37 @@
+TASK: 5. Omit Junior Grok default medium factory effort
+DATE: 2026-07-18
+BRANCH: feat/grok-4.5-basic-support
+
+WHAT WAS TESTED:
+- packages/omo-opencode/src/agents/sisyphus-junior/agent.ts Grok branch no longer defaults reasoningEffort to "medium"
+- Only sets reasoningEffort when override.reasoningEffort is provided
+- GPT Junior path still hardcodes reasoningEffort: "medium"
+- FILE_EDIT guidance swap (todo 3) left intact on Grok prompt path
+
+COMMANDS:
+```bash
+bun test packages/omo-opencode/src/agents/grok-config-shape.test.ts \
+  packages/omo-opencode/src/agents/sisyphus-junior/index.test.ts \
+  packages/omo-opencode/src/agents/gpt-apply-patch-guidance.test.ts
+```
+
+WHAT WAS OBSERVED:
+- bun test: 79 pass / 0 fail / 188 expect() calls / exit 0
+- Junior Grok without override: reasoningEffort undefined
+- Junior Grok with override high: high
+- Junior GPT: medium (existing test still green)
+- gpt-apply-patch-guidance tests still green (FILE_EDIT swap not regressed)
+
+WHY IT IS ENOUGH:
+- Unit tests pin factory shape for Grok omit + override high + GPT medium
+- Matches Sisyphus omit pattern from task-04
+- No live OpenCode spawn required: pure agent factory config shape
+
+WHAT WAS OMITTED:
+- No secrets / env dumps
+- Did not run full opencode harness (factory-only change)
+
+FILES MODIFIED:
+- packages/omo-opencode/src/agents/sisyphus-junior/agent.ts
+- packages/omo-opencode/src/agents/grok-config-shape.test.ts
+- packages/omo-opencode/src/agents/sisyphus-junior/index.test.ts

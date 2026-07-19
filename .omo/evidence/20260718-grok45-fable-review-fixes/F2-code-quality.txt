@@ -1,0 +1,152 @@
+F2. Code quality review
+Date: 2026-07-18
+Branch: feat/grok-4.5-basic-support
+Base: dev...HEAD
+Working dir: /Users/darkomijic/dev-projects/oh-my-openagent
+Reviewer surface: static grep + git diff only (no product edits)
+
+================================================================================
+CHECK 1 — Touched paths (git diff dev...HEAD --name-only / --stat)
+================================================================================
+Command: git diff dev...HEAD --name-only && git diff dev...HEAD --stat
+Result: 97 files changed, +3390 / -419
+
+Product / package paths (summary):
+- packages/model-core/src/* (detectors, capabilities, requirements, tests)
+- packages/omo-opencode/src/agents/* (atlas/sisyphus/sisyphus-junior/prometheus grok overlays, types, tests)
+- packages/omo-opencode/src/hooks/runtime-fallback/* (effort payload, fallback-state, chat-message-handler, tests)
+- packages/omo-opencode/src/hooks/model-fallback/*
+- packages/omo-opencode/src/hooks/prometheus-md-only/* (policy + tests)
+- packages/omo-opencode/src/hooks/atlas/*, start-work/*, auto-slash-command/*
+- packages/omo-opencode/src/plugin-handlers/tool-config-handler.ts (+tests)
+- packages/omo-opencode/src/plugin/* reconciler tests / system-transform
+- packages/omo-codex + packages/shared-skills scaffold-plan.mjs (minor)
+- packages/prompts-core/prompts/atlas/default.md
+- .omo/evidence/20260718-atlas-grok45-review/* (evidence only)
+
+Unexpected docs/**:
+- NONE under docs/
+
+prometheus-md-only / bash permission map:
+- TOUCHED (expected for grok/prometheus scaffold work):
+  - packages/omo-opencode/src/agents/prometheus/bash-permission.ts (NEW)
+  - packages/omo-opencode/src/plugin-handlers/tool-config-handler.ts
+  - packages/omo-opencode/src/hooks/prometheus-md-only/*
+
+Working tree (uncommitted): clean for product paths at review time
+(git diff --name-only empty aside from this evidence write)
+
+Status: PASS (no unexpected docs/**; permission-related changes in-scope and reviewed in Check 3)
+
+================================================================================
+CHECK 2 — Banned casts in touched TS (as any / @ts-ignore / @ts-expect-error)
+================================================================================
+Command A (repo scan non-test):
+  grep -rn "as any\|@ts-ignore\|@ts-expect-error" packages/omo-opencode/src packages/model-core/src --include='*.ts' | grep -v '\.test\.ts' | head -40
+
+Hits were documentation/prompt strings only, e.g.:
+- agents/dynamic-agent-policy-sections.ts (forbids the patterns in prose)
+- agents/sisyphus/*.ts, hephaestus/*.ts (anti-pattern instructions)
+- hooks/atlas/system-reminder-templates.ts (grep guidance text)
+- features/builtin-commands/templates/.../verification-and-tooling.ts (forbids patterns)
+No production type-suppression casts found in non-test sources.
+
+Command B (added lines on branch):
+  git diff dev...HEAD -- packages/omo-opencode/src packages/model-core/src -- '*.ts' \
+    | grep -E '^\+.*(as any|@ts-ignore|@ts-expect-error)' | grep -v test
+Result: empty (NO_BANNED_IN_ADDED_LINES)
+
+Status: PASS
+
+================================================================================
+CHECK 3 — Prometheus bash permission map key order
+================================================================================
+File: packages/omo-opencode/src/agents/prometheus/bash-permission.ts (NEW on branch)
+
+Full content:
+  export const PROMETHEUS_BASH_PERMISSION = {
+    "*": "deny",
+    "*scaffold-plan.mjs*": "allow",
+  } as const
+
+Order check:
+- `"*": "deny"` at line 2
+- `"*scaffold-plan.mjs*": "allow"` at line 3
+- deny appears BEFORE scaffold allow pattern: YES
+
+tool-config-handler.ts wires:
+  bash: prometheusMdOnlyDisabled ? "deny" : PROMETHEUS_BASH_PERMISSION
+
+Not UNTOUCHED (file is new + tool-config import), but ORDER-CORRECT.
+
+Status: PASS (ORDER-CORRECT APPROVE; not UNTOUCHED)
+
+================================================================================
+CHECK 4 — Tests import GPT_FILE_EDIT_GUIDANCE / GPT_APPLY_PATCH_GUIDANCE constants
+================================================================================
+Command:
+  grep -rn "GPT_FILE_EDIT_GUIDANCE\|GPT_APPLY_PATCH_GUIDANCE" packages/omo-opencode/src --include='*.test.ts'
+
+Key hits (constant imports + expect on constants, not prose-only):
+- packages/omo-opencode/src/agents/gpt-apply-patch-guidance.test.ts
+  imports GPT_APPLY_PATCH_GUIDANCE, GPT_FILE_EDIT_GUIDANCE
+  expect(...includes(GPT_FILE_EDIT_GUIDANCE))
+  expect(...includes(GPT_APPLY_PATCH_GUIDANCE)) / countOccurrences(...)
+- packages/omo-opencode/src/plugin/sisyphus-runtime-prompt-reconciler.test.ts
+  import { GPT_APPLY_PATCH_GUIDANCE } from "../agents/gpt-apply-patch-guard"
+  expect(...).toContain / not.toContain(GPT_APPLY_PATCH_GUIDANCE)
+
+Status: PASS
+
+================================================================================
+CHECK 5 — No reasoningEffort assignment onto output.message.model
+================================================================================
+File: packages/omo-opencode/src/hooks/runtime-fallback/chat-message-handler.ts
+
+Relevant lines (grep reasoningEffort|message.model|output.message):
+- output.message.model = primaryPayload.model   (model object only)
+- output.message.model = selectedPayload.model  (model object only)
+- output.message.variant = ... / delete variant
+- if (selectedPayload.reasoningEffort) {
+    applySessionPromptParams(sessionID, { reasoningEffort: selectedPayload.reasoningEffort })
+  }
+
+reasoningEffort is applied via session prompt params, NOT written onto output.message.model
+and NOT as output.message.reasoningEffort in the production handler path.
+
+Supporting test (chat-message-handler.test.ts):
+  expect(output.message.reasoningEffort).toBeUndefined()
+  expect(getSessionPromptParams(sessionID)?.options).toEqual({ reasoningEffort: "low" })
+
+grep message.model.*reasoningEffort / reasoningEffort.*message.model under runtime-fallback/: empty for assignment anti-pattern.
+
+Status: PASS
+
+================================================================================
+CHECK 6 — fallback-state selection does not use indexOf for advancement
+================================================================================
+Command: grep -n "indexOf" packages/omo-opencode/src/hooks/runtime-fallback/fallback-state.ts
+Result: NO_INDEXOF_OR_MISSING (no matches)
+
+Advancement mechanism (read of fallback-state.ts):
+- findFallbackSelection: for (let selectedIndex = 0; ...)
+- findNextAvailableFallback: for (let selectedIndex = state.fallbackIndex + 1; ...)
+- prepareFallback sets state.fallbackIndex = selectedFallback.selectedIndex
+- keys via `${selectedIndex}:${model}` — explicit index, not Array.indexOf
+
+Status: PASS
+
+================================================================================
+VERDICT
+================================================================================
+VERDICT: APPROVE
+
+All six F2 checks passed:
+1. Touched paths in-scope; no unexpected docs/**
+2. No banned casts in non-test product TS / no banned casts in branch added lines
+3. Prometheus bash map ORDER-CORRECT ("*" deny before scaffold allow)
+4. GPT guidance tests assert imported constants
+5. reasoningEffort not assigned onto message.model
+6. fallback-state advancement uses selectedIndex loops, not indexOf
+
+Commit: N (evidence-only; no product code changes; no stage/commit by this review)

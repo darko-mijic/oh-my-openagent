@@ -1,0 +1,3 @@
+{"type":"model-request","request":1,"model":"gpt-5.4-nano","grokAtlasOverlay":false,"lowEffort":false}
+{"type":"model-request","request":2,"model":"grok-4.5","grokAtlasOverlay":true,"lowEffort":false}
+{"type":"model-request","request":3,"model":"gpt-fallback","grokAtlasOverlay":false,"lowEffort":false}

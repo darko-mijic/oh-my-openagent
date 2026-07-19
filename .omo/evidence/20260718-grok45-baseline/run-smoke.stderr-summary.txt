@@ -1,0 +1,2 @@
+--- stderr tail ---
+zsh:43: command not found: timeout

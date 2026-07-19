@@ -1,0 +1,39 @@
+TASK: 3 Junior Grok — swap APPLY_PATCH guidance for FILE_EDIT (constant asserts)
+DATE: 2026-07-18
+BRANCH: feat/grok-4.5-basic-support
+
+WHAT WAS TESTED:
+- Grok Junior path in packages/omo-opencode/src/agents/sisyphus-junior/agent.ts
+  after GPT-5.5 body + identity neutralize:
+  replaceAll(GPT_APPLY_PATCH_GUIDANCE, GPT_FILE_EDIT_GUIDANCE)
+- GPT-5.5 Junior still keeps GPT_APPLY_PATCH_GUIDANCE
+- Constant-based asserts in gpt-apply-patch-guidance.test.ts
+  (Grok routes only through 5.5 template; gpt-5-4 APPLY_PATCH out of path)
+
+COMMAND:
+  bun test packages/omo-opencode/src/agents/grok-config-shape.test.ts \
+    packages/omo-opencode/src/agents/gpt-apply-patch-guidance.test.ts
+
+WHAT WAS OBSERVED:
+  bun test v1.3.14
+  20 pass
+  0 fail
+  69 expect() calls
+  exit 0
+
+ASSERTIONS (exported constants):
+  - Grok 4.5 Junior: prompt.includes(GPT_FILE_EDIT_GUIDANCE) === true
+  - Grok 4.5 Junior: prompt.includes(GPT_APPLY_PATCH_GUIDANCE) === false
+  - GPT-5.5 Junior: prompt.includes(GPT_APPLY_PATCH_GUIDANCE) === true
+
+WHY IT IS ENOUGH:
+- Pins the Grok-only replaceAll seam without rewriting the shared 5.5 template
+- GPT Junior path unchanged (still APPLY_PATCH)
+- No prose phrase pins
+
+FILES MODIFIED:
+- packages/omo-opencode/src/agents/sisyphus-junior/agent.ts
+- packages/omo-opencode/src/agents/gpt-apply-patch-guidance.test.ts
+
+OMITTED:
+- No secrets / env dumps

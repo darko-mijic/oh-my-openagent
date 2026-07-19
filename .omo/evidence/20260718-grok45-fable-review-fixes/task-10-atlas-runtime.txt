@@ -1,0 +1,48 @@
+Task 10 — Atlas full runtime prompt reconcile
+Date: 2026-07-18
+Branch: feat/grok-4.5-basic-support
+
+WHAT WAS TESTED
+- Unit surface: bun test on Sisyphus + Atlas runtime prompt reconcilers
+  Command:
+    bun test packages/omo-opencode/src/plugin/sisyphus-runtime-prompt-reconciler.test.ts \
+             packages/omo-opencode/src/plugin/atlas-runtime-prompt-reconciler.test.ts
+- Cases covered by atlas-runtime-prompt-reconciler.test.ts:
+  1. GPT-configured Atlas → non-GPT runtime: full body rebuild (not overlay-append-only)
+  2. Concatenated system entry: only baked body portion swapped
+  3. Same family: no-op (false, body unchanged)
+  4. No registered context: no-op
+  5. Non-matching system text: no-op
+  6. Non-Grok bake → xai/grok-4.5 runtime: system contains GROK_ATLAS_ORCHESTRATION_OVERLAY
+  7. prompt_append override retained after family-switch rebuild
+  8. createSystemTransformHandler end-to-end family swap
+  9. createSystemTransformHandler end-to-end Grok overlay constant
+
+WHAT WAS OBSERVED
+- bun test: 15 pass / 0 fail / 46 expect() calls / 113.00ms / exit 0
+- Sisyphus suite still green (no regression)
+- Atlas family resolver: getAtlasPromptSource + distinct "grok" when isGrok45Model
+- Registration context set AFTER applyOverrides with:
+  configuredModel: orchestratorConfig.model ?? atlasModel
+  bakedPrompt: orchestratorConfig.prompt ?? ""
+  rebuild: createAtlasAgent({ model: runtimeModel, ...same ctx }) + applyOverrides
+  (no env context — Atlas pipeline does not apply it)
+- system-transform.ts invokes reconcileSisyphusRuntimePrompt then reconcileAtlasRuntimePrompt
+
+WHY IT IS ENOUGH
+- Mirrors verified Sisyphus reconciler layout (impl under agents/, test under plugin/)
+- Full family rebuild on model-family change (not overlay-append-only)
+- Grok path asserted via exported GROK_ATLAS_ORCHESTRATION_OVERLAY constant (no prose pin)
+- prompt_append retention proves rebuild re-applies overrides (Oracle R2 #4)
+- system-transform wiring covered by handler-level tests
+
+WHAT WAS OMITTED
+- Live opencode TUI model-switch QA (unit surface is the matching contract for this pure reconciler;
+  full harness QA deferred to integration wave / task 13 consumers)
+- No secrets / env dumps
+
+FILES
+- created: packages/omo-opencode/src/agents/atlas-runtime-prompt-reconciler.ts
+- created: packages/omo-opencode/src/plugin/atlas-runtime-prompt-reconciler.test.ts
+- modified: packages/omo-opencode/src/agents/builtin-agents/atlas-agent.ts
+- modified: packages/omo-opencode/src/plugin/system-transform.ts

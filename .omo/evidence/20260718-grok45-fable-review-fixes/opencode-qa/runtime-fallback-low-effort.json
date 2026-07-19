@@ -1,0 +1,6 @@
+{
+  "eventPath": "session.status -> runtime fallback",
+  "fallbackModel": "gpt-fallback",
+  "configuredReasoningEffort": "low",
+  "requestLowEffortObserved": false
+}

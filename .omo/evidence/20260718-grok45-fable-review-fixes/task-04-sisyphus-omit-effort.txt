@@ -1,0 +1,23 @@
+WHAT WAS TESTED:
+- packages/omo-opencode/src/agents/sisyphus-agent-config.ts buildGrokSisyphusAgentConfig
+  no longer sets factory reasoningEffort (returns base config only).
+- packages/omo-opencode/src/agents/grok-config-shape.test.ts Sisyphus effort pins +
+  override path via applyOverrides({ reasoningEffort: "high" }, {}).
+- bun test packages/omo-opencode/src/agents/grok-config-shape.test.ts
+
+WHAT WAS OBSERVED:
+- Factory Sisyphus on xai/grok-4.5: reasoningEffort undefined; no Claude thinking;
+  Grok Harness Overlay still present.
+- Override high: applyOverrides yields reasoningEffort "high".
+- Non-4.5 Grok ids and opencode/grok-4.5: reasoningEffort undefined.
+- grok-build-latest: no longer 4.5 alias — no harness overlay / no Prometheus process law
+  (aligned with prior alias hygiene; suite green).
+- bun test: 13 pass, 0 fail, exit 0.
+
+WHY IT IS ENOUGH:
+- Pins factory omit of medium effort and user override still winning via applyOverrides.
+- Does not hardcode high; Claude thinking path and Prometheus default high untouched in source.
+
+WHAT WAS OMITTED:
+- Full opencode live harness (unit surface is agent factory config shape).
+- Junior effort change (todo 5).

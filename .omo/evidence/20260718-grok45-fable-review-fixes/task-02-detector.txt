@@ -1,0 +1,30 @@
+TASK: 2. Detector — exclude non-reasoning SKUs, drop grok-build-latest, sync docstring
+DATE: 2026-07-18
+BRANCH: feat/grok-4.5-basic-support
+
+WHAT WAS TESTED:
+- bun test packages/model-core/src/model-family-detectors.test.ts
+- isGrok45Model pins for 4.5 / latest / non-reasoning / build-latest / multi-agent
+- Source no longer lists grok-build-latest as a GROK_45 alias or JSDoc official alias
+
+WHAT WAS OBSERVED:
+- bun test: 16 pass, 0 fail, 99 expect() calls, exit 0 (~879ms)
+- GROK_45_ALIASES = Set(["grok-4-5-latest"]) only
+- isGrok45Model returns false when normalized name includes "non-reasoning"
+- multi-agent exclusion retained
+- isGrokModel unchanged
+
+ASSERT RESULTS (from test file pins):
+- isGrok45Model("xai/grok-4.5") === true
+- isGrok45Model("xai/grok-4.5-latest") === true
+- isGrok45Model("xai/grok-4.5-fast-non-reasoning") === false
+- isGrok45Model("xai/grok-4.5-non-reasoning") === false
+- isGrok45Model("xai/grok-build-latest") === false
+- isGrok45Model("xai/grok-4.5-multi-agent") === false (via grok-4.5-multi-agent pin)
+
+WHY IT IS ENOUGH:
+- Unit suite is the detector surface; all required true/false cases are locked in model-family-detectors.test.ts
+- Implementation + JSDoc updated in model-family-detectors.ts
+
+WHAT WAS OMITTED:
+- No secrets; no full suite beyond this file

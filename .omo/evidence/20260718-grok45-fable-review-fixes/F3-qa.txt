@@ -1,0 +1,135 @@
+F3 Real manual QA (agent-executed)
+Date: 2026-07-18
+Evidence root: .omo/evidence/20260718-grok45-fable-review-fixes/
+Commit: N (no commit per task instructions)
+
+================================================================================
+VERDICT: APPROVE
+================================================================================
+
+## WHAT WAS TESTED
+
+1. Targeted unit bundle (todo 8 + atlas + capabilities + runtime-fallback full dir)
+2. bun run typecheck
+3. Presence and content of prior codex gate + opencode-qa isolation/hook proofs
+
+## COMMANDS AND RESULTS
+
+### 1. Unit bundle — EXIT 0
+
+Command:
+```
+bun test \
+  packages/model-core/src/model-family-detectors.test.ts \
+  packages/model-core/src/model-capabilities.test.ts \
+  packages/omo-opencode/src/agents/grok-config-shape.test.ts \
+  packages/omo-opencode/src/hooks/runtime-fallback/ \
+  packages/omo-opencode/src/plugin/atlas-runtime-prompt-reconciler.test.ts \
+  packages/omo-opencode/src/plugin/sisyphus-runtime-prompt-reconciler.test.ts
+```
+
+Observed (tee: F3-units.txt):
+```
+bun test v1.3.14 (0d9b296a)
+ 324 pass
+ 0 fail
+ 762 expect() calls
+Ran 324 tests across 33 files. [4.43s]
+EXIT_CODE=0
+```
+
+### 2. typecheck — EXIT 0
+
+Command:
+```
+bun run typecheck
+```
+
+Observed (tee: F3-typecheck.txt):
+```
+$ tsgo --noEmit && bun run typecheck:script && bun run typecheck:packages
+$ tsgo --noEmit -p script/tsconfig.json
+$ tsgo --noEmit -p packages/... (all workspace packages)
+EXIT_CODE=0
+```
+
+Schema/install-local dirt check after typecheck: none
+(assets/oh-my-opencode.schema.json and packages/omo-codex/scripts/install-dist/install-local.mjs clean; no revert needed)
+
+### 3. Prior gate artifacts — PRESENT
+
+test-codex.txt:
+- EXISTS at .omo/evidence/20260718-grok45-fable-review-fixes/test-codex.txt
+- Summary: tests 510, pass 510, fail 0, duration_ms ~23525
+
+opencode-qa/isolation.txt:
+- EXISTS
+- host_session_count_before=193
+- host_session_count_after=193
+- unchanged=yes
+- before===after: CONFIRMED
+
+### 4. Hook / event proofs — PRESENT
+
+opencode-qa/system-transform-atlas-grok.json:
+```json
+{
+  "hook": "experimental.chat.system.transform",
+  "runtimeModel": "grok-4.5",
+  "grokAtlasOverlay": true
+}
+```
+Named hook proven: experimental.chat.system.transform
+
+opencode-qa/runtime-fallback-low-effort.json:
+```json
+{
+  "eventPath": "session.status -> runtime fallback",
+  "fallbackModel": "gpt-fallback",
+  "configuredReasoningEffort": "low",
+  "requestLowEffortObserved": false
+}
+```
+Named path proven: session.status -> runtime fallback
+
+opencode-qa/qa-pass.txt:
+```
+QA_PASS system_transform=experimental.chat.system.transform runtime_fallback=session.status+message.updated fallback_model=gpt-fallback
+```
+
+## CHECKLIST
+
+- [x] Unit bundle exit 0 documented (F3-units.txt)
+- [x] typecheck exit 0 documented (F3-typecheck.txt)
+- [x] isolation before===after confirmed (193===193, unchanged=yes)
+- [x] hook proofs present (system.transform + runtime-fallback)
+- [x] test-codex.txt exists (510 pass)
+- [x] Commit: N
+
+## WHY IT IS ENOUGH
+
+- Fresh re-run of the focused unit surface covering detectors, capabilities,
+  grok config shape, full runtime-fallback dir, and both prompt reconcilers
+  is green (324/324).
+- Full repository typecheck is green with no generated-file dirt.
+- Prior isolated OpenCode QA still on disk with host DB isolation proof and
+  named hook/event artifacts for system.transform and runtime-fallback.
+- Prior Codex gate artifact still on disk at 510/510 pass.
+
+## WHAT WAS OMITTED
+
+- Matrix C is not claimed.
+- No commit staged or created.
+- Plan checkboxes not marked.
+- Raw secrets/credentials not re-copied; prior pack already sanitized.
+
+## ARTIFACTS
+
+- F3-qa.txt (this file)
+- F3-units.txt
+- F3-typecheck.txt
+- test-codex.txt (prior)
+- opencode-qa/isolation.txt (prior)
+- opencode-qa/system-transform-atlas-grok.json (prior)
+- opencode-qa/runtime-fallback-low-effort.json (prior)
+- opencode-qa/qa-pass.txt (prior)

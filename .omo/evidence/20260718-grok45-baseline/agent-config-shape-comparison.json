@@ -1,0 +1,3 @@
+error: Cannot find module '@oh-my-opencode/model-core' from '/Users/darkomijic/dev-projects/oh-my-openagent/packages/omo-opencode/src/agents/types.ts'
+
+Bun v1.3.14 (macOS arm64)

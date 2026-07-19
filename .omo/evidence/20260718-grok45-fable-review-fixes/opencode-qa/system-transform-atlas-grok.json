@@ -1,0 +1,5 @@
+{
+  "hook": "experimental.chat.system.transform",
+  "runtimeModel": "grok-4.5",
+  "grokAtlasOverlay": true
+}

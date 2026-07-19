@@ -1,0 +1,82 @@
+Task 13 Local plugin rebuild note + work-log pointer
+====================================================
+
+Status: REBUILD RAN (host helper available)
+Commit: N | host/evidence only (no commit, no stage; todo 14 owns final evidence commit)
+
+When: 2026-07-19T02:14:32Z (start) through refresh completion ~2026-07-18 19:14:41 PDT
+Branch: feat/grok-4.5-basic-support
+HEAD at refresh: 6d313beaa
+Checkout: /Users/darkomijic/dev-projects/oh-my-openagent
+
+Host helper discovery
+---------------------
+- Helper path: ~/.config/opencode/doc/omo-local-plugin.sh
+  mode: -rwxr-xr-x (executable) present
+- Companion doc: ~/.config/opencode/doc/local-plugin.md present
+- Work-log pointer (host, not committed into OmO repo):
+  ~/.config/opencode/doc/grok-4.5-omo-work-log.md
+  (named in local-plugin.md Quick reference table)
+
+Rebuild command
+---------------
+Command:
+  ~/.config/opencode/doc/omo-local-plugin.sh refresh
+
+Exit code: 0
+
+What refresh did (summary):
+  1. bun run script/build.ts (full local plugin build → dist/index.js)
+  2. post-build marker checks (Grok Prometheus process law,
+     preferGrokHeuristicThinkingOptOut, xai/grok-4.5, isGrokModel)
+  3. verify local plugin wiring + freshness (opencode.json + tui.json
+     file:// checkout, dist not older than tracked sources)
+  4. doctor (local CLI from checkout): summary total=7 passed=6 failed=0
+     warnings=0 skipped=1; pluginVersion/loadedVersion 4.19.0;
+     doctor artifact host-only:
+     ~/.config/opencode/doc/doctor-local-20260718.txt
+
+dist fingerprint (key behaviors load from this bundle)
+------------------------------------------------------
+Path: dist/index.js
+Size: 5493746 bytes
+
+Before refresh:
+  sha256: 929a53e7049ab2b40c215d42833c1d38f8829d42e4960a6019a2b97627ac6e89
+  mtime:  2026-07-18T18:54:14-0700
+  (prior todo 12 build)
+
+After refresh:
+  sha256: 929a53e7049ab2b40c215d42833c1d38f8829d42e4960a6019a2b97627ac6e89
+  mtime:  2026-07-18T19:14:41-0700
+
+Note: content hash unchanged vs todo 12 build (byte-identical rebuild);
+mtime advanced by refresh rebuild. Fingerprint for key Grok 4.5 behaviors
+remains the same sha256 as task-12 evidence build.
+
+Post-build markers verified by helper (present in dist):
+  - Grok Prometheus process law
+  - preferGrokHeuristicThinkingOptOut
+  - xai/grok-4.5
+  - isGrokModel
+
+Plugin wiring (host config; not committed)
+------------------------------------------
+Plugin entry: file:///Users/darkomijic/dev-projects/oh-my-openagent
+opencode.json: points at local file:// checkout
+tui.json: includes local file:// checkout
+oh-my-openagent.jsonc: present
+Helper result: "local plugin looks current and wired"
+
+Operator note (from helper):
+  Restart OpenCode or start a new session so the process reloads dist/.
+
+MUST NOT / scope
+----------------
+- No product code edits in this todo
+- No host files committed into OmO repo
+- No git add / commit (todo 14 stages evidence)
+- No plan checkbox edits
+
+Evidence path:
+  .omo/evidence/20260718-grok45-fable-review-fixes/task-13-reload.txt

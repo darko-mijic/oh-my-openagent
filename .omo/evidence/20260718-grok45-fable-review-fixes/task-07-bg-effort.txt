@@ -1,0 +1,31 @@
+TASK: 7. Background-agent fallback: forward reasoningEffort on nextModel
+DATE: 2026-07-18
+BRANCH: feat/grok-4.5-basic-support
+
+WHAT WAS TESTED:
+- Unit surface: tryFallbackRetry in packages/omo-opencode/src/features/background-agent/fallback-retry-handler.ts
+- bun test packages/omo-opencode/src/features/background-agent/fallback-retry-handler.test.ts
+- bun test packages/omo-opencode/src/features/background-agent/
+
+WHAT WAS OBSERVED:
+- nextModel now spreads nextFallback.reasoningEffort only when defined
+- variant still always forwarded (including undefined)
+- New tests:
+  - forwards fallback reasoningEffort onto nextModel when present (high + variant high)
+  - omits reasoningEffort when entry has none (variant max preserved; no invented high)
+  - preserves variant without inventing effort (variant low)
+- fallback-retry-handler.test.ts: 31 pass / 0 fail
+- full background-agent suite: 747 pass / 0 fail
+
+WHY IT IS ENOUGH:
+- Pins machine-consumed model shape on task.model and queued LaunchInput.model
+- Covers present/absent effort and variant preservation without touching concurrency
+- Full package suite green for regression
+
+WHAT WAS OMITTED:
+- No live opencode spawn (pure unit path; no session DB touch)
+- Did not change runtime-fallback hooks (todo 6)
+
+FILES:
+- packages/omo-opencode/src/features/background-agent/fallback-retry-handler.ts
+- packages/omo-opencode/src/features/background-agent/fallback-retry-handler.test.ts

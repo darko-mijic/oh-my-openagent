@@ -1,0 +1,34 @@
+TASK 11: opencode-go/grok-4.5 context 500k
+Date: 2026-07-18
+Branch: feat/grok-4.5-basic-support
+
+WHAT WAS TESTED
+- Capability lookup for providerID=opencode-go modelID=grok-4.5 against production bundled snapshot path.
+- Expected: context limit 500000.
+
+DECISION
+- Already covered by bare-key supplemental fallback.
+- SUPPLEMENTAL_MODEL_CAPABILITIES already has bare key "grok-4.5" with limit.context=500000 (and "xai/grok-4.5").
+- getModelCapabilities({ providerID: "opencode-go", modelID: "grok-4.5", bundledSnapshot }) canonicalizes to "grok-4.5" and hits bundled-snapshot entry.
+- No provider-prefixed supplemental key "opencode-go/grok-4.5" required.
+- No multi-agent supplemental touched.
+- No change to supplemental-entries.ts.
+
+WHAT CHANGED
+- Pin only: packages/model-core/src/model-capabilities-bundled-snapshot.test.ts
+  - New test: "resolves opencode-go grok-4.5 context to 500k via bare-key snapshot fallback"
+
+WHAT WAS OBSERVED
+- TDD: wrote pin test first; suite was green immediately (no red → no production fix).
+- bun test packages/model-core/src/model-capabilities-bundled-snapshot.test.ts packages/model-core/src/model-capabilities.test.ts
+  → 22 pass, 0 fail, 116 expect() calls, exit 0
+
+WHY IT IS ENOUGH
+- Pins the production resolution path used by OpenCode Go bare model IDs.
+- Asserts canonicalModelID, family, context 500_000, and bundled-snapshot source.
+- Existing xai/bare grok-4.5 500k pins remain.
+
+OMITTED
+- No secrets/logs.
+- Did not add opencode-go/grok-4.5 supplemental (unnecessary).
+- Did not touch runtime-model-readers (todo 9).

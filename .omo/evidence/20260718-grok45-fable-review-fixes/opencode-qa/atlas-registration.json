@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Atlas - Plan Executor",
+    "model": {
+      "modelID": "gpt-fallback",
+      "providerID": "openai"
+    },
+    "description": "Orchestrates work via task() to complete ALL tasks in a todo list until fully done. (Atlas - OhMyOpenCode)"
+  }
+]

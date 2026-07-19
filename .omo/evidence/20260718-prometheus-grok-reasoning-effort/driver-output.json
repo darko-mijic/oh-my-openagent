@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "prometheusGrok": {
+    "providers": [
+      "xai",
+      "opencode"
+    ],
+    "model": "grok-4.5",
+    "variant": "high",
+    "reasoningEffort": "high"
+  },
+  "retryPayload": {
+    "model": {
+      "providerID": "xai",
+      "modelID": "grok-4.5"
+    },
+    "reasoningEffort": "high"
+  },
+  "clearedAfterNoEffortFallback": true
+}

@@ -1,0 +1,52 @@
+F4. Scope fidelity
+Date: 2026-07-18
+Branch: feat/grok-4.5-basic-support
+Scope boundary: 3abbd3f1d..HEAD only
+Reviewer: Oracle (final gate)
+
+Correction
+----------
+The prior rejection used merge-base(dev)..HEAD and therefore incorrectly included
+the already-shipped grok45-review-claim-fixes work, including Prometheus bash and
+trusted-scaffold commits. Those commits precede boundary 3abbd3f1d and are not
+part of this plan's scope.
+
+Commands checked
+----------------
+git diff --name-only 3abbd3f1d..HEAD
+git log --format='%H %s' 3abbd3f1d..HEAD
+git diff --check 3abbd3f1d..HEAD
+
+Observed plan commits
+---------------------
+The range contains exactly the nine fable-review-fixes commits:
+- 5d8cf4ecf fix(model-core): tighten isGrok45Model non-reasoning and drop grok-build-latest
+- 0d7f8a0df test(model-core): pin opencode-go grok-4.5 context via bare-key fallback
+- 2d27f1123 fix(agents): omit Sisyphus Grok factory reasoningEffort
+- 841aaebf6 fix(atlas): reconcile runtime prompt on model family switch
+- 9d27fe38f fix(agents): give Grok Junior tool-agnostic file edit guidance
+- d6becf04b fix(model-core): separate reasoning-derived thinking from explicit for Grok
+- 3ee016d9d fix(agents): omit Junior Grok default reasoningEffort
+- ceb182b69 fix(background-agent): preserve fallback reasoningEffort on retry
+- 6d313beaa fix(runtime-fallback): index-selected effort/variant with lifecycle cleanup
+
+Scope-out results
+-----------------
+- docs/**: absent
+- Prometheus bash / trusted-scaffold / scaffold-plan: absent
+- Hephaestus Grok registration: absent
+- assets/oh-my-opencode.schema.json: absent
+- packages/omo-codex/scripts/install-dist/install-local.mjs: absent
+- Host ~/.config/opencode paths: absent
+- git diff --check: clean
+
+The range changes model-core and OpenCode agent/runtime-fallback surfaces required
+by this plan. `packages/omo-opencode/src/hooks/runtime-fallback/AGENTS.md` is a
+local implementation instruction file, not user-facing `docs/**` or a root README.
+
+Working-tree note
+-----------------
+Staged evidence and untracked `.local-ignore/` / `.opencode/lsp.json` are not
+committed changes in `3abbd3f1d..HEAD`. They must remain outside any product commit.
+
+VERDICT: APPROVE

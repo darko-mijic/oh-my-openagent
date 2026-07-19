@@ -1,0 +1,1 @@
+TEXT=CONFIG_PATH_OK — Grok

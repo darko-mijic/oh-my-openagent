@@ -1,0 +1,95 @@
+Task 06: Runtime-fallback indexed effort and variant preservation
+Date: 2026-07-18
+Branch: feat/grok-4.5-basic-support
+
+WHAT WAS TESTED
+
+1. Focused runtime-fallback suite
+Command:
+  bun test packages/omo-opencode/src/hooks/runtime-fallback/
+Observed:
+  bun test v1.3.14 (0d9b296a)
+  259 pass
+  0 fail
+  467 expect() calls
+  Ran 259 tests across 28 files. [4.44s]
+
+The suite pins:
+- SelectedFallback carries selectedIndex and normalized object entry settings.
+- Exact duplicate xai/grok-4.5 entries advance from index 0 low effort to index 1 high effort.
+- Failed/cooldown keys include the selected index.
+- Auto-retry timeout snapshot/restore preserves indexed keys and reselects duplicate index 1.
+- Timeout dispatch receives SelectedFallback settings rather than a reconstructed model string.
+- Selected effort low wins over agent effort high.
+- xai/grok-4.5(low) resolves low effort and never receives the Grok high default.
+- Bare xai/grok-4.5 with no effort resolves the high default.
+- xai/grok-build-latest does not receive the Grok 4.5 high default.
+- Subsequent chat turns restore model and variant while effort is applied through session prompt params.
+- Manual model change, primary restoration, and session deletion clear runtime-fallback-owned prompt params.
+
+2. Repository typecheck
+Command:
+  bun run typecheck
+Observed:
+  tsgo --noEmit passed.
+  script package typecheck passed.
+  all workspace package typechecks, including packages/omo-opencode, passed.
+  Exit code: 0.
+
+3. Strict TypeScript audit
+Command:
+  bun run /Users/darkomijic/dev-projects/oh-my-openagent/dist/skills/programming/scripts/typescript/check-no-excuse-rules.ts packages/omo-opencode/src/hooks/runtime-fallback
+Observed:
+  No violations in 59 file(s).
+  Exit code: 0.
+
+4. Full build
+Command:
+  bun run build
+Observed:
+  Main plugin bundle included 1917 modules.
+  Declaration generation completed.
+  Final line: build: all steps completed.
+  Exit code: 0.
+
+5. Real OpenCode lifecycle surface in isolated XDG sandbox
+Surface:
+  OpenCode 1.18.3 server loading local file:///Users/darkomijic/dev-projects/oh-my-openagent/dist/index.js.
+Actions:
+  Started password-protected opencode serve with isolated HOME and XDG data/config/cache/state.
+  Enabled runtime_fallback and configured an object fallback with variant low and reasoningEffort low.
+  Opened the real /event SSE stream.
+  Created and deleted a session through the HTTP API.
+Observed:
+  Configured plugin: ["file:///Users/darkomijic/dev-projects/oh-my-openagent/dist/index.js"]
+  Observed lifecycle events: session.created,session.deleted
+  Created/deleted isolated session: ses_0881184eaffeePhsML4ivc4csJ
+  Isolated session count after deletion: 0
+  Real DB sessions before: 190
+  Real DB sessions after: 190
+  Exit code: 0.
+
+6. Static invariants
+Commands:
+  git grep -n "indexOf(nextModel)\|getFallbackModelsForSession\|getRawFallbackModelsForSession" -- packages/omo-opencode/src/hooks/runtime-fallback
+  git grep -n "flattenToFallbackModelStrings" -- packages/omo-opencode/src/hooks/runtime-fallback packages/model-core/src/model-resolver.ts
+Observed:
+  No runtime-fallback references to indexOf(nextModel), getFallbackModelsForSession, or private getRawFallbackModelsForSession.
+  flattenToFallbackModelStrings remains only in packages/model-core/src/model-resolver.ts and was not changed.
+
+7. Diagnostics and size gate
+Observed:
+  Changed production files returned no TypeScript LSP errors when diagnostics completed.
+  Directory diagnostics reported no errors in changed files; remaining reported errors were pre-existing fixtures in untouched tests.
+  event-handler.ts was reduced from 262 to 217 pure LOC by extracting session-created-handler.ts at 56 pure LOC.
+  All other changed production files are below 250 pure LOC.
+
+WHY IT IS ENOUGH
+
+The focused suite exercises each locked behavior at the state, timeout, dispatch, payload, chat-message, and cleanup seams. The full typecheck and build prove the SelectedFallback signature is threaded through every compiled producer. The real isolated OpenCode server proves the rebuilt local plugin loads and receives the lifecycle events that drive runtime-fallback, while the unchanged host DB count proves QA isolation. Static searches prove the prohibited advancement and private/raw lookup paths are absent and the delegate-task flatten helper was untouched.
+
+WHAT WAS OMITTED
+
+- No real provider request was sent because QA used an offline isolated OpenCode sandbox; deterministic tests cover provider failure, retry, timeout, and effort payload behavior.
+- Raw server logs and environment dumps were not copied because they can contain machine-local paths and configuration. Only reviewer-relevant observations are recorded above.
+- TUI smoke was omitted because this change has no TUI rendering behavior and tmux is unavailable in this environment; the HTTP API plus SSE stream is the matching lifecycle surface.

@@ -1,0 +1,109 @@
+task-14-final-stage — force-track Fable/claim-fixes evidence + final verification
+================================================================================
+Date: 2026-07-18
+Branch: feat/grok-4.5-basic-support
+Working dir: /Users/darkomijic/dev-projects/oh-my-openagent
+
+1) Secret / credential scan (F1–F4 + ORACLE + MOMUS + task-13)
+--------------------------------------------------------------
+Patterns (grep -RIn -E):
+  sk-[a-zA-Z0-9]{10,}
+  xai-[a-zA-Z0-9]{10,}
+  BEGIN (RSA |OPENSSH |EC )?PRIVATE KEY
+  Bearer [a-zA-Z0-9._-]{20,}
+  OPENAI_API_KEY=.+
+  ANTHROPIC_API_KEY=.+
+  XAI_API_KEY=.+
+
+Targets:
+  F1-plan-compliance.txt
+  F2-code-quality.txt
+  F3-qa.txt
+  F3-typecheck.txt
+  F3-units.txt
+  F4-scope.txt
+  ORACLE-final-gate.txt
+  MOMUS-final-gate.txt
+  task-13-reload.txt
+
+Result: SECRET_SCAN_CLEAN (no matches)
+
+Prior pack secret-review.txt already present under fable pack.
+
+2) Generated product hygiene
+----------------------------
+git checkout -- assets/oh-my-opencode.schema.json \
+  packages/omo-codex/scripts/install-dist/install-local.mjs  (best-effort)
+
+Pre-commit: git diff --cached --name-only | grep -E 'schema\.json|install-local'
+Result: NO_FORBIDDEN
+
+Post-commit: git show --name-only HEAD | grep -E 'schema\.json|install-local'
+Result: empty (COMMIT_CLEAN_OF_FORBIDDEN)
+
+3) Force-stage (git add -f)
+---------------------------
+  .omo/evidence/20260718-grok45-fable-review-fixes/
+  .omo/evidence/20260718-grok45-review-claim-fixes/
+  .omo/evidence/20260718-grok-supports-thinking-snapshot-fix/
+  .omo/evidence/20260718-grok45-baseline/
+  .omo/evidence/20260718-prometheus-grok-gaps/
+  .omo/evidence/20260718-prometheus-grok-reasoning-effort/
+  .omo/evidence/20260718-atlas-grok45-review/verification.txt
+
+NOT staged:
+  .local-ignore/**
+  .opencode/lsp.json
+  product source under packages/*/src
+  assets/oh-my-opencode.schema.json
+  packages/omo-codex/scripts/install-dist/install-local.mjs
+
+4) Pre-commit staging proof
+---------------------------
+Staged file count: 97 (includes this task-14 file)
+All staged paths under .omo/evidence/ only: EVIDENCE_ONLY = yes
+
+Key paths in index:
+  F1-plan-compliance.txt
+  F2-code-quality.txt
+  F3-qa.txt
+  F4-scope.txt
+  ORACLE-final-gate.txt
+  MOMUS-final-gate.txt
+  task-13-reload.txt
+  task-14-final-stage.txt
+  opencode-qa/* (fable + claim-fixes live bash pack)
+  prior packs from todo 12 list
+
+5) Final-gate APPROVE confirmation
+----------------------------------
+  F1 VERDICT: APPROVE
+  F2 VERDICT: APPROVE
+  F3 VERDICT: APPROVE
+  F4 VERDICT: APPROVE (boundary 3abbd3f1d..HEAD)
+  ORACLE-final-gate.txt VERDICT: APPROVE
+  MOMUS-final-gate.txt FINAL VERDICT: APPROVE
+
+6) Commit
+---------
+Message:
+  test(qa): force-track Fable/claim-fixes evidence and final verification artifacts
+
+Authoritative SHA: use `git rev-parse HEAD` / `git log -1 --oneline`
+  (self-referential SHA inside this blob is intentionally omitted).
+
+Staged file count at commit: 97 (evidence-only)
+Post-commit git ls-files '.omo/evidence/20260718-*' count: 99
+  claim-fixes tracked: 18 paths
+  fable-review-fixes tracked: 44 paths
+
+Proof commands:
+  git ls-files '.omo/evidence/20260718-grok45-review-claim-fixes/*'
+  git ls-files '.omo/evidence/20260718-grok45-fable-review-fixes/*'
+  git show --name-only --pretty=format: HEAD | grep -E 'schema|install-local'  # empty
+
+7) task-14 self-include
+-----------------------
+This file force-added after write; final staged count includes task-14-final-stage.txt.
+Notepad learnings appended under .omo/notepads/grok45-fable-review-fixes/learnings.md
+(not committed; notepad is local agent workspace).

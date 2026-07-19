@@ -1,0 +1,183 @@
+data: {"id":"evt_f78227472001Dvv52nq467uVV6","type":"server.connected","properties":{}}
+
+data: {"id":"evt_f7822790d001XWyduhQ5yjgD3p","type":"session.created","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"ses_087dd86f3ffeeAWExl1Fwo8QWA","slug":"eager-orchid","version":"1.18.3","projectID":"global","directory":"/private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","path":"private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","title":"New session - 2026-07-19T02:09:12.972Z","permission":[{"permission":"question","pattern":"*","action":"deny"},{"permission":"plan_enter","pattern":"*","action":"deny"},{"permission":"plan_exit","pattern":"*","action":"deny"}],"cost":0,"tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},"time":{"created":1784426952972,"updated":1784426952972}}}}
+
+data: {"id":"evt_f7822799e001wyQFjh8d1DkJio","type":"session.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"ses_087dd86f3ffeeAWExl1Fwo8QWA","slug":"eager-orchid","projectID":"global","directory":"/private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","path":"private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","title":"New session - 2026-07-19T02:09:12.972Z","agent":"Atlas - Plan Executor","model":{"id":"grok-4.5","providerID":"openai","variant":"default"},"version":"1.18.3","cost":0,"tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},"permission":[{"permission":"question","pattern":"*","action":"deny"},{"permission":"plan_enter","pattern":"*","action":"deny"},{"permission":"plan_exit","pattern":"*","action":"deny"}],"time":{"created":1784426952972,"updated":1784426953117}}}}
+
+data: {"id":"evt_f78227aac001BqESkhCbDWi756","type":"tui.toast.show","properties":{"title":"⚠️ Provider Cache Missing","message":"Model filtering disabled. RESTART OpenCode to enable full functionality.","variant":"warning","duration":6000}}
+
+data: {"id":"evt_f782279b7001KxGNTCTtszwRm1","type":"message.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"msg_f7822799d001iesyaisk5SEUOk","role":"user","sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","time":{"created":1784426953117},"agent":"Atlas - Plan Executor","model":{"providerID":"openai","modelID":"grok-4.5"}}}}
+
+data: {"id":"evt_f78227ada001OhjXp84ez3wP9T","type":"message.part.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","part":{"type":"text","text":"\"Reply exactly QA_FALLBACK_OK.\"","messageID":"msg_f7822799d001iesyaisk5SEUOk","sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","id":"prt_f782279a5001F6D30TH3IUg0Mu"},"time":1784426953434}}
+
+data: {"id":"evt_f78227ade001ScuaGOIuiEw1Lo","type":"session.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"ses_087dd86f3ffeeAWExl1Fwo8QWA","slug":"eager-orchid","projectID":"global","directory":"/private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","path":"private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","title":"New session - 2026-07-19T02:09:12.972Z","agent":"Atlas - Plan Executor","model":{"id":"grok-4.5","providerID":"openai","variant":"default"},"version":"1.18.3","cost":0,"tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},"permission":[{"permission":"question","pattern":"*","action":"deny"},{"permission":"plan_enter","pattern":"*","action":"deny"},{"permission":"plan_exit","pattern":"*","action":"deny"}],"time":{"created":1784426952972,"updated":1784426953437}}}}
+
+data: {"id":"evt_f78227ae4001ivr0XroUPfSj3c","type":"session.status","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","status":{"type":"busy"}}}
+
+data: {"id":"evt_f78227ae70010c9OysJ7aMqJj2","type":"message.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"msg_f78227ae7001QS7CWTOjSTZ6Ss","parentID":"msg_f7822799d001iesyaisk5SEUOk","role":"assistant","mode":"Atlas - Plan Executor","agent":"Atlas - Plan Executor","path":{"cwd":"/private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","root":"/"},"cost":0,"tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},"modelID":"grok-4.5","providerID":"openai","time":{"created":1784426953447},"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA"}}}
+
+data: {"id":"evt_f78227b8a001cCEXJhKIjODOiw","type":"session.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"ses_087dd86f3ffeeAWExl1Fwo8QWA","slug":"eager-orchid","projectID":"global","directory":"/private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","path":"private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","title":"QA_FALLBACK_OK","agent":"Atlas - Plan Executor","model":{"id":"grok-4.5","providerID":"openai","variant":"default"},"version":"1.18.3","cost":0,"tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},"permission":[{"permission":"question","pattern":"*","action":"deny"},{"permission":"plan_enter","pattern":"*","action":"deny"},{"permission":"plan_exit","pattern":"*","action":"deny"}],"time":{"created":1784426952972,"updated":1784426953437}}}}
+
+data: {"id":"evt_f78227f0f0017LFI1CR0BIvST3","type":"session.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"ses_087dd86f3ffeeAWExl1Fwo8QWA","slug":"eager-orchid","projectID":"global","directory":"/private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","path":"private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","title":"QA_FALLBACK_OK","agent":"Atlas - Plan Executor","model":{"id":"grok-4.5","providerID":"openai","variant":"default"},"version":"1.18.3","summary":{"additions":0,"deletions":0,"files":0},"cost":0,"tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},"permission":[{"permission":"question","pattern":"*","action":"deny"},{"permission":"plan_enter","pattern":"*","action":"deny"},{"permission":"plan_exit","pattern":"*","action":"deny"}],"time":{"created":1784426952972,"updated":1784426954510}}}}
+
+data: {"id":"evt_f78227f11001HuF0lFq7TJ0ehv","type":"session.diff","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","diff":[]}}
+
+data: {"id":"evt_f78227f12001xr4zJtX56frfAg","type":"message.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"role":"user","time":{"created":1784426953117},"agent":"Atlas - Plan Executor","model":{"providerID":"openai","modelID":"grok-4.5"},"id":"msg_f7822799d001iesyaisk5SEUOk","sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","summary":{"diffs":[]}}}}
+
+data: {"id":"evt_f7822805b001P60mYzRNYe0ljz","type":"plugin.added","properties":{"id":"core/config-reference"}}
+
+data: {"id":"evt_f7822805c001OnbelKT3YqER9t","type":"plugin.added","properties":{"id":"agent"}}
+
+data: {"id":"evt_f7822805c0027hlpBFa2fyhPHv","type":"plugin.added","properties":{"id":"command"}}
+
+data: {"id":"evt_f7822805d001uX4G1U8wB0exup","type":"plugin.added","properties":{"id":"skill"}}
+
+data: {"id":"evt_f7822805e001cTCOLCy2uqYsWF","type":"plugin.added","properties":{"id":"models-dev"}}
+
+data: {"id":"evt_f7822805f001Z63BuU7ZS5RDfv","type":"plugin.added","properties":{"id":"config-agent"}}
+
+data: {"id":"evt_f7822805f002IYRN7ITXCmo9kd","type":"plugin.added","properties":{"id":"config-command"}}
+
+data: {"id":"evt_f7822805f003qH8TImN3SvmeZw","type":"plugin.added","properties":{"id":"config-skill"}}
+
+data: {"id":"evt_f78228060001q2meEVrLqzZ6t7","type":"plugin.added","properties":{"id":"alibaba"}}
+
+data: {"id":"evt_f78228060002C2n59C6Gwz9YLA","type":"plugin.added","properties":{"id":"amazon-bedrock"}}
+
+data: {"id":"evt_f78228061001wO7TL6vvLhUi8U","type":"plugin.added","properties":{"id":"anthropic"}}
+
+data: {"id":"evt_f78228061002kMg1e5Fc4Q0GoZ","type":"plugin.added","properties":{"id":"azure-cognitive-services"}}
+
+data: {"id":"evt_f7822811e001a40KLnk47iy1GL","type":"plugin.added","properties":{"id":"azure"}}
+
+data: {"id":"evt_f7822811f001stYTO7SSx4AMfC","type":"plugin.added","properties":{"id":"cerebras"}}
+
+data: {"id":"evt_f7822811f002BthglSivT9Y3cf","type":"plugin.added","properties":{"id":"cloudflare-ai-gateway"}}
+
+data: {"id":"evt_f7822811f00373vr0RqG0e1VhN","type":"plugin.added","properties":{"id":"cloudflare-workers-ai"}}
+
+data: {"id":"evt_f7822811f004rtKf7SkEVMHMF0","type":"plugin.added","properties":{"id":"cohere"}}
+
+data: {"id":"evt_f7822811f005dDDVJHvlCqdOI4","type":"plugin.added","properties":{"id":"deepinfra"}}
+
+data: {"id":"evt_f78228120001FFc6N0OT3p0Hc3","type":"plugin.added","properties":{"id":"gateway"}}
+
+data: {"id":"evt_f78228120002bAlAlK6uzxjiAe","type":"plugin.added","properties":{"id":"github-copilot"}}
+
+data: {"id":"evt_f78228120003QloQLmf4qPEWur","type":"plugin.added","properties":{"id":"gitlab"}}
+
+data: {"id":"evt_f782281200041vI7tNZk5l5rRa","type":"plugin.added","properties":{"id":"google"}}
+
+data: {"id":"evt_f78228121001bzkhYUXQXGaaEG","type":"plugin.added","properties":{"id":"google-vertex-anthropic"}}
+
+data: {"id":"evt_f78228121002yPPTQ8zlR7A5MK","type":"plugin.added","properties":{"id":"google-vertex"}}
+
+data: {"id":"evt_f78228137001hDIdBUfYPZtjmG","type":"plugin.added","properties":{"id":"groq"}}
+
+data: {"id":"evt_f78228137002QAzQBovQ3Yd3Wv","type":"plugin.added","properties":{"id":"kilo"}}
+
+data: {"id":"evt_f78228138001QF1kTEa6YeladN","type":"plugin.added","properties":{"id":"llmgateway"}}
+
+data: {"id":"evt_f78228138002RPTknS7fErMBYq","type":"plugin.added","properties":{"id":"mistral"}}
+
+data: {"id":"evt_f78228138003LSIjM1HadtbeW5","type":"plugin.added","properties":{"id":"nvidia"}}
+
+data: {"id":"evt_f7822813b001RPaUqZD4iRu8IO","type":"plugin.added","properties":{"id":"opencode"}}
+
+data: {"id":"evt_f7822813b002G3mYfXOpAKYp2N","type":"plugin.added","properties":{"id":"snowflake-cortex"}}
+
+data: {"id":"evt_f7822813b00326cT5VK8HqnHp4","type":"plugin.added","properties":{"id":"openai-compatible"}}
+
+data: {"id":"evt_f7822813c001A7BoKyswjRDYjr","type":"plugin.added","properties":{"id":"openai"}}
+
+data: {"id":"evt_f7822813d001ZVczxvcO8O3JCQ","type":"plugin.added","properties":{"id":"openrouter"}}
+
+data: {"id":"evt_f7822813d0020TjJNXcNfZiu5R","type":"plugin.added","properties":{"id":"perplexity"}}
+
+data: {"id":"evt_f7822813d0033vJitgaqmo6ik5","type":"plugin.added","properties":{"id":"sap-ai-core"}}
+
+data: {"id":"evt_f782281a2001G7uKJYDtJy507U","type":"catalog.updated","properties":{}}
+
+data: {"id":"evt_f782281a2002Zd8bM3x8y7ld5e","type":"plugin.added","properties":{"id":"togetherai"}}
+
+data: {"id":"evt_f782281a200311875uPCbRCFeM","type":"plugin.added","properties":{"id":"vercel"}}
+
+data: {"id":"evt_f782281a30015W7lyV1f3jI7vt","type":"plugin.added","properties":{"id":"venice"}}
+
+data: {"id":"evt_f782281a3002thjJIt0N2ZUP6Y","type":"plugin.added","properties":{"id":"xai"}}
+
+data: {"id":"evt_f782281a3003UEEEjcVKu4M0Wf","type":"plugin.added","properties":{"id":"zenmux"}}
+
+data: {"id":"evt_f782281a30041KOUKbP0Yoat4c","type":"plugin.added","properties":{"id":"dynamic-provider"}}
+
+data: {"id":"evt_f782281a50018IRWbm7CNKx5X3","type":"plugin.added","properties":{"id":"config-plugin"}}
+
+data: {"id":"evt_f782281a5002fkIQbLnGdYAe7i","type":"plugin.added","properties":{"id":"config-provider"}}
+
+data: {"id":"evt_f782281a5003bHEbsdE4v5Bxxg","type":"plugin.added","properties":{"id":"variant"}}
+
+data: {"id":"evt_f782281a6001v4i1SkjM4U90P3","type":"reference.updated","properties":{}}
+
+data: {"id":"evt_f782281bd001aqsuREPnYUCCTZ","type":"integration.updated","properties":{}}
+
+data: {"id":"evt_f782281f9001qC6sdRm7aQuMTd","type":"catalog.updated","properties":{}}
+
+data: {"id":"evt_f782281fd001IDYtWV4Bp8s5rU","type":"session.status","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","status":{"type":"busy"}}}
+
+data: {"id":"evt_f7822821a001Npng2b25nc6kmN","type":"session.status","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","status":{"type":"retry","attempt":1,"message":"QA rate limit","next":1784426957290}}}
+
+data: {"id":"evt_f7822821f0019kb60otglcJvUa","type":"message.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"msg_f78227ae7001QS7CWTOjSTZ6Ss","parentID":"msg_f7822799d001iesyaisk5SEUOk","role":"assistant","mode":"Atlas - Plan Executor","agent":"Atlas - Plan Executor","path":{"cwd":"/private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","root":"/"},"cost":0,"tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},"modelID":"grok-4.5","providerID":"openai","time":{"created":1784426953447,"completed":1784426955295},"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA"}}}
+
+data: {"id":"evt_f78228222001L3t6gJ5PyACTWb","type":"session.status","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","status":{"type":"idle"}}}
+
+data: {"id":"evt_f78228223001TkcbmOR1hbODC7","type":"session.idle","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA"}}
+
+data: {"id":"evt_f782283c1001KuqI1HPkESV6U0","type":"session.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"ses_087dd86f3ffeeAWExl1Fwo8QWA","slug":"eager-orchid","projectID":"global","directory":"/private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","path":"private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","title":"QA_FALLBACK_OK","agent":"Atlas - Plan Executor","model":{"id":"gpt-fallback","providerID":"openai","variant":"default"},"version":"1.18.3","summary":{"additions":0,"deletions":0,"files":0},"cost":0,"tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},"permission":[{"permission":"question","pattern":"*","action":"deny"},{"permission":"plan_enter","pattern":"*","action":"deny"},{"permission":"plan_exit","pattern":"*","action":"deny"}],"time":{"created":1784426952972,"updated":1784426955712}}}}
+
+data: {"id":"evt_f782283d6001xbfgLO0v2hiHzU","type":"tui.toast.show","properties":{"title":"Model Fallback","message":"Switched to gpt-fallback for next request","variant":"warning","duration":5000}}
+
+data: {"id":"evt_f782283db001mbWS9WVjpHcLgZ","type":"message.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"msg_f7822799d001iesyaisk5SEUOk","role":"user","sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","time":{"created":1784426955712},"agent":"Atlas - Plan Executor","model":{"providerID":"openai","modelID":"gpt-fallback"}}}}
+
+data: {"id":"evt_f782283dd001Mwr03cJUhPnPpt","type":"message.part.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","part":{"id":"prt_f782279a5001F6D30TH3IUg0Mu","type":"text","text":"\"Reply exactly QA_FALLBACK_OK.\"","messageID":"msg_f7822799d001iesyaisk5SEUOk","sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA"},"time":1784426955741}}
+
+data: {"id":"evt_f782283df0010OavGBJ1wT3KNi","type":"session.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"ses_087dd86f3ffeeAWExl1Fwo8QWA","slug":"eager-orchid","projectID":"global","directory":"/private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","path":"private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","title":"QA_FALLBACK_OK","agent":"Atlas - Plan Executor","model":{"id":"gpt-fallback","providerID":"openai","variant":"default"},"version":"1.18.3","summary":{"additions":0,"deletions":0,"files":0},"cost":0,"tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},"permission":[{"permission":"question","pattern":"*","action":"deny"},{"permission":"plan_enter","pattern":"*","action":"deny"},{"permission":"plan_exit","pattern":"*","action":"deny"}],"time":{"created":1784426952972,"updated":1784426955742}}}}
+
+data: {"id":"evt_f782283e7001pmHWN581fh4rpF","type":"session.status","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","status":{"type":"busy"}}}
+
+data: {"id":"evt_f782283e80016HEWOwymTE60aN","type":"message.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"msg_f782283e8001gZrcsSmIrhSY53","parentID":"msg_f7822799d001iesyaisk5SEUOk","role":"assistant","mode":"Atlas - Plan Executor","agent":"Atlas - Plan Executor","path":{"cwd":"/private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","root":"/"},"cost":0,"tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},"modelID":"gpt-fallback","providerID":"openai","time":{"created":1784426955752},"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA"}}}
+
+data: {"id":"evt_f782283f0001CDp13CJ6Vgda4N","type":"tui.toast.show","properties":{"title":"⚠️ Provider Cache Missing","message":"Model filtering disabled. RESTART OpenCode to enable full functionality.","variant":"warning","duration":6000}}
+
+data: {"id":"evt_f782284070015vF0r1jDDpXR4X","type":"session.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"ses_087dd86f3ffeeAWExl1Fwo8QWA","slug":"eager-orchid","projectID":"global","directory":"/private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","path":"private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","title":"QA_FALLBACK_OK","agent":"Atlas - Plan Executor","model":{"id":"gpt-fallback","providerID":"openai","variant":"default"},"version":"1.18.3","summary":{"additions":0,"deletions":0,"files":0},"cost":0,"tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},"permission":[{"permission":"question","pattern":"*","action":"deny"},{"permission":"plan_enter","pattern":"*","action":"deny"},{"permission":"plan_exit","pattern":"*","action":"deny"}],"time":{"created":1784426952972,"updated":1784426955782}}}}
+
+data: {"id":"evt_f78228408001ZPAbcIRh7Vrgvr","type":"session.diff","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","diff":[]}}
+
+data: {"id":"evt_f78228409001byY1DunJkIuA8U","type":"message.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"role":"user","time":{"created":1784426955712},"agent":"Atlas - Plan Executor","model":{"providerID":"openai","modelID":"gpt-fallback"},"id":"msg_f7822799d001iesyaisk5SEUOk","sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","summary":{"diffs":[]}}}}
+
+data: {"id":"evt_f78228423001xEj8To8qblx5Xs","type":"session.status","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","status":{"type":"busy"}}}
+
+data: {"id":"evt_f782284300015JK8RL9KjjvNXP","type":"message.part.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","part":{"id":"prt_f7822842f001WApE1qfCXSGEVI","messageID":"msg_f782283e8001gZrcsSmIrhSY53","sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","type":"step-start"},"time":1784426955823}}
+
+data: {"id":"evt_f78228432001SD7pMQMEQ2vE3m","type":"message.part.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","part":{"id":"prt_f78228432001fWSQoihU1c8Bba","messageID":"msg_f782283e8001gZrcsSmIrhSY53","sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","type":"text","text":"","time":{"start":1784426955826},"metadata":{"openai":{"itemId":"msg_3"}}},"time":1784426955826}}
+
+data: {"id":"evt_f782284350018cYFzIIJd2p24V","type":"message.part.delta","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","messageID":"msg_f782283e8001gZrcsSmIrhSY53","partID":"prt_f78228432001fWSQoihU1c8Bba","field":"text","delta":"QA_FALLBACK_OK"}}
+
+data: {"id":"evt_f782284350028B4lKKL4YpFUcV","type":"message.part.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","part":{"id":"prt_f78228432001fWSQoihU1c8Bba","messageID":"msg_f782283e8001gZrcsSmIrhSY53","sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","type":"text","text":"QA_FALLBACK_OK","time":{"start":1784426955826,"end":1784426955829},"metadata":{"openai":{"itemId":"msg_3"}}},"time":1784426955829}}
+
+data: {"id":"evt_f78228439001hGEvv5p7nf0onL","type":"message.part.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","part":{"id":"prt_f78228439001fQzIjMRfMILiQr","reason":"stop","messageID":"msg_f782283e8001gZrcsSmIrhSY53","sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","type":"step-finish","tokens":{"total":15,"input":10,"output":5,"reasoning":0,"cache":{"write":0,"read":0}},"cost":0},"time":1784426955833}}
+
+data: {"id":"evt_f7822843c001yqZakSEPaO5JLI","type":"message.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"msg_f782283e8001gZrcsSmIrhSY53","parentID":"msg_f7822799d001iesyaisk5SEUOk","role":"assistant","mode":"Atlas - Plan Executor","agent":"Atlas - Plan Executor","path":{"cwd":"/private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","root":"/"},"cost":0,"tokens":{"total":15,"input":10,"output":5,"reasoning":0,"cache":{"write":0,"read":0}},"modelID":"gpt-fallback","providerID":"openai","time":{"created":1784426955752,"completed":1784426955839},"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","finish":"stop"}}}
+
+data: {"id":"evt_f7822843f001hdxa9zGvqNEOSz","type":"message.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"msg_f782283e8001gZrcsSmIrhSY53","parentID":"msg_f7822799d001iesyaisk5SEUOk","role":"assistant","mode":"Atlas - Plan Executor","agent":"Atlas - Plan Executor","path":{"cwd":"/private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","root":"/"},"cost":0,"tokens":{"total":15,"input":10,"output":5,"reasoning":0,"cache":{"write":0,"read":0}},"modelID":"gpt-fallback","providerID":"openai","time":{"created":1784426955752,"completed":1784426955839},"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","finish":"stop"}}}
+
+data: {"id":"evt_f78228440001SiIkbtr3JU2tg4","type":"session.status","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","status":{"type":"busy"}}}
+
+data: {"id":"evt_f78228442001uUDeyjDf1YqogB","type":"session.status","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","status":{"type":"idle"}}}
+
+data: {"id":"evt_f78228442002UgKrFc2RPOz37D","type":"session.idle","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA"}}
+
+data: {"id":"evt_f78228445001ZCwCshzF0crXDw","type":"session.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"id":"ses_087dd86f3ffeeAWExl1Fwo8QWA","slug":"eager-orchid","projectID":"global","directory":"/private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","path":"private/var/folders/s3/vw7jp6q16zg617g7x7j8lnw40000gn/T/oqa-xdg.XXXXXX.ll1DnSBqBG/proj","title":"QA_FALLBACK_OK","agent":"Atlas - Plan Executor","model":{"id":"gpt-fallback","providerID":"openai","variant":"default"},"version":"1.18.3","summary":{"additions":0,"deletions":0,"files":0},"cost":0,"tokens":{"input":10,"output":5,"reasoning":0,"cache":{"read":0,"write":0}},"permission":[{"permission":"question","pattern":"*","action":"deny"},{"permission":"plan_enter","pattern":"*","action":"deny"},{"permission":"plan_exit","pattern":"*","action":"deny"}],"time":{"created":1784426952972,"updated":1784426955845}}}}
+
+data: {"id":"evt_f78228447001WEbrhrQC1n4oTu","type":"session.diff","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","diff":[]}}
+
+data: {"id":"evt_f78228448001FG173PE5qEOpFL","type":"message.updated","properties":{"sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA","info":{"role":"user","time":{"created":1784426955712},"agent":"Atlas - Plan Executor","model":{"providerID":"openai","modelID":"gpt-fallback"},"summary":{"diffs":[]},"id":"msg_f7822799d001iesyaisk5SEUOk","sessionID":"ses_087dd86f3ffeeAWExl1Fwo8QWA"}}}

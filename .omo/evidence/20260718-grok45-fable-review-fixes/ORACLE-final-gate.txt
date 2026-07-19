@@ -1,0 +1,70 @@
+Oracle Final Gate
+=================
+Plan: grok45-fable-review-fixes
+Date: 2026-07-18
+Review boundary: 3abbd3f1d..HEAD
+
+Goal and Must-have coverage
+---------------------------
+1. Junior FILE_EDIT guidance:
+   APPROVE. task-03-junior-guidance.txt records constant-based Grok-vs-GPT
+   assertions, 20 pass / 0 fail.
+
+2. Detector non-reasoning exclusion:
+   APPROVE. task-02-detector.txt records 16 pass / 0 fail and pins normalized
+   non-reasoning SKUs false.
+
+3. Drop grok-build-latest as a 4.5 alias:
+   APPROVE. task-02-detector.txt pins it false and records alias/JSDoc cleanup.
+
+4. Runtime/background effort preservation:
+   APPROVE. task-06-runtime-effort.txt records 259 pass / 0 fail, indexed
+   duplicate selection, timeout snapshot/restore, effort precedence, variant
+   restoration, and lifecycle cleanup. task-07-bg-effort.txt records 747 pass /
+   0 fail for background retry propagation. task-08-effort-suite.txt records
+   790 pass / 0 fail.
+
+5. Reasoning-derived versus explicit thinking:
+   APPROVE. task-09-thinking-live.txt records 105 pass / 0 fail and confirms
+   Grok reasoning-only metadata does not imply thinking while explicit runtime
+   thinking keys win.
+
+6. Sisyphus and Junior factory effort omission:
+   APPROVE. task-04-sisyphus-omit-effort.txt records Sisyphus omission with
+   override preservation, 13 pass / 0 fail. task-05-junior-omit-effort.txt
+   records Junior omission, override preservation, GPT medium retention, and
+   79 pass / 0 fail.
+
+7. Atlas runtime family prompt rebuild:
+   APPROVE. task-10-atlas-runtime.txt records 15 pass / 0 fail for full rebuild,
+   Grok overlay, same-family no-op, override retention, and system-transform
+   wiring. Isolated live QA also records the Grok Atlas system transform.
+
+8. opencode-go Grok 4.5 context:
+   APPROVE. task-11-opencode-go-context.txt records a production bundled-path
+   500,000-context pin, 22 pass / 0 fail, without unnecessary supplemental data.
+
+9. Evidence hygiene:
+   APPROVE. task-01 confirms generated schema/install-local cleanliness;
+   task-12 records the isolated OpenCode proof, Codex gate, and secret review.
+   The staged index contains the fable and claim-fixes evidence artifacts, while
+   cached paths exclude schema.json and install-local.mjs.
+
+Final-gate spot checks
+----------------------
+- F1: APPROVE, 9/9 Must-haves mapped to evidence.
+- F2: APPROVE, including no fallback-state indexOf advancement and no
+  reasoningEffort assignment onto output.message.model.
+- F3: APPROVE, including 324 focused tests passing, typecheck exit 0, Codex
+  gate evidence, isolated host session count 193 before and after, and named
+  system-transform/runtime-fallback proof.
+- F4: APPROVE using the required plan-only boundary 3abbd3f1d..HEAD. No
+  docs/**, Prometheus bash/trusted-scaffold, Hephaestus, schema, install-local,
+  or host-config paths occur in the plan's committed range.
+
+Residual risks remain documented and are intentionally out of scope: Sisyphus
+same-family 4.3-to-4.5 overlay reconciliation, Prometheus bare-PATH trust,
+unset effort when neither user effort nor mappable variant exists, and no
+Matrix C claim. These do not contradict this plan's Must-haves.
+
+VERDICT: APPROVE

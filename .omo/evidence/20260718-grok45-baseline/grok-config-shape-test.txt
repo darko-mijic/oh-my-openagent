@@ -1,0 +1,11 @@
+bun test v1.3.14 (0d9b296a)
+
+packages/omo-opencode/src/agents/grok-config-shape.test.ts:
+(pass) Grok agent config shape > #given xai/grok-4.5 #when creating Sisyphus #then uses grok family without Claude thinking [5.69ms]
+(pass) Grok agent config shape > #given xai/grok-4.5 #when creating Sisyphus-Junior #then uses reasoningEffort without Claude thinking [0.55ms]
+(pass) Grok agent config shape > #given opencode/grok-4.5 and grok-4.3 #then Sisyphus routes as grok [0.25ms]
+
+ 3 pass
+ 0 fail
+ 17 expect() calls
+Ran 3 tests across 1 file. [1.76s]

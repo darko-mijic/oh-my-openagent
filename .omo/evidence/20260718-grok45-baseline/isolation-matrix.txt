@@ -1,0 +1,8 @@
+session_count_before=1
+isolated_db=/var/folders/y3/87nvgcy154g_0cz2d51vtq9h0000gn/T/oqa-grok45.XXXXXX.f6IyYeTQhm/data/opencode/opencode.db
+isolated_session_count=0
+session_count_after=1
+sandbox=/var/folders/y3/87nvgcy154g_0cz2d51vtq9h0000gn/T/oqa-grok45.XXXXXX.f6IyYeTQhm
+1
+host_sessions=1
+sandbox_sessions=3

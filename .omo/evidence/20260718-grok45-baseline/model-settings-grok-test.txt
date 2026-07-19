@@ -1,0 +1,14 @@
+bun test v1.3.14 (0d9b296a)
+
+packages/model-core/src/model-settings-compatibility.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+error: Cannot find module '@oh-my-opencode/utils' from '/Users/darkomijic/dev-projects/oh-my-openagent/packages/omo-opencode/src/shared/data-path.ts'
+-------------------------------
+
+
+ 0 pass
+ 1 fail
+ 1 error
+Ran 1 test across 1 file. [66.00ms]

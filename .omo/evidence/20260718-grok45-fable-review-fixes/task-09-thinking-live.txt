@@ -1,0 +1,45 @@
+TASK 09: Thinking — distinguish reasoning-derived vs explicit; Grok opts out only of derived
+Date: 2026-07-18
+Branch: feat/grok-4.5-basic-support
+
+WHAT WAS TESTED
+- Primary site: packages/model-core/src/model-capabilities/runtime-model-readers.ts
+  readRuntimeModelThinkingSupport now returns tagged { value, source } where source is
+  "explicit-thinking" | "reasoning-derived". Explicit thinking/supportsThinking wins over reasoning.
+- Consumer: packages/model-core/src/model-capabilities/get-model-capabilities.ts
+  Grok family heuristic supportsThinking:false overrides only reasoning-derived runtime thinking.
+  Explicit runtime thinking/supportsThinking still wins when co-present with reasoning:true.
+  reasoning capability remains true when metadata says reasoning.
+- Unit pins in model-capabilities.test.ts (3 Grok conflict cases + existing Kimi runtime-thinking).
+- Bundled snapshot Grok/opencode-go 500k pins remain green.
+- Live driver (bun -e import of getModelCapabilities + readRuntimeModelThinkingSupport).
+
+WHAT WAS OBSERVED
+- bun test packages/model-core/src/model-capabilities.test.ts
+         packages/model-core/src/model-capabilities-bundled-snapshot.test.ts
+         packages/model-core/src/model-settings-compatibility.test.ts
+  → 105 pass / 0 fail / 334 expect() calls / exit 0
+
+- Live driver results:
+  Grok + { reasoning: true }
+    tagged=reasoning-derived → supportsThinking=false (heuristic), reasoning=true
+  Grok + { reasoning: true, supportsThinking: true }
+    tagged=explicit-thinking → supportsThinking=true (runtime), reasoning=true
+  Grok + { reasoning: true, thinking: false }
+    tagged=explicit-thinking → supportsThinking=false (runtime), reasoning=true
+  Kimi + { reasoning: true }
+    tagged=reasoning-derived → supportsThinking=true (runtime), reasoning=true
+
+- LSP diagnostics clean on changed files.
+- opencode-go grok-4.5 context 500k pin still green (todo 11).
+
+WHY IT IS ENOUGH
+- Covers Oracle R2 #3 conflict matrix (reasoning-only, both true, reasoning+thinking false).
+- Proves Grok is not blunt "always false" — explicit keys win.
+- Proves non-Grok (Kimi) still maps reasoning-derived → supportsThinking true.
+- Production bundled path + settings-compat Grok thinking-drop tests still pass.
+
+WHAT WAS OMITTED
+- No secrets/logs.
+- Did not change isGrok45Model detector.
+- Did not commit schema/install-local/evidence.

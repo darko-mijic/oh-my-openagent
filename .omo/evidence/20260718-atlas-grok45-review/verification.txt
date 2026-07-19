@@ -11,11 +11,14 @@ GREEN PHASE
 - `bun run build`: passed all build stages.
 
 FULL SUITE
-- 11780 passed, 3 skipped, 3 failed across 1512 files.
-- The three failures are pre-existing fallback-chain count assertions in:
-  - packages/model-core/src/model-requirements-categories.test.ts
-  - packages/model-core/src/model-requirements-agents.test.ts (two cases)
-- Those tests expect fallback lengths 6/8/6 while unrelated staged branch changes currently produce 7/9/7. No files in model-core were modified by this task.
+- The prior full-suite attribution is withdrawn. It incorrectly described the
+  model-core fallback-chain failures as pre-existing and stated that model-core
+  was not modified. The corrected claim record is
+  `.omo/evidence/20260718-grok45-review-claim-fixes/`.
+- Task 12 records the current targeted green suite, repository typecheck, Codex
+  suite, and isolated OpenCode hook QA in
+  `.omo/evidence/20260718-grok45-fable-review-fixes/`. It does not assert that
+  an unrun full suite is green or that Matrix C is complete.
 
 STATIC TOOLING CAVEAT
 - `lsp_diagnostics` could not run because the TypeScript LSP was previously declined.

@@ -1,0 +1,27 @@
+MOMUS FINAL GATE - grok45-fable-review-fixes
+Date: 2026-07-18
+Reviewed boundary: 3abbd3f1d..HEAD (exclusive of 3abbd3f1d)
+
+PLAN COMPLIANCE
+- Must-have 1-9 are covered: F1 maps all 9/9 to green task-01..13 evidence. The implementing commits in the reviewed boundary cover detector/alias, Junior guidance, Sisyphus and Junior effort omission, runtime fallback effort/variant state, background fallback effort, thinking provenance, Atlas reconciliation, and the opencode-go 500k pin.
+- The evidence pack contains README, task-01 through task-13 descriptive artifacts, test-codex.txt, typecheck.txt, secret-review.txt, and opencode-qa/. F1, F2, and F3 approve.
+
+MUST-NOT REVIEW - THIS PLAN BOUNDARY ONLY
+- `git log --oneline 3abbd3f1d..HEAD` contains nine scoped implementation/test commits.
+- `git diff --name-only 3abbd3f1d..HEAD` contains no docs/**, README, Hephaestus registration, Prometheus bash/trusted-scaffold/scaffold-plan paths, schema.json, or install-local.mjs. It also contains no host configuration path.
+- No Matrix C claim, public-PR/work-with-pr work, or prohibited global fallback flattening is evidenced. `git diff --check 3abbd3f1d..HEAD` is clean.
+- The existing F4 REJECT is stale for this gate: it evaluated merge-base-with-dev..HEAD and therefore included pre-3abbd3f1d claim-fixes Prometheus/docs work. Those commits are outside the required boundary and are not a violation by this plan. On the required boundary, F4 scope fidelity is APPROVE.
+
+EVIDENCE COMPLETENESS
+- task-01..13 are present; task 14 is correctly pending as the post-final-wave force-stage/commit step.
+- OpenCode QA is isolated: opencode-qa/isolation.txt records host session count 193 before and 193 after, unchanged=yes.
+- Changed system hook proof is present: system-transform-atlas-grok.json names `experimental.chat.system.transform`, runtimeModel `grok-4.5`, and Grok Atlas overlay=true.
+- Runtime-fallback proof is present: runtime-fallback-low-effort.json names `session.status -> runtime fallback`, gpt-fallback, and configuredReasoningEffort=low; qa-pass.txt also records session.status+message.updated. The lack of a provider-wire low-effort observation is explicitly disclosed, while task-06/F3 unit evidence covers payload and state behavior.
+- F3 records a fresh focused run (324 pass, 0 fail), typecheck exit 0, and confirms the Codex gate artifact (510 pass). secret-review.txt reports no credential-bearing evidence.
+
+RESIDUAL RISKS
+The pack README documents all plan residuals: Sisyphus same-family 4.3 to 4.5 overlay short-circuit, Prometheus bare-PATH scaffold trust, intentionally unset effort when neither user effort nor mappable variant exists, and Junior GPT-5.5-only Grok routing. It also documents the intentionally unavailable provider-wire low-effort assertion and that Matrix C is out of scope.
+
+FINAL VERDICT: APPROVE
+
+The completed implementation and final-wave evidence meet this plan scope and verification requirements on the correct commit boundary. Proceed with todo 14 to re-scan and force-stage the complete evidence pack, including this final-gate artifact, without staging generated files.
