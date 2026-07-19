@@ -4,11 +4,12 @@ import { createSisyphusAgent } from "./sisyphus"
 import { createHephaestusAgent, UnsupportedHephaestusModelError } from "./hephaestus"
 import { maybeCreateHephaestusConfig } from "./builtin-agents/hephaestus-agent"
 import { buildSisyphusJuniorPrompt } from "./sisyphus-junior"
+import {
+  GPT_APPLY_PATCH_GUIDANCE,
+  GPT_FILE_EDIT_GUIDANCE,
+} from "./gpt-apply-patch-guard"
 import type { AgentOverrides } from "./types"
 import type { CategoryConfig } from "../config/schema"
-
-const GPT_APPLY_PATCH_PHRASE = "Use `apply_patch` for file edits"
-const GPT_ONLY_FILE_TOOL_PHRASE = "only file-editing tool available here"
 
 function countOccurrences(text: string, needle: string): number {
   return text.split(needle).length - 1
@@ -23,8 +24,7 @@ describe("GPT apply_patch prompt guidance", () => {
     const agent = createSisyphusAgent(model)
 
     // then
-    expect(countOccurrences(agent.prompt ?? "", GPT_APPLY_PATCH_PHRASE)).toBe(1)
-    expect(agent.prompt).not.toContain(GPT_ONLY_FILE_TOOL_PHRASE)
+    expect(countOccurrences(agent.prompt ?? "", GPT_APPLY_PATCH_GUIDANCE)).toBe(1)
   })
 
   test("#given GPT-5.5 Sisyphus-Junior #when rendering the prompt #then apply_patch guidance appears once", () => {
@@ -35,8 +35,21 @@ describe("GPT apply_patch prompt guidance", () => {
     const prompt = buildSisyphusJuniorPrompt(model, false)
 
     // then
-    expect(countOccurrences(prompt, GPT_APPLY_PATCH_PHRASE)).toBe(1)
-    expect(prompt).not.toContain(GPT_ONLY_FILE_TOOL_PHRASE)
+    expect(prompt.includes(GPT_APPLY_PATCH_GUIDANCE)).toBe(true)
+    expect(countOccurrences(prompt, GPT_APPLY_PATCH_GUIDANCE)).toBe(1)
+  })
+
+  // Grok Junior routes only through the GPT-5.5 template (gpt-5-4 APPLY_PATCH path is out of band).
+  test("#given Grok 4.5 Sisyphus-Junior #when rendering the prompt #then file-edit guidance replaces apply_patch", () => {
+    // given
+    const model = "xai/grok-4.5"
+
+    // when
+    const prompt = buildSisyphusJuniorPrompt(model, false)
+
+    // then
+    expect(prompt.includes(GPT_FILE_EDIT_GUIDANCE)).toBe(true)
+    expect(prompt.includes(GPT_APPLY_PATCH_GUIDANCE)).toBe(false)
   })
 
   test("#given GPT-5.5 Hephaestus #when rendering the prompt #then apply_patch guidance appears once", () => {
@@ -47,8 +60,7 @@ describe("GPT apply_patch prompt guidance", () => {
     const agent = createHephaestusAgent(model)
 
     // then
-    expect(countOccurrences(agent.prompt ?? "", GPT_APPLY_PATCH_PHRASE)).toBe(1)
-    expect(agent.prompt).not.toContain(GPT_ONLY_FILE_TOOL_PHRASE)
+    expect(countOccurrences(agent.prompt ?? "", GPT_APPLY_PATCH_GUIDANCE)).toBe(1)
   })
 
   test("#given non-GPT Sisyphus variants #when rendering prompts #then GPT-only apply_patch guidance is absent", () => {
@@ -64,8 +76,7 @@ describe("GPT apply_patch prompt guidance", () => {
       const agent = createSisyphusAgent(model)
 
       // then
-      expect(agent.prompt).not.toContain(GPT_APPLY_PATCH_PHRASE)
-      expect(agent.prompt).not.toContain(GPT_ONLY_FILE_TOOL_PHRASE)
+      expect(agent.prompt).not.toContain(GPT_APPLY_PATCH_GUIDANCE)
     }
   })
 

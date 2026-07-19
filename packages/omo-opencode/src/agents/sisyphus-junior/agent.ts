@@ -34,6 +34,10 @@ import { buildGpt55SisyphusJuniorPrompt } from "./gpt-5-5"
 import { buildGeminiSisyphusJuniorPrompt } from "./gemini"
 import { buildGlm52SisyphusJuniorPrompt } from "./glm-5-2"
 import { appendGrokJuniorOverlay, neutralizeGpt55Identity } from "./grok-overlay"
+import {
+  GPT_APPLY_PATCH_GUIDANCE,
+  GPT_FILE_EDIT_GUIDANCE,
+} from "../gpt-apply-patch-guard"
 
 const MODE: AgentMode = "subagent"
 
@@ -105,9 +109,10 @@ export function buildSisyphusJuniorPrompt(
     case "glm-5-2":
       return buildGlm52SisyphusJuniorPrompt(useTaskSystem, promptAppend)
     case "grok": {
+      // Grok Junior reuses the GPT-5.5 body only (not gpt-5-4 APPLY_PATCH path).
       const body = neutralizeGpt55Identity(
         buildGpt55SisyphusJuniorPrompt(useTaskSystem, promptAppend),
-      )
+      ).replaceAll(GPT_APPLY_PATCH_GUIDANCE, GPT_FILE_EDIT_GUIDANCE)
       if (model && isGrok45Model(model)) {
         return appendGrokJuniorOverlay(body)
       }
