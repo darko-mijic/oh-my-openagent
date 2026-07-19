@@ -1,0 +1,28 @@
+{
+  "lsp": {
+    "typescript": {
+      "priority": 100
+    },
+    "basedpyright": {
+      "priority": 100
+    },
+    "bash": {
+      "priority": 90
+    },
+    "yaml-ls": {
+      "priority": 80,
+      "initialization": {
+        "yaml": {
+          "validate": true,
+          "completion": true,
+          "schemaStore": {
+            "enable": true
+          }
+        }
+      }
+    },
+    "dockerfile": {
+      "priority": 70
+    }
+  }
+}
