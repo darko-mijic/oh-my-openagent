@@ -275,4 +275,3 @@ data: {"id":"evt_f7db2903d00155tjkdRe0ziZuQ","type":"message.part.delta","proper
 data: {"id":"evt_f7db2903e001wa7YuoDCG8Lq3g","type":"message.part.updated","properties":{"sessionID":"ses_0824da6daffe6k9KjDJqEfd82Q","part":{"id":"prt_f7db2903700166viFbAqzs3t2o","messageID":"msg_f7db28db9001n043tkZPMSJlgv","sessionID":"ses_0824da6daffe6k9KjDJqEfd82Q","type":"text","text":"MARKED_REJECT_DONE","time":{"start":1784520282167,"end":1784520282174},"metadata":{"openai":{"itemId":"msg_3"}}},"time":1784520282174}}
 
 data: {"id":"evt_f7db290940010Gk009jdtuMvXP","type":"tui.toast.show","properties":{"title":"● OhMyOpenCode 4.19.0 (dev)","message":"Sisyphus running in local development mode.","variant":"info","duration":150}}
-

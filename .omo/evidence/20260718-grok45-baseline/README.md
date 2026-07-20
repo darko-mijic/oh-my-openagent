@@ -1,6 +1,6 @@
 # Evidence: Grok 4.5 / xAI baseline + early matrix
 
-**Date:** 2026-07-18  
+**Date:** 2026-07-18
 **Machine:** macOS, opencode 1.18.3, plugin 4.19.0, xAI oauth connected
 
 ## What was tested
@@ -137,4 +137,3 @@ Branch response (commits c6e38db69 + 828104694 on `feat/grok-4.5-basic-support`)
 | No chain visibility for xAI | Experimental `grok-4.5` rungs on Prometheus, Atlas, Sisyphus, Junior, writing, deep, ultrabrain, unspecified-high |
 
 **Still require live Matrix C** to claim quality: re-run self-hosting phase-2 brief on this build and score §9 acceptance checklist. Overlay + ban are necessary, not sufficient proof.
-

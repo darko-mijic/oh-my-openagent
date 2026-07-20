@@ -145,4 +145,3 @@ data: {"id":"evt_f7dca95a0001aRQJVtKC736Axv","type":"session.updated","propertie
 data: {"id":"evt_f7dca95a3001zEZS361g3vrLyp","type":"session.diff","properties":{"sessionID":"ses_082357bf8ffe977JomheNpOMXI","diff":[]}}
 
 data: {"id":"evt_f7dca9626001DJOsz02AM531gU","type":"message.updated","properties":{"sessionID":"ses_082357bf8ffe977JomheNpOMXI","info":{"role":"user","time":{"created":1784521855840},"agent":"Atlas - Plan Executor","model":{"providerID":"openai","modelID":"gpt-fake"},"summary":{"diffs":[]},"id":"msg_f7dca93600014HEFhkmLkQ3FEi","sessionID":"ses_082357bf8ffe977JomheNpOMXI"}}}
-

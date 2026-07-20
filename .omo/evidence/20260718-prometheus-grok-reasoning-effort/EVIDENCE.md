@@ -1,7 +1,7 @@
 # Evidence: Prometheus Grok reasoningEffort preservation on fallback
 
-**Date:** 2026-07-18  
-**Slug:** `20260718-prometheus-grok-reasoning-effort`  
+**Date:** 2026-07-18
+**Slug:** `20260718-prometheus-grok-reasoning-effort`
 **Scope:** model-core Prometheus Grok chain + model-fallback chat handler + runtime-fallback retry payload
 
 ## What was tested

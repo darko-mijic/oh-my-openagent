@@ -213,4 +213,3 @@ data: {"id":"evt_f7db2b6aa002jpsPURQdNgbGtA","type":"session.idle","properties":
 data: {"id":"evt_f7db2b6ae001oY3t935FWjkiuZ","type":"session.updated","properties":{"sessionID":"ses_0824d6e9cffeWH5AnZsR6OgdOP","info":{"id":"ses_0824d6e9cffeWH5AnZsR6OgdOP","slug":"curious-eagle","projectID":"916561b7119b605373db418a283dc0b61d7f7a52","directory":"/tmp/oqa-xdg.C2gaKW/proj","path":"","title":"fw-receipt","agent":"Atlas - Plan Executor","model":{"id":"gpt-fake","providerID":"openai","variant":"default"},"version":"1.18.3","summary":{"additions":0,"deletions":0,"files":0},"cost":0,"tokens":{"input":30,"output":15,"reasoning":0,"cache":{"read":0,"write":0}},"time":{"created":1784520282467,"updated":1784520292013}}}}
 
 data: {"id":"evt_f7db2b6b0001rhoqHXpPROAfFT","type":"session.diff","properties":{"sessionID":"ses_0824d6e9cffeWH5AnZsR6OgdOP","diff":[]}}
-

@@ -1,7 +1,7 @@
 # Evidence: Prometheus Grok 4.5 review-gap fixes
 
-**Date:** 2026-07-18  
-**Branch:** feat/grok-4.5-basic-support  
+**Date:** 2026-07-18
+**Branch:** feat/grok-4.5-basic-support
 **Goal:** Address validated review gaps (scaffold bash, workflow reminder, fallback effort, docs/tests)
 
 **Evidence status:** Narrative-only. This folder does not contain the raw unit,
@@ -37,7 +37,7 @@ Result: exit 0 (root + packages including omo-opencode + model-core)
 ```bash
 ~/.config/opencode/doc/omo-local-plugin.sh refresh
 ```
-Result: rebuild ok; doctor configuration valid; prometheus: `xai/grok-4.5 (high)` snapshot-backed  
+Result: rebuild ok; doctor configuration valid; prometheus: `xai/grok-4.5 (high)` snapshot-backed
 Artifact: `~/.config/opencode/doc/doctor-local-20260718.txt`
 
 ### Module driver (fallback effort)
