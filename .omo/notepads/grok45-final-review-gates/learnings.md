@@ -154,3 +154,16 @@ Session artifacts live here.
 
 - `git diff --check dev...HEAD` failed again on Batch D retrospective evidence captures (task-1/5/6/7/8 + batch-d-docs-evidence): trailing whitespace from tool output, same failure mode as the earlier F2 R2 rejection. Claimed "diff-check clean" without re-running the range check against committed content is not enough; working-tree-only checks miss what `dev...HEAD` reports.
 - Remaining stale "11 agents" mentions lived in `packages/AGENTS.md` and `packages/model-core/AGENTS.md` after Batch D; real roster is 12 (11 factories + Prometheus / sisyphus-junior included). Trim evidence whitespace and sync those two counts in one fix commit.
+
+## 2026-07-20 — F3 qa-executor workflow pitfalls (from REJECT ses_0807fec7dffeR3K9hU1IeL9Z1a)
+
+- NEVER stage QA driver scripts into `.omo/evidence/**` and execute them there — `.omo/**` is deliberately non-executable (MD-8 fix). Invoke drivers from their trusted locations: `.agents/skills/opencode-qa/scripts/` / `.claude/skills/codex-qa/scripts/` (canonical repo paths pass isTrustedScript).
+- qa-executor must write evidence with the `write`/`edit` tools — `apply_patch` is denied at the agent-permission layer BY DESIGN (qa-executor.ts:18-20), not by the guard. The generic guard error message does not distinguish the two denial layers.
+- Repo gates that write no build artifacts (`bun test`, `bun run typecheck`, `bun run test:codex`) run in the CANONICAL repo; only `bun run build` (writes dist/) belongs in the disposable worktree. Running suites FROM a /tmp worktree breaks CodeGraph hook-exclusion tests (21 fail) and guard path fixtures (8 fail) — environment artifacts, not regressions. Canonical: test:codex 0 fail, root 12,139 pass, guard dispatcher 104/104.
+- CR-1/CR-2a/CR-2b live probes PASS (stripped markers → blocked; checkbox flip → receipts valid; stale receipt → archived + re-issued).
+- Follow-up candidate: qa-executor.ts prompt should state the write/edit-only evidence path and the driver-invocation rule explicitly (deferred to avoid another restart mid-wave).
+
+## 2026-07-20 — QA executor scoped write surface
+
+- `apply_patch` must not be denied in the qa-executor factory: GPT-family sessions expose it as their file-editing surface, while `reviewer-scope-guard` remains the path authority for `.omo/evidence/**`, OS temp, and the disposable QA worktree. Momus and Oracle retain their independent `apply_patch` denials.
+- QA driver staging uses destination-scoped `cp` only. The grammar permits an optional leading `-p`, validates the destination with `isCreationTarget`, and rejects `packages/**` plus canonical repo-root files; evidence remains non-executable and drivers run from the disposable QA worktree.

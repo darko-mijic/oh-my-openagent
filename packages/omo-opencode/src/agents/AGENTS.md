@@ -44,7 +44,7 @@ Defined in [`src/shared/agent-tool-restrictions.ts`](../shared/agent-tool-restri
 | Multimodal-Looker | ALL except read |
 | Atlas | task, call_omo_agent |
 | Momus | write, edit, task |
-| QA-Executor | apply_patch, task, call_omo_agent (write/edit allowed for `.omo/evidence/**` only; enforced by `reviewer-scope-guard`) |
+| QA-Executor | task, call_omo_agent (file edits scoped to `.omo/evidence/**` + OS temp + QA worktree by `reviewer-scope-guard`, including `apply_patch`) |
 | Prometheus | enforces `.md`-only writes via `prometheus-md-only` hook (path-based, not tool-based) |
 
 ## TEAM-MODE ELIGIBILITY

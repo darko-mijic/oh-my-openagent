@@ -1,3 +1,5 @@
+import { dirname, isAbsolute, relative, resolve } from "node:path"
+
 import { createQaPathPolicy, type QaPathPolicy } from "./qa-path-policy"
 import {
   inspectSafeCurlCommand,
@@ -35,6 +37,8 @@ const SAFE_BUN_RUN_SCRIPTS = new Set(["build", "typecheck", "test", "test:codex"
 type QaCommandContext = {
   readonly paths: QaPathPolicy
   readonly tokens: readonly string[]
+  readonly projectRoot: string
+  readonly worktree: string
 }
 
 function stripEnvironmentAssignments(tokens: readonly string[]): readonly string[] | undefined {
@@ -107,6 +111,27 @@ function isMkdirCommand({ paths, tokens }: QaCommandContext): boolean {
     && targets.every((target) => !target.startsWith("-") && paths.isCreationTarget(target))
 }
 
+function isPathWithin(path: string, root: string): boolean {
+  const relativePath = relative(root, path)
+  return relativePath === "" || (!relativePath.startsWith("..") && !isAbsolute(relativePath))
+}
+
+function isCpCommand({ paths, tokens, projectRoot, worktree }: QaCommandContext): boolean {
+  const arguments_ = tokens.slice(1)
+  const operands = arguments_[0] === "-p" ? arguments_.slice(1) : arguments_
+  const destination = operands.at(-1)
+  if (destination === undefined || operands.length < 2 || operands.some((token) => token.startsWith("-"))) {
+    return false
+  }
+
+  const lexicalDestination = resolve(worktree, destination)
+  const lexicalProjectRoot = resolve(projectRoot)
+  return paths.isCreationTarget(destination)
+    && !isPathWithin(lexicalDestination, resolve(worktree, "packages"))
+    && !isPathWithin(lexicalDestination, resolve(lexicalProjectRoot, "packages"))
+    && dirname(lexicalDestination) !== lexicalProjectRoot
+}
+
 function isBunCommand({ paths, tokens }: QaCommandContext): boolean {
   if (hasForbiddenNodeFlag(tokens) || tokens.some((token) => token === "--preload" || token.startsWith("--preload="))) {
     return false
@@ -159,15 +184,16 @@ function isSqliteCommand({ paths, tokens }: QaCommandContext): boolean {
     && !/\b(?:load_extension|writefile)\s*\(/i.test(query)
 }
 
-function isQaSegmentAllowed(tokens: readonly string[], paths: QaPathPolicy): boolean {
+function isQaSegmentAllowed(tokens: readonly string[], paths: QaPathPolicy, projectRoot: string, worktree: string): boolean {
   const commandTokens = stripEnvironmentAssignments(tokens)
   if (commandTokens === undefined) {
     return false
   }
-  const context = { paths, tokens: commandTokens }
+  const context = { paths, tokens: commandTokens, projectRoot, worktree }
   const command = commandTokens[0]
   if (command === "git") return isGitCommand(context)
   if (command === "mkdir") return isMkdirCommand(context)
+  if (command === "cp") return isCpCommand(context)
   if (command === "bun") return isBunCommand(context)
   if (command === "node") return isNodeCommand(context)
   if (command === "bash" || command === "sh") return isShellScriptCommand(context)
@@ -187,5 +213,5 @@ export function isQaExecutorCommand(command: string, projectRoot: string, worktr
     return false
   }
   const paths = createQaPathPolicy(projectRoot, worktree)
-  return segments.every((segment) => isQaSegmentAllowed(segment, paths))
+  return segments.every((segment) => isQaSegmentAllowed(segment, paths, projectRoot, worktree))
 }

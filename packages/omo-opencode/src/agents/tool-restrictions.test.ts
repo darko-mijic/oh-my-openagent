@@ -166,7 +166,7 @@ describe("read-only agent tool restrictions", () => {
       // then
       expect(agent.mode).toBe("subagent")
       expect(agent.temperature).toBe(0.1)
-      expect(permission.apply_patch).toBe("deny")
+      expect(permission.apply_patch).toBeUndefined()
       expect(permission.task).toBeUndefined()
       expect(permission.call_omo_agent).toBeUndefined()
       expect(sessionRestrictions.task).toBe(false)

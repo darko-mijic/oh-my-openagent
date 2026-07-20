@@ -171,6 +171,58 @@ describe("tool.execute.before reviewer-scope-guard dispatch", () => {
     await expect(result).resolves.toBeUndefined()
   })
 
+  test("#given qa-executor #when apply_patch targets canonical project evidence #then dispatcher allows", async () => {
+    // given
+    const projectRoot = createProjectRoot()
+    const worktree = createWorktree()
+
+    // when
+    const result = runTool({
+      agent: "qa-executor",
+      projectRoot,
+      worktree,
+      tool: "apply_patch",
+      toolArgs: { filePath: join(projectRoot, ".omo", "evidence", "20260720-f3", "result.txt") },
+    })
+
+    // then
+    await expect(result).resolves.toBeUndefined()
+  })
+
+  test("#given qa-executor #when apply_patch targets product source #then dispatcher rejects", async () => {
+    // given
+    const worktree = createWorktree()
+
+    // when
+    const result = runTool({
+      agent: "qa-executor",
+      worktree,
+      tool: "apply_patch",
+      toolArgs: { filePath: join(worktree, "packages", "omo-opencode", "src", "index.ts") },
+    })
+
+    // then
+    await expect(result).rejects.toThrow(".omo/evidence/**, worktree evidence/**, or OS temp")
+  })
+
+  for (const agent of ["momus", "oracle"] as const) {
+    test(`#given ${agent} #when apply_patch targets evidence #then dispatcher rejects`, async () => {
+      // given
+      const worktree = createWorktree()
+
+      // when
+      const result = runTool({
+        agent,
+        worktree,
+        tool: "apply_patch",
+        toolArgs: { filePath: join(worktree, ".omo", "evidence", "result.txt") },
+      })
+
+      // then
+      await expect(result).rejects.toThrow("read-only reviewer")
+    })
+  }
+
   test("#given qa-executor #when Write targets product source under worktree #then dispatcher rejects", async () => {
     // given
     const worktree = createWorktree()
@@ -185,6 +237,100 @@ describe("tool.execute.before reviewer-scope-guard dispatch", () => {
 
     // then
     await expect(result).rejects.toThrow(".omo/evidence/**, worktree evidence/**, or OS temp")
+  })
+
+  test("#given qa-executor #when cp stages a driver into OS temp #then dispatcher allows", async () => {
+    // given
+    const projectRoot = createProjectRoot()
+    const worktree = createWorktree()
+    const source = join(projectRoot, "run-isolated-qa.sh")
+    const destination = join(tmpdir(), "reviewer-scope-copy-driver.sh")
+
+    // when
+    const result = runTool({
+      agent: "qa-executor",
+      projectRoot,
+      worktree,
+      tool: "Bash",
+      toolArgs: { command: `cp ${source} ${destination}` },
+    })
+
+    // then
+    await expect(result).resolves.toBeUndefined()
+  })
+
+  test("#given qa-executor #when cp stages a driver into its QA worktree #then dispatcher allows", async () => {
+    // given
+    const projectRoot = createProjectRoot()
+    const worktree = createWorktree()
+    const source = join(projectRoot, "run-isolated-qa.sh")
+    const destination = join(worktree, "run-isolated-qa.sh")
+
+    // when
+    const result = runTool({
+      agent: "qa-executor",
+      projectRoot,
+      worktree,
+      tool: "Bash",
+      toolArgs: { command: `cp ${source} ${destination}` },
+    })
+
+    // then
+    await expect(result).resolves.toBeUndefined()
+  })
+
+  test("#given qa-executor #when cp preserves a driver into canonical evidence #then dispatcher allows", async () => {
+    // given
+    const projectRoot = createProjectRoot()
+    const worktree = createWorktree()
+    const source = join(worktree, "run-isolated-qa.sh")
+    const destination = join(projectRoot, ".omo", "evidence", "20260720-f3", "driver-copy.sh")
+
+    // when
+    const result = runTool({
+      agent: "qa-executor",
+      projectRoot,
+      worktree,
+      tool: "Bash",
+      toolArgs: { command: `cp -p ${source} ${destination}` },
+    })
+
+    // then
+    await expect(result).resolves.toBeUndefined()
+  })
+
+  test("#given qa-executor #when cp targets product source #then dispatcher rejects", async () => {
+    // given
+    const worktree = createWorktree()
+
+    // when
+    const result = runTool({
+      agent: "qa-executor",
+      worktree,
+      tool: "Bash",
+      toolArgs: { command: `cp AGENTS.md ${join(worktree, "packages", "omo-opencode", "src", "copied.ts")}` },
+    })
+
+    // then
+    await expect(result).rejects.toThrow("QA allowlist")
+  })
+
+  test("#given qa-executor #when cp targets a canonical repo root file #then dispatcher rejects", async () => {
+    // given
+    const projectRoot = createProjectRoot()
+    const worktree = createWorktree()
+
+    // when
+    const result = runTool({
+      agent: "qa-executor",
+      projectRoot,
+      worktree,
+      tool: "Bash",
+      toolArgs: { command: `cp ${join(worktree, "run-isolated-qa.sh")} ${join(projectRoot, "README.md")}` },
+    })
+
+    // then
+    await expect(result).rejects.toThrow("QA allowlist")
   })
 
   const allowedQaCommands = [

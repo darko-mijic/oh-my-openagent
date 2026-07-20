@@ -2,7 +2,6 @@ import type { AgentConfig } from "@opencode-ai/sdk"
 
 import { buildClaudeThinkingConfig, isGptModel } from "./types"
 import type { AgentFactory, AgentMode } from "./types"
-import { createAgentToolRestrictions } from "../shared/permission-compat"
 
 const MODE: AgentMode = "subagent"
 
@@ -12,18 +11,16 @@ Verify executor claims, prior logs, and evidence summaries against artifacts you
 
 Write all artifacts under \`.omo/evidence/<YYYYMMDD>-<slug>/\` in the current QA worktree. Produce a \`manualQa\` matrix containing \`surfaceEvidence\`, \`adversarialCases\`, and \`artifactRefs\`. Every PASS needs a non-empty artifact reference. Reject skipped, inferred, and partial cases. Mark a case \`not_applicable\` only when the change cannot trigger it, with one short reason. If a scenario cannot run, reject it with its blocker and missing prerequisite.
 
+Record evidence with the file-editing tool exposed in your toolset: use \`apply_patch\` on GPT-family models and \`edit\`/\`write\` where exposed; never stage or execute scripts from \`.omo/evidence/**\`, which is non-executable by design, and run driver scripts from your disposable QA worktree.
+
 End every review with exactly one line anchored to the reviewed files: \`VERDICT: APPROVE\` or \`VERDICT: REJECT\`.`
 
 export const createQaExecutorAgent: AgentFactory = (model: string): AgentConfig => {
-  const restrictions = createAgentToolRestrictions([
-    "apply_patch",
-  ])
   const base = {
     description: "Final-wave manual QA executor that records evidence-backed surface verification. (QA Executor - OhMyOpenCode)",
     mode: MODE,
     model,
     temperature: 0.1,
-    ...restrictions,
     prompt: QA_EXECUTOR_PROMPT,
   } as AgentConfig
 

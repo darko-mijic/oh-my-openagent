@@ -1,0 +1,26 @@
+Task: expose qa-executor's guard-scoped GPT apply_patch surface and allow destination-scoped cp staging.
+Date: 2026-07-20
+
+WHAT WAS TESTED
+- TDD red: bun test packages/omo-opencode/src/plugin/tool-execute-before-reviewer-scope-guard.test.ts failed for the three new cp allow cases; bun test packages/omo-opencode/src/agents/tool-restrictions.test.ts failed because qa-executor still denied apply_patch.
+- Focused green: bun test packages/omo-opencode/src/plugin/tool-execute-before-reviewer-scope-guard.test.ts passed 113 tests, including dispatcher-level apply_patch evidence/product polarity, Momus and Oracle read-only apply_patch denial, and cp temp/worktree/canonical-evidence/product/root-file polarity.
+- Focused green: bun test packages/omo-opencode/src/agents/tool-restrictions.test.ts passed 15 tests, proving qa-executor no longer emits an apply_patch deny while shared task and call_omo_agent restrictions remain.
+- Required scoped regression: bun test packages/omo-opencode/src/hooks/reviewer-scope-guard/ packages/omo-opencode/src/plugin/ packages/omo-opencode/src/agents/ passed 841 tests with 0 failures.
+- Root regression under the default TMPDIR after removing /tmp/reviewer-scope-dispatch-* leftovers: bun test passed 12,148 tests, 3 skipped, and 0 failures.
+- Static gates: bun run typecheck exited 0; bun run packages/shared-skills/skills/programming/scripts/typescript/check-no-excuse-rules.ts on the four changed TypeScript files reported no violations; git diff --check exited 0.
+- Harness availability: opencode --version reported 1.18.3. The opencode-qa common self-check confirmed isolated XDG setup but could not run its full helper gate because this host lacks sqlite3 and tmux.
+
+WHAT WAS OBSERVED
+- The real plugin tool.execute.before dispatcher allows qa-executor apply_patch only for canonical evidence and rejects product paths. The same dispatcher rejects apply_patch for Momus and Oracle before any path exception applies.
+- The qa-executor Bash grammar now accepts cp [src...] <destination> and cp -p [src...] <destination> only when the destination passes isCreationTarget and is not packages/** or a canonical repository-root file. Source operands remain read-only.
+- The source plugin was not rebuilt or restarted, per task constraint. The checked-in dist therefore cannot demonstrate the new runtime configuration until the orchestrator rebuilds it and OpenCode restarts.
+
+WHY IT IS ENOUGH
+- Regression coverage uses the production dispatcher rather than calling the guard policy in isolation, exercising the same tool.execute.before route OpenCode invokes.
+- The focused and root suites cover existing guard grammar and agent permissions, while typecheck validates the adapter packages.
+- The remaining live-harness step is intentionally deferred to the required post-commit rebuild and restart; no stale dist behavior is represented as validation of this source-only change.
+
+WHAT WAS OMITTED
+- No bun run build was run.
+- No live OpenCode prompt was driven because the mandated helper dependencies sqlite3 and tmux are absent, and rebuilding the local plugin dist is explicitly owned by the orchestrator.
+- No raw environment dumps, authentication headers, provider credentials, or host database data were recorded.
