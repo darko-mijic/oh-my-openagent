@@ -24,6 +24,7 @@ export function parseTrackedTaskFromPrompt(prompt: string): TrackedTopLevelTaskR
       const label = finalWaveMatch[1].toUpperCase()
       return {
         key: `final-wave:${label.toLowerCase()}`,
+        section: "final-wave",
         label,
         title: finalWaveMatch[2].trim(),
       }
@@ -34,6 +35,7 @@ export function parseTrackedTaskFromPrompt(prompt: string): TrackedTopLevelTaskR
       const label = todoMatch[1]
       return {
         key: `todo:${label}`,
+        section: "todo",
         label,
         title: todoMatch[2].trim(),
       }

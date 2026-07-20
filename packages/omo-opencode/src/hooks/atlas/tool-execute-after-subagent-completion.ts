@@ -13,8 +13,14 @@ import {
 import { collectGitDiffStats, formatFileChanges } from "../../shared/git-worktree"
 import { log } from "../../shared/logger"
 import { syncBackgroundLaunchSessionTracking } from "./background-launch-session-tracking"
+import {
+  processFinalWaveAdvisoryCompletion,
+  recordFinalWaveLaunchBinding,
+} from "./final-wave-completion-verification"
+import { reconstructFinalWavePauseState } from "./final-wave-enforcement"
 import { HOOK_NAME } from "./hook-name"
 import { buildSubagentCompletionReminder } from "./subagent-completion-reminder"
+import { UNVERIFIED_FINAL_WAVE_REMINDER } from "./system-reminder-templates"
 import { extractSessionIdFromOutput, validateSubagentSessionId } from "./subagent-session-id"
 import { resolvePreferredSessionId, resolveTaskContext } from "./task-context"
 import { isTrackedTaskChecked } from "./tool-execute-after-plan-tasks"
@@ -184,6 +190,14 @@ export async function handleSubagentCompletionAfter(input: {
     }
   }
 
+  if (subagentSessionId) {
+    recordFinalWaveLaunchBinding({
+      planPath,
+      task: pendingTaskRef?.kind === "track" ? pendingTaskRef.task : currentTask,
+      childSessionId: subagentSessionId,
+    })
+  }
+
   const preferredSessionId = resolvePreferredSessionId(
     shouldIgnoreCurrentSessionId ? undefined : subagentSessionId,
     trackedTaskSession?.session_id,
@@ -195,7 +209,24 @@ export async function handleSubagentCompletionAfter(input: {
       && sessionState.activeContinuationPlanPath !== planPath) {
       sessionState.verifiedTaskKeys = undefined
     }
+    // After compaction/restart the in-memory map is empty; rebuild gate counters
+    // from the durable sidecar before the pause decision for this completion.
+    reconstructFinalWavePauseState(sessionState, planPath, ctx.directory)
   }
+
+  // Write identity-matched receipts before the pause decision so enforced mode
+  // can count the receipt produced by this completion. Binding comes only from
+  // the pending ref or durable sidecar bindings — never readCurrentTopLevelTask.
+  const finalWaveCompletion = processFinalWaveAdvisoryCompletion({
+    planPath,
+    workspaceRoot: ctx.directory,
+    toolOutput: { output: originalResponse, metadata: toolOutput.metadata ?? {} },
+    pendingTaskRef,
+    childSessionId: subagentSessionId,
+    boulderState: workScopedBoulderState,
+  })
+  const finalWaveAdvisoryBlock = finalWaveCompletion.advisoryText ? `${finalWaveCompletion.advisoryText}\n` : ""
+
   const isAlreadyVerified = currentTask
     ? isTrackedTaskChecked(planPath, currentTask.key)
       || sessionState?.verifiedTaskKeys?.has(currentTask.key) === true
@@ -215,7 +246,9 @@ export async function handleSubagentCompletionAfter(input: {
 
   toolOutput.output = `
 <system-reminder>
-${reminderDecision.leadReminder}
+${reminderDecision.isUnverifiedFinalWave ? `${UNVERIFIED_FINAL_WAVE_REMINDER}
+
+` : ""}${finalWaveAdvisoryBlock}${reminderDecision.leadReminder}
 </system-reminder>
 
 ## SUBAGENT WORK COMPLETED

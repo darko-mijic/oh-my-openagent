@@ -38,10 +38,10 @@ export const PLAN_SECTION_HEADERS = [
 ];
 
 export const FINAL_VERIFICATION_ITEMS = [
-	"F1. Plan compliance audit",
-	"F2. Code quality review",
-	"F3. Real manual QA",
-	"F4. Scope fidelity",
+	{ n: 1, title: "Plan compliance audit", role: "plan-auditor" },
+	{ n: 2, title: "Code quality review", role: "code-reviewer" },
+	{ n: 3, title: "Real manual QA", role: "qa-executor" },
+	{ n: 4, title: "Scope fidelity", role: "scope-auditor" },
 ];
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,79}$/;
@@ -277,7 +277,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
 
 ## Final verification wave
 > Runs in parallel after ALL todos. ALL must APPROVE. Surface results and wait for the user's explicit okay before declaring complete.
-${FINAL_VERIFICATION_ITEMS.map((item) => `- [ ] ${item}`).join("\n")}
+${FINAL_VERIFICATION_ITEMS.map((item) => `- [ ] F${item.n}. ${item.title} <!-- role:${item.role} -->`).join("\n")}
 
 ## Commit strategy
 

@@ -138,6 +138,10 @@ describe("team-mode types", () => {
         "prometheus",
         "Agent 'prometheus' is plan-mode-only; can only write to .omo/*.md (enforced by prometheusMdOnly hook). Cannot write to team mailbox. Use delegate-task with subagent_type: 'plan' instead.",
       ],
+      [
+        "qa-executor",
+        "Agent 'qa-executor' is a final-wave reviewer, not a team member. It may write only QA evidence and cannot operate a team mailbox. Use delegate-task with subagent_type: 'qa-executor' instead.",
+      ],
     ] as const
 
     // when
@@ -262,8 +266,8 @@ describe("team-mode types", () => {
     )
 
     // then
-    expect(entries).toHaveLength(11)
-    expect(verdictCounts).toEqual({ eligible: 3, conditional: 1, "hard-reject": 7 })
+    expect(entries).toHaveLength(12)
+    expect(verdictCounts).toEqual({ eligible: 3, conditional: 1, "hard-reject": 8 })
     expect(AGENT_ELIGIBILITY_REGISTRY.hephaestus.rejectionMessage).toBe(
       "Agent 'hephaestus' lacks teammate permission. Either apply D-36 (add teammate: \"allow\" in tool-config-handler.ts) or use subagent_type: \"sisyphus\" instead.",
     )
@@ -287,6 +291,9 @@ describe("team-mode types", () => {
     )
     expect(AGENT_ELIGIBILITY_REGISTRY.prometheus.rejectionMessage).toBe(
       "Agent 'prometheus' is plan-mode-only; can only write to .omo/*.md (enforced by prometheusMdOnly hook). Cannot write to team mailbox. Use delegate-task with subagent_type: 'plan' instead.",
+    )
+    expect(AGENT_ELIGIBILITY_REGISTRY["qa-executor"].rejectionMessage).toBe(
+      "Agent 'qa-executor' is a final-wave reviewer, not a team member. It may write only QA evidence and cannot operate a team mailbox. Use delegate-task with subagent_type: 'qa-executor' instead.",
     )
     expect(CategoryMemberSchema).toBeDefined()
     expect(SubagentMemberSchema).toBeDefined()

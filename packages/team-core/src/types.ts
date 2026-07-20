@@ -226,6 +226,11 @@ export const AGENT_ELIGIBILITY_REGISTRY: Readonly<Record<string, {
     rejectionMessage:
       "Agent 'momus' is read-only (plan reviewer). Cannot write to mailbox as team member. Use delegate-task for plan review instead.",
   },
+  "qa-executor": {
+    verdict: "hard-reject",
+    rejectionMessage:
+      "Agent 'qa-executor' is a final-wave reviewer, not a team member. It may write only QA evidence and cannot operate a team mailbox. Use delegate-task with subagent_type: 'qa-executor' instead.",
+  },
   atlas: { verdict: "eligible" },
   prometheus: {
     verdict: "hard-reject",

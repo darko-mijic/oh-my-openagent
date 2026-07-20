@@ -9,6 +9,7 @@ import {
 } from "../../features/boulder-state"
 import { log } from "../../shared/logger"
 import { injectBoulderContinuation } from "./boulder-continuation-injector"
+import { reconstructFinalWavePauseState } from "./final-wave-enforcement"
 import { HOOK_NAME } from "./hook-name"
 import {
   CONTINUATION_COOLDOWN_MS,
@@ -171,7 +172,6 @@ export function scheduleRetry(input: {
 
       if (sessionState.promptFailureCount >= MAX_CONSECUTIVE_PROMPT_FAILURES) return
       if (sessionState.stalledContinuationReason) return
-      if (sessionState.waitingForFinalWaveApproval) return
 
       const now = Date.now()
       if (
@@ -186,7 +186,11 @@ export function scheduleRetry(input: {
       const normalizedSessionID = normalizeSessionId(sessionID)
       if (!currentBoulder.session_ids?.includes(normalizedSessionID)) return
 
-      const currentProgress = getPlanProgress(resolveBoulderPlanPath(ctx.directory, currentBoulder))
+      const planPath = resolveBoulderPlanPath(ctx.directory, currentBoulder)
+      reconstructFinalWavePauseState(sessionState, planPath, ctx.directory)
+      if (sessionState.waitingForFinalWaveApproval) return
+
+      const currentProgress = getPlanProgress(planPath)
       if (currentProgress.isComplete) return
       if (options?.isContinuationStopped?.(sessionID)) return
       const canContinueSession = await canContinueTrackedBoulderSession({

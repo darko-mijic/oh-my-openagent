@@ -1,6 +1,14 @@
 import type { PluginInput } from "@opencode-ai/plugin"
+import {
+  readBoulderState,
+  resolveBoulderPlanPath,
+} from "../../features/boulder-state"
 import { log } from "../../shared/logger"
 import { resolveMessageEventSessionID, resolveSessionEventID } from "../../shared/event-session-id"
+import {
+  hasAllFinalWaveReceipts,
+  resolveFinalWaveEnforcement,
+} from "./final-wave-enforcement"
 import { HOOK_NAME } from "./hook-name"
 import { isAbortError } from "./is-abort-error"
 import { handleAtlasSessionIdle } from "./idle-event"
@@ -57,7 +65,7 @@ export function createAtlasEventHandler(input: {
         state.lastEventWasAbortError = false
         state.skipNextIdleAfterRuntimeErrorRetry = false
         if (role === "user") {
-          state.waitingForFinalWaveApproval = false
+          maybeClearFinalWaveApprovalPause(state, ctx.directory)
         }
       }
       return
@@ -112,9 +120,39 @@ export function createAtlasEventHandler(input: {
           clearTimeout(compactedState.pendingRetryTimer)
           compactedState.pendingRetryTimer = undefined
         }
+        // Drop in-memory gate state only. Next idle/completion rebuilds from the
+        // receipt sidecar via reconstructFinalWavePauseState.
         sessions.delete(sessionID)
         log(`[${HOOK_NAME}] Session compacted: cleaned up`, { sessionID })
       }
     }
   }
+}
+
+function maybeClearFinalWaveApprovalPause(state: SessionState, directory: string): void {
+  const boulder = readBoulderState(directory)
+  if (!boulder) {
+    state.waitingForFinalWaveApproval = false
+    return
+  }
+
+  const planPath = resolveBoulderPlanPath(directory, boulder)
+  const enforcement = resolveFinalWaveEnforcement(planPath, directory)
+
+  if (enforcement.mode === "blocked") {
+    // Corrupt/contract-blocked waves never clear from a user message.
+    return
+  }
+
+  if (enforcement.mode === "enforced") {
+    // Explicit final user approval is only valid once every F-row has a receipt.
+    if (!hasAllFinalWaveReceipts(planPath, directory)) {
+      return
+    }
+    state.waitingForFinalWaveApproval = false
+    return
+  }
+
+  // Advisory / legacy: keep the previous clear-on-user-message behavior.
+  state.waitingForFinalWaveApproval = false
 }

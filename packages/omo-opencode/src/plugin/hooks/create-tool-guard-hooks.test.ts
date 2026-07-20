@@ -47,4 +47,22 @@ describe("createToolGuardHooks", () => {
     // then
     expect(capturedOptions).toEqual({ skipClaudeUserRules: true })
   })
+
+  it("registers reviewer-scope-guard when enabled", () => {
+    // given
+    const pluginConfig = {} as OhMyOpenCodeConfig
+    const { createToolGuardHooks } = require("./create-tool-guard-hooks")
+
+    // when
+    const hooks = createToolGuardHooks({
+      ctx: mockContext,
+      pluginConfig,
+      modelCacheState: mockModelCacheState,
+      isHookEnabled: (hookName: string) => hookName === "reviewer-scope-guard",
+      safeHookEnabled: true,
+    })
+
+    // then
+    expect(hooks.reviewerScopeGuard).not.toBeNull()
+  })
 })

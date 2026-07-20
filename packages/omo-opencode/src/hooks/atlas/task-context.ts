@@ -1,4 +1,5 @@
 import { readCurrentTopLevelTask } from "../../features/boulder-state"
+import { normalizeTrackedTopLevelTaskRef } from "./types"
 import type { PendingTaskRef, TrackedTopLevelTaskRef } from "./types"
 
 export function resolvePreferredSessionId(currentSessionId?: string, trackedSessionId?: string): string {
@@ -23,7 +24,7 @@ export function resolveTaskContext(
 
   if (pendingTaskRef.kind === "track") {
     return {
-      currentTask: pendingTaskRef.task,
+      currentTask: normalizeTrackedTopLevelTaskRef(pendingTaskRef.task),
       shouldSkipTaskSessionUpdate: false,
       shouldIgnoreCurrentSessionId: false,
     }
@@ -38,7 +39,7 @@ export function resolveTaskContext(
   }
 
   return {
-    currentTask: pendingTaskRef.task,
+    currentTask: normalizeTrackedTopLevelTaskRef(pendingTaskRef.task),
     shouldSkipTaskSessionUpdate: true,
     shouldIgnoreCurrentSessionId: true,
   }

@@ -171,6 +171,25 @@ export const AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
       { providers: ["opencode-go", "vercel"], model: "glm-5.2" },
     ],
   },
+  "qa-executor": {
+    fallbackChain: [
+      {
+        providers: ["openai", "github-copilot", "opencode", "vercel"],
+        model: "gpt-5.6-terra",
+        variant: "high",
+      },
+      {
+        providers: ["openai", "github-copilot", "opencode", "vercel"],
+        model: "gpt-5.5",
+        variant: "xhigh",
+      },
+      {
+        providers: ["anthropic", "github-copilot", "opencode", "vercel"],
+        model: "claude-opus-4-7",
+        variant: "max",
+      },
+    ],
+  },
   atlas: {
     fallbackChain: [
       { providers: ["anthropic", "github-copilot", "opencode", "vercel"], model: "claude-sonnet-4-6" },

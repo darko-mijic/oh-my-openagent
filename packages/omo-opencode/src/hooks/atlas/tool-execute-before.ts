@@ -9,9 +9,11 @@ import { getWorkForSession, readBoulderState, readCurrentTopLevelTask, resolveBo
 import { HOOK_NAME } from "./hook-name"
 import { ORCHESTRATOR_DELEGATION_REQUIRED, SINGLE_TASK_DIRECTIVE } from "./system-reminder-templates"
 import { isOmoPath } from "./omo-path"
+import { normalizeTrackedTopLevelTaskRef } from "./types"
 import type { PendingTaskRef, TrackedTopLevelTaskRef } from "./types"
 import { isWriteOrEditToolName } from "./write-edit-tool-policy"
 import { parseTrackedTaskFromPrompt } from "./task-prompt-parser"
+import { authorizeMarkedFinalWaveLaunch } from "./final-wave-launch-authorization"
 
 export function createToolExecuteBeforeHandler(input: {
   ctx: PluginInput
@@ -27,7 +29,7 @@ export function createToolExecuteBeforeHandler(input: {
   const resolveIsCallerOrchestrator = input.isCallerOrchestrator ?? ((sessionID) => isCallerOrchestrator(sessionID, ctx.client))
 
   function trackTask(callID: string, task: TrackedTopLevelTaskRef): void {
-    pendingTaskRefs.set(callID, { kind: "track", task })
+    pendingTaskRefs.set(callID, { kind: "track", task: normalizeTrackedTopLevelTaskRef(task) })
   }
 
   return async (toolInput, toolOutput): Promise<void> => {
@@ -95,12 +97,16 @@ export function createToolExecuteBeforeHandler(input: {
           const prompt = typeof toolOutput.args.prompt === "string" ? toolOutput.args.prompt : ""
           const taskFromPrompt = parseTrackedTaskFromPrompt(prompt)
           const boulderState = readBoulderState(ctx.directory)
-          const currentTask = boulderState
-            ? readCurrentTopLevelTask(resolveBoulderPlanPath(ctx.directory, boulderState))
+          const planPath = boulderState
+            ? resolveBoulderPlanPath(ctx.directory, boulderState)
+            : null
+          const currentTask = planPath
+            ? readCurrentTopLevelTask(planPath)
             : null
           const resolvedTask = taskFromPrompt ?? (currentTask
             ? {
                 key: currentTask.key,
+                section: currentTask.section,
                 label: currentTask.label,
                 title: currentTask.title,
               }
@@ -112,11 +118,12 @@ export function createToolExecuteBeforeHandler(input: {
                 callID: toolInput.callID,
               })
             }
-            const trackedTask = {
+            let trackedTask = normalizeTrackedTopLevelTaskRef({
               key: resolvedTask.key,
+              section: resolvedTask.section,
               label: resolvedTask.label,
               title: resolvedTask.title,
-            }
+            })
             const hasExistingClaim = [...pendingTaskRefs.values()].some((pendingTaskRef) => (
               pendingTaskRef.kind === "track" && pendingTaskRef.task.key === trackedTask.key
             ))
@@ -133,6 +140,28 @@ export function createToolExecuteBeforeHandler(input: {
                 taskKey: trackedTask.key,
               })
             } else {
+              // F-row launch authorization is prompt-echo based: only taskFromPrompt
+              // final-wave rows on MARKED plans get expectations (fail-safe deadlock otherwise).
+              if (
+                taskFromPrompt !== null
+                && trackedTask.section === "final-wave"
+                && planPath !== null
+              ) {
+                const authorization = authorizeMarkedFinalWaveLaunch({
+                  planPath,
+                  trackedTask,
+                  args: toolOutput.args,
+                  toolOutput,
+                  sessionID: toolInput.sessionID,
+                  callID: toolInput.callID,
+                  workspaceRoot: ctx.directory,
+                })
+                if (authorization.kind === "rejected") {
+                  // Hard reject: do not track or persist an expectation for a blocked launch.
+                  throw new Error(authorization.message)
+                }
+                trackedTask = authorization.task
+              }
               trackTask(toolInput.callID, trackedTask)
             }
           }

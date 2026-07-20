@@ -12,6 +12,7 @@ describe("parseTrackedTaskFromPrompt", () => {
     // then
     expect(task).toEqual({
       key: "todo:2",
+      section: "todo",
       label: "2",
       title: "Add tests",
     })

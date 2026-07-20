@@ -45,6 +45,106 @@ Per-task breakdown:
 Per your <boulder_completion_response> instructions, print the final ORCHESTRATION COMPLETE summary in your next turn. This nudge fires at most once.
 </system-reminder>`
 
+export const UNVERIFIED_FINAL_WAVE_REMINDER = `<unverified-final-wave>
+This Final Verification Wave has no reviewer role markers. It is running UNVERIFIED: reviewer identities are unauthenticated. Treat every completion as advisory only and do not rely on it for authenticated release approval.
+</unverified-final-wave>`
+
+export function buildFinalWaveNamedReviewerAdvisory(input: {
+  readonly fKey: string
+  readonly role: string
+  readonly expectedSubagent: string
+  readonly reason: "category" | "wrong-subagent" | "missing-subagent"
+  readonly requestedSubagent?: string
+  readonly requestedCategory?: string
+}): string {
+  const requested = formatFinalWaveRouteRequest(input)
+
+  return `
+<final-wave-named-reviewer-advisory>
+ADVISORY: Final-wave row ${input.fKey} requires named reviewer subagent_type="${input.expectedSubagent}" (role:${input.role}).
+Requested route was ${requested}. Categories never satisfy final-wave rows. Relaunch with the bound subagent.
+This launch is not blocked in advisory mode; the durable expectation was still recorded.
+</final-wave-named-reviewer-advisory>
+`
+}
+
+export function buildFinalWaveNamedReviewerRejection(input: {
+  readonly fKey: string
+  readonly role: string
+  readonly expectedSubagent: string
+  readonly reason: "category" | "wrong-subagent" | "missing-subagent"
+  readonly requestedSubagent?: string
+  readonly requestedCategory?: string
+}): string {
+  const requested = formatFinalWaveRouteRequest(input)
+
+  return `
+<final-wave-named-reviewer-rejection>
+REJECTED: Final-wave row ${input.fKey} requires named reviewer subagent_type="${input.expectedSubagent}" (role:${input.role}).
+Requested route was ${requested}. Categories never satisfy final-wave rows.
+This task() launch was blocked. No launch expectation was recorded. Relaunch with the bound subagent.
+</final-wave-named-reviewer-rejection>
+`
+}
+
+function formatFinalWaveRouteRequest(input: {
+  readonly reason: "category" | "wrong-subagent" | "missing-subagent"
+  readonly requestedSubagent?: string
+  readonly requestedCategory?: string
+}): string {
+  if (input.reason === "category") return `category="${input.requestedCategory ?? ""}"`
+  if (input.reason === "wrong-subagent") return `subagent_type="${input.requestedSubagent ?? ""}"`
+  return "no subagent_type"
+}
+
+export type FinalWaveCompletionAdvisoryReason =
+  | "missing-binding"
+  | "missing-identity"
+  | "identity-mismatch"
+  | "dirty-workspace"
+
+export function buildFinalWaveCompletionAdvisory(input: {
+  readonly reason: FinalWaveCompletionAdvisoryReason
+  readonly fKey?: string
+  readonly expectedSubagent?: string
+  readonly actualAgent?: string
+  readonly dirtyPaths?: readonly string[]
+}): string {
+  const row = input.fKey ?? "F?"
+  switch (input.reason) {
+    case "missing-binding":
+      return `
+<final-wave-completion-advisory>
+ADVISORY: Final-wave row ${row} completed without a durable launch binding. No approval receipt was written. Relaunch the named reviewer so the before-hook can stamp launchId and the after-hook can bind the child session.
+</final-wave-completion-advisory>
+`
+    case "missing-identity":
+      return `
+<final-wave-completion-advisory>
+ADVISORY: Final-wave row ${row} completed without a resolvable reviewer identity (tool metadata.agent and boulder task_sessions agent were both absent). No approval receipt was written.
+</final-wave-completion-advisory>
+`
+    case "identity-mismatch":
+      return `
+<final-wave-completion-advisory>
+ADVISORY: Final-wave row ${row} completed with identity mismatch (expected subagent_type="${input.expectedSubagent ?? "?"}", actual="${input.actualAgent ?? "?"}"). No approval receipt was written. Relaunch with the bound named reviewer.
+</final-wave-completion-advisory>
+`
+    case "dirty-workspace":
+      return `
+<final-wave-completion-advisory>
+ADVISORY: Final-wave row ${row} returned APPROVE but the canonical workspace has product-code modifications outside .omo/** (${(input.dirtyPaths ?? []).join(", ") || "dirty"}). No approval receipt was written until the tree is clean relative to the frozen baseline.
+</final-wave-completion-advisory>
+`
+    default:
+      return assertNever(input.reason)
+  }
+}
+
+function assertNever(value: never): never {
+  throw new Error(`Unexpected final-wave completion advisory reason: ${String(value)}`)
+}
+
 export const VERIFICATION_REMINDER = `**THE SUBAGENT JUST CLAIMED THIS TASK IS DONE. THEY ARE PROBABLY LYING.**
 
 Subagents say "done" when code has errors, tests pass trivially, logic is wrong,

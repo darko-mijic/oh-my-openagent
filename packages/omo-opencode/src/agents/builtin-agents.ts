@@ -11,6 +11,7 @@ import { createMultimodalLookerAgent, MULTIMODAL_LOOKER_PROMPT_METADATA } from "
 import { createMetisAgent, metisPromptMetadata } from "./metis"
 import { createAtlasAgent, atlasPromptMetadata } from "./atlas"
 import { createMomusAgent, momusPromptMetadata } from "./momus"
+import { createQaExecutorAgent } from "./qa-executor"
 import { createHephaestusAgent } from "./hephaestus"
 import { createSisyphusJuniorAgentWithOverrides } from "./sisyphus-junior"
 import type { AvailableCategory } from "./dynamic-agent-prompt-builder"
@@ -38,6 +39,7 @@ const agentSources: Record<BuiltinAgentName, AgentSource> = {
   "multimodal-looker": createMultimodalLookerAgent,
   metis: createMetisAgent,
   momus: createMomusAgent,
+  "qa-executor": createQaExecutorAgent,
   // Note: Atlas is handled specially in createBuiltinAgents()
   // because it needs OrchestratorContext, not just a model string
   atlas: createAtlasAgent as AgentFactory,

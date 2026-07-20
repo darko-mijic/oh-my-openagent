@@ -221,6 +221,21 @@ describe("resolveSubagentExecution", () => {
     expect(result.agentToUse).toBe("Sisyphus-Junior")
   })
 
+  test("resolves qa-executor as a callable final-wave subagent", async () => {
+    // given
+    const args = createBaseArgs({ subagent_type: "qa-executor" })
+    const executorCtx = createExecutorContext(async () => ([
+      { name: "qa-executor", mode: "subagent" },
+    ]))
+
+    // when
+    const result = await resolveSubagentExecution(args, executorCtx, "sisyphus", "deep")
+
+    // then
+    expect(result.error).toBeUndefined()
+    expect(result.agentToUse).toBe("qa-executor")
+  })
+
   test("renders a usable fallback hint when categoryExamples is empty for the default Sisyphus-Junior block", async () => {
     //#given
     const args = createBaseArgs({ subagent_type: "sisyphus-junior" })

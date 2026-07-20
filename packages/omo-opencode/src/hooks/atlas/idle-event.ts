@@ -5,6 +5,7 @@ import {
 } from "../../features/boulder-state"
 import { log } from "../../shared/logger"
 import { shouldPromptAfterSessionIdle } from "../shared/session-idle-settle"
+import { reconstructFinalWavePauseState } from "./final-wave-enforcement"
 import { HOOK_NAME } from "./hook-name"
 import { handleCompletedBoulderIdle } from "./idle-completion-nudge"
 import { hasRunningBackgroundTasks, injectContinuation, scheduleRetry } from "./idle-continuation"
@@ -76,6 +77,10 @@ export async function handleAtlasSessionIdle(input: {
   const now = Date.now()
   const activePlanPath = resolveBoulderPlanPath(ctx.directory, boulderState)
   resetStallStateForPlanChange(sessionState, activePlanPath)
+
+  // Compaction/restart drops in-memory state; rebuild the pause flag from the
+  // receipt sidecar before deciding whether idle may continue.
+  reconstructFinalWavePauseState(sessionState, activePlanPath, ctx.directory)
 
   if (sessionState.waitingForFinalWaveApproval) {
     log(`[${HOOK_NAME}] Skipped: waiting for explicit final-wave approval`, { sessionID })

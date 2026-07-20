@@ -5,6 +5,7 @@ import { createOracleAgent } from "./oracle"
 import { createLibrarianAgent } from "./librarian"
 import { createExploreAgent } from "./explore"
 import { createMomusAgent } from "./momus"
+import { createQaExecutorAgent } from "./qa-executor"
 import { createMetisAgent } from "./metis"
 import { createAtlasAgent } from "./atlas"
 import { createSisyphusAgent } from "./sisyphus"
@@ -150,6 +151,21 @@ describe("read-only agent tool restrictions", () => {
       // then
       expect(permission["task"]).toBeUndefined()
       expect(sessionRestrictions["task"]).toBeUndefined()
+    })
+  })
+
+  describe("qa-executor", () => {
+    test("permits scoped file tools while denying unscopeable apply_patch", () => {
+      // given
+      const agent = createQaExecutorAgent("openai/gpt-5.5")
+
+      // when
+      const permission = (agent.permission ?? {}) as Record<string, string>
+
+      // then
+      expect(agent.mode).toBe("subagent")
+      expect(agent.temperature).toBe(0.1)
+      expect(permission.apply_patch).toBe("deny")
     })
   })
 

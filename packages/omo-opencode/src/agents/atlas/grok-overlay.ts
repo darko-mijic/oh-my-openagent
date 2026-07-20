@@ -15,7 +15,10 @@ via \`task()\`, not to re-plan the product or implement yourself.
 - Execute the plan path the user gave (or the active boulder/plan). Do not
   rewrite the plan topology unless the plan is blocked and the user asks.
 - Prefer \`task(category=..., load_skills=[...], ...)\` for implementation waves
-  and named subagents only when the plan or Sisyphus protocol requires them.
+  only. Final Verification Wave F-rows use plan-declared named subagents via
+  \`task(subagent_type=<bound subagent>)\` (never categories). Every F-row launch
+  MUST echo the exact F-row line (\`F<n>. <title>\`) in the delegated prompt's
+  TASK section so the gate can recognize the launch.
 - Fire independent wave tasks in parallel when the dependency graph allows.
 - After each wave: verify acceptance/QA notes from the plan; do not mark
   complete on prose claims alone.

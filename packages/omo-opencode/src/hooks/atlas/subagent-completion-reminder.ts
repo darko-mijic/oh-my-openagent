@@ -1,7 +1,12 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { classifyFinalWaveVerdict, shouldPauseForFinalWaveApproval } from "./final-wave-approval-gate"
+import {
+  hasFinalWaveReceiptForRow,
+  resolveFinalWaveEnforcement,
+} from "./final-wave-enforcement"
 import { readFinalWavePlanState } from "./final-wave-plan-state"
 import type { SessionState } from "./types"
+import type { TrackedTopLevelTaskRef } from "./types"
 import {
   buildAdvanceDirective,
   buildCompletionGate,
@@ -11,10 +16,7 @@ import {
   buildRejectedVerdictEscalation,
 } from "./verification-reminders"
 
-type CurrentTask = {
-  readonly key: string
-  readonly label: string
-} | null
+type CurrentTask = Pick<TrackedTopLevelTaskRef, "key" | "label" | "section"> | null
 
 type ReminderDecision = {
   readonly leadReminder: string
@@ -22,6 +24,7 @@ type ReminderDecision = {
   readonly isFinalWaveTask: boolean
   readonly isMissingFinalWaveVerdict: boolean
   readonly isRejectedFinalWaveVerdict: boolean
+  readonly isUnverifiedFinalWave: boolean
   readonly shouldPauseForApproval: boolean
 }
 
@@ -37,30 +40,60 @@ export async function buildSubagentCompletionReminder(input: {
   readonly isAlreadyVerified: boolean
   readonly autoCommit: boolean
 }): Promise<ReminderDecision> {
-  const shouldPauseForApproval = input.sessionState
-    ? shouldPauseForFinalWaveApproval({
-        planPath: input.planPath,
-        taskOutput: input.originalResponse,
-        sessionState: input.sessionState,
-      })
-    : false
-
   const finalWavePlanState = readFinalWavePlanState(input.planPath)
-  const isFinalWaveTask = input.currentTask?.key.startsWith("final-wave:") === true
+  const isFinalWaveTask = input.currentTask?.section === "final-wave"
     || ((finalWavePlanState?.pendingImplementationTaskCount ?? 1) === 0
       && (finalWavePlanState?.pendingFinalWaveTaskCount ?? 0) > 0)
+  const enforcement = resolveFinalWaveEnforcement(input.planPath, input.ctx.directory)
+  const isUnverifiedFinalWave = isFinalWaveTask
+    && finalWavePlanState?.hasFinalVerificationWave === true
+    && finalWavePlanState.finalWaveRoles.status === "legacy-unmarked"
   const finalWaveVerdict = isFinalWaveTask
     ? classifyFinalWaveVerdict(input.originalResponse)
     : "missing"
   const isMissingFinalWaveVerdict = isFinalWaveTask && finalWaveVerdict === "missing"
   const isRejectedFinalWaveVerdict = isFinalWaveTask && finalWaveVerdict === "reject"
-  const shouldPause = shouldPauseForApproval || isMissingFinalWaveVerdict || isRejectedFinalWaveVerdict
+
+  // Under enforcement, checkbox state never authorizes an F-row advance.
+  const isAlreadyVerified = resolveIsAlreadyVerified({
+    isAlreadyVerified: input.isAlreadyVerified,
+    isFinalWaveTask,
+    currentTask: input.currentTask,
+    planPath: input.planPath,
+    enforcementMode: enforcement.mode,
+  })
+
+  const shouldPauseForApproval = input.sessionState
+    ? shouldPauseForFinalWaveApproval({
+        planPath: input.planPath,
+        taskOutput: input.originalResponse,
+        sessionState: input.sessionState,
+        workspaceRoot: input.ctx.directory,
+      })
+    : false
+  const shouldPause = shouldPauseForApproval
+    || isMissingFinalWaveVerdict
+    || isRejectedFinalWaveVerdict
+    || enforcement.mode === "blocked"
 
   if (input.sessionState) {
     input.sessionState.waitingForFinalWaveApproval = shouldPause
     if (shouldPause && input.sessionState.pendingRetryTimer) {
       clearTimeout(input.sessionState.pendingRetryTimer)
       input.sessionState.pendingRetryTimer = undefined
+    }
+  }
+
+  if (enforcement.mode === "blocked") {
+    await showFinalWaveToast(input.ctx, "Final wave blocked", enforcement.message)
+    return {
+      leadReminder: enforcement.message,
+      followupReminder: null,
+      isFinalWaveTask,
+      isMissingFinalWaveVerdict,
+      isRejectedFinalWaveVerdict,
+      isUnverifiedFinalWave,
+      shouldPauseForApproval: true,
     }
   }
 
@@ -76,6 +109,7 @@ export async function buildSubagentCompletionReminder(input: {
       isFinalWaveTask,
       isMissingFinalWaveVerdict,
       isRejectedFinalWaveVerdict,
+      isUnverifiedFinalWave,
       shouldPauseForApproval,
     }
   }
@@ -92,6 +126,7 @@ export async function buildSubagentCompletionReminder(input: {
       isFinalWaveTask,
       isMissingFinalWaveVerdict,
       isRejectedFinalWaveVerdict,
+      isUnverifiedFinalWave,
       shouldPauseForApproval,
     }
   }
@@ -103,17 +138,26 @@ export async function buildSubagentCompletionReminder(input: {
       isFinalWaveTask,
       isMissingFinalWaveVerdict,
       isRejectedFinalWaveVerdict,
+      isUnverifiedFinalWave,
       shouldPauseForApproval,
     }
   }
 
-  if (input.isAlreadyVerified) {
+  // Enforced F-rows may advance only with a durable receipt for that row.
+  // Checkbox state alone never authorizes; missing receipt re-enters the gate.
+  if (isAlreadyVerified && canAdvanceAfterVerified({
+    isFinalWaveTask,
+    currentTask: input.currentTask,
+    planPath: input.planPath,
+    enforcementMode: enforcement.mode,
+  })) {
     return {
       leadReminder: buildAdvanceDirective(input.planName),
       followupReminder: null,
       isFinalWaveTask,
       isMissingFinalWaveVerdict,
       isRejectedFinalWaveVerdict,
+      isUnverifiedFinalWave,
       shouldPauseForApproval,
     }
   }
@@ -129,8 +173,46 @@ export async function buildSubagentCompletionReminder(input: {
     isFinalWaveTask,
     isMissingFinalWaveVerdict,
     isRejectedFinalWaveVerdict,
+    isUnverifiedFinalWave,
     shouldPauseForApproval,
   }
+}
+
+function resolveIsAlreadyVerified(input: {
+  readonly isAlreadyVerified: boolean
+  readonly isFinalWaveTask: boolean
+  readonly currentTask: CurrentTask
+  readonly planPath: string
+  readonly enforcementMode: "enforced" | "advisory" | "blocked"
+}): boolean {
+  if (!input.isFinalWaveTask || input.currentTask === null) {
+    return input.isAlreadyVerified
+  }
+  if (input.enforcementMode === "blocked") {
+    return false
+  }
+  if (input.enforcementMode === "enforced") {
+    return hasFinalWaveReceiptForRow(input.planPath, input.currentTask.label)
+  }
+  return input.isAlreadyVerified
+}
+
+function canAdvanceAfterVerified(input: {
+  readonly isFinalWaveTask: boolean
+  readonly currentTask: CurrentTask
+  readonly planPath: string
+  readonly enforcementMode: "enforced" | "advisory" | "blocked"
+}): boolean {
+  if (!input.isFinalWaveTask || input.currentTask === null) {
+    return true
+  }
+  if (input.enforcementMode === "blocked") {
+    return false
+  }
+  if (input.enforcementMode === "enforced") {
+    return hasFinalWaveReceiptForRow(input.planPath, input.currentTask.label)
+  }
+  return true
 }
 
 async function showFinalWaveToast(ctx: PluginInput, title: string, message: string): Promise<void> {

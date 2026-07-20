@@ -900,6 +900,7 @@ session_id: ses_parallel_collision_222
         reason: "ambiguous_task_key",
         task: {
           key: "todo:1",
+          section: "todo",
           label: "1",
           title: "Implement auth flow",
         },

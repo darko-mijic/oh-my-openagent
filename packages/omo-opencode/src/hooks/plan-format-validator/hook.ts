@@ -5,6 +5,7 @@ import type { PluginInput } from "@opencode-ai/plugin"
 
 import { getPlanProgress } from "../../features/boulder-state/storage"
 import { log } from "../../shared/logger"
+import { buildFinalWaveMarkerWarning, getFinalWaveMarkerDiagnostics } from "./final-wave-marker-diagnostics"
 
 const WRITE_TOOLS = new Set(["Write", "Edit", "write", "edit"])
 
@@ -104,8 +105,22 @@ function isClosingFence(line: string, fence: MarkdownFence): boolean {
   return run?.charAt(0) === fence.marker && run.length >= fence.length
 }
 
-function buildWarning(rawCount: number, parsedCount: number, hasEmptySection: boolean): string {
+function buildWarning(
+  rawCount: number,
+  parsedCount: number,
+  hasEmptySection: boolean,
+  markerDiagnostics: readonly string[],
+): string {
   const skipped = rawCount - parsedCount
+
+  if (!hasEmptySection && skipped === 0 && markerDiagnostics.length > 0) {
+    return [
+      "",
+      "<plan-format-warning>",
+      buildFinalWaveMarkerWarning(markerDiagnostics),
+      "</plan-format-warning>",
+    ].join("\n")
+  }
 
   if (hasEmptySection) {
     const summary =
@@ -123,11 +138,12 @@ function buildWarning(rawCount: number, parsedCount: number, hasEmptySection: bo
       "followed by dot + space: `1.`, `2.`, `3.` — NOT `T1.`, `Phase 1:`, `Task-1.` etc.",
       "Every Final Verification Wave checkbox MUST start with `F` + number:",
       "`F1.`, `F2.` — NOT `T-F1.`, `F-1.`, `Final-1.` etc.",
+      ...(markerDiagnostics.length > 0 ? [buildFinalWaveMarkerWarning(markerDiagnostics)] : []),
       "</plan-format-warning>",
     ].join("\n")
   }
 
-  return [
+  const formatWarning = [
     "",
     "<plan-format-warning>",
     `Plan has **${rawCount} task checkbox(es)** but \`getPlanProgress()\` only parsed **${parsedCount}**. `,
@@ -138,7 +154,11 @@ function buildWarning(rawCount: number, parsedCount: number, hasEmptySection: bo
     "  `## TODOs` → `1.`, `2.`, `3.` (NOT `T1.`, `Phase 1:`, `Task-1.`)",
     "  `## Final Verification Wave` → `F1.`, `F2.`, `F3.` (NOT `T-F1.`, `F-1.`, `Final-1.`)",
     "</plan-format-warning>",
-  ].join("\n")
+  ]
+
+  if (markerDiagnostics.length === 0) return formatWarning.join("\n")
+
+  return [...formatWarning.slice(0, -1), buildFinalWaveMarkerWarning(markerDiagnostics), "</plan-format-warning>"].join("\n")
 }
 
 function isPlanWrite(tool: string, args: Record<string, unknown>): string | null {
@@ -183,11 +203,12 @@ export function createPlanFormatValidatorHook(_ctx: PluginInput) {
       const content = readFileSync(resolvedPath, "utf-8")
       const formatStats = analyzeStructuredSections(content)
       if (!formatStats.recognized) return
+      const markerDiagnostics = getFinalWaveMarkerDiagnostics(content)
 
       const progress = getPlanProgress(resolvedPath)
       const parsedCount = progress.total
 
-      if (!formatStats.hasEmptySection && !formatStats.hasMalformedRows) return
+      if (!formatStats.hasEmptySection && !formatStats.hasMalformedRows && markerDiagnostics.length === 0) return
 
       log(`[plan-format-validator] Plan ${filePath}: ${parsedCount}/${formatStats.rawCount} tasks parsed`, {
         sessionID: input.sessionID,
@@ -196,7 +217,12 @@ export function createPlanFormatValidatorHook(_ctx: PluginInput) {
         parsedCount,
       })
 
-      output.output = `${output.output}${buildWarning(formatStats.rawCount, parsedCount, formatStats.hasEmptySection)}`
+      output.output = `${output.output}${buildWarning(
+        formatStats.rawCount,
+        parsedCount,
+        formatStats.hasEmptySection,
+        markerDiagnostics,
+      )}`
     },
   }
 }

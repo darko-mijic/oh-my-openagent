@@ -6,9 +6,11 @@ import test from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const scriptPath = join(root, "skills", "ulw-plan", "scripts", "scaffold-plan.mjs");
+const componentSkillPath = join(root, "components", "ultrawork", "skills", "ulw-plan");
+const scriptPath = join(componentSkillPath, "scripts", "scaffold-plan.mjs");
 const scriptUrl = pathToFileURL(scriptPath).href;
-const workflowPath = join(root, "skills", "ulw-plan", "references", "full-workflow.md");
+const workflowPath = join(componentSkillPath, "references", "full-workflow.md");
+const sharedScriptPath = join(root, "..", "..", "shared-skills", "skills", "ulw-plan", "scripts", "scaffold-plan.mjs");
 
 test("#given the scaffold script and the workflow reference #when compared #then every plan header the script emits is documented in full-workflow.md (no drift)", async () => {
 	// given
@@ -43,6 +45,34 @@ test("#given buildPlanSkeleton #when intent is clear #then it surfaces a decisio
 	// then
 	assert.match(plan, /Decisions to sanity-check/);
 	assert.doesNotMatch(plan, /Decisions I made for you/);
+});
+
+test("#given buildPlanSkeleton #when it emits the final verification wave #then every row carries its fixed parser role marker", async () => {
+	// given
+	const { buildPlanSkeleton, FINAL_VERIFICATION_ITEMS } = await import(scriptUrl);
+
+	// when
+	const plan = buildPlanSkeleton("demo", "clear");
+
+	// then
+	assert.deepEqual(FINAL_VERIFICATION_ITEMS, [
+		{ n: 1, title: "Plan compliance audit", role: "plan-auditor" },
+		{ n: 2, title: "Code quality review", role: "code-reviewer" },
+		{ n: 3, title: "Real manual QA", role: "qa-executor" },
+		{ n: 4, title: "Scope fidelity", role: "scope-auditor" },
+	]);
+	assert.match(plan, /- \[ \] F1\. Plan compliance audit <!-- role:plan-auditor -->/);
+	assert.match(plan, /- \[ \] F2\. Code quality review <!-- role:code-reviewer -->/);
+	assert.match(plan, /- \[ \] F3\. Real manual QA <!-- role:qa-executor -->/);
+	assert.match(plan, /- \[ \] F4\. Scope fidelity <!-- role:scope-auditor -->/);
+});
+
+test("#given the shared and Codex scaffold sources #when their bytes are compared #then the dual-maintained copies remain identical", async () => {
+	// when
+	const [sharedSource, codexSource] = await Promise.all([readFile(sharedScriptPath, "utf8"), readFile(scriptPath, "utf8")]);
+
+	// then
+	assert.equal(codexSource, sharedSource);
 });
 
 test("#given resolveSafeOmoPath #when the target escapes .omo or the workspace #then it is refused (the script never escapes .omo)", async () => {

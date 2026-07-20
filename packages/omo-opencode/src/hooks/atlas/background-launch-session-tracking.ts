@@ -11,6 +11,7 @@ import {
   upsertTaskSessionStateForWork,
 } from "../../features/boulder-state"
 import { log } from "../../shared/logger"
+import { recordFinalWaveLaunchBinding } from "./final-wave-completion-verification"
 import { HOOK_NAME } from "./hook-name"
 import { extractSessionIdFromOutput, validateSubagentSessionId } from "./subagent-session-id"
 import { resolveTaskContext } from "./task-context"
@@ -57,12 +58,10 @@ export async function syncBackgroundLaunchSessionTracking(input: {
     appendSessionId(ctx.directory, trackedSessionId, "appended")
   }
 
-  const { currentTask, shouldSkipTaskSessionUpdate } = resolveTaskContext(
-    pendingTaskRef,
-    trackedWork
-      ? resolveBoulderPlanPathForWork(ctx.directory, trackedWork)
-      : resolveBoulderPlanPath(ctx.directory, boulderState),
-  )
+  const planPath = trackedWork
+    ? resolveBoulderPlanPathForWork(ctx.directory, trackedWork)
+    : resolveBoulderPlanPath(ctx.directory, boulderState)
+  const { currentTask, shouldSkipTaskSessionUpdate } = resolveTaskContext(pendingTaskRef, planPath)
 
   if (currentTask && !shouldSkipTaskSessionUpdate) {
     if (trackedWork) {
@@ -86,10 +85,18 @@ export async function syncBackgroundLaunchSessionTracking(input: {
     }
   }
 
+  const bindingTask = pendingTaskRef?.kind === "track" ? pendingTaskRef.task : currentTask
+  recordFinalWaveLaunchBinding({
+    planPath,
+    task: bindingTask,
+    childSessionId: trackedSessionId,
+  })
+
   log(`[${HOOK_NAME}] Background launch session tracked`, {
     sessionID: toolInput.sessionID,
     subagentSessionId: trackedSessionId,
     taskKey: currentTask?.key,
+    launchId: bindingTask && "launchId" in bindingTask ? bindingTask.launchId : undefined,
   })
 }
 

@@ -158,10 +158,19 @@ No Metis, no plan file, no execution until the user approves. The UNCLEAR path a
 
 ## Plan artifact producer contract
 
-When producing the plan, encode every executable item as a column-zero Markdown task row: implementation rows MUST match `- [ ] N. <title>` (where `N` is a positive decimal integer), and final-verifier rows MUST match `- [ ] F<number>. <title>`. Prose headings, numbered paragraphs, and ordinary bullets are not task substitutes and MUST NOT be counted as implementation or final-verifier tasks. Before handoff, run a structural self-check over the plan: verify that every implementation row and final-verifier row is column-zero, matches its required grammar, and appears in the intended `## Todos` or `## Final verification wave` section; verify that no prose heading or bullet is being used as a task; and repair the plan before handoff if any check fails.
+When producing the plan, encode every executable item as a column-zero Markdown task row: implementation rows MUST match `- [ ] N. <title>` (where `N` is a positive decimal integer), and final-verifier rows MUST match `- [ ] F<number>. <title> <!-- role:<role> -->`. The role comment has no extra spaces and appears before any scope attribute when present. Prose headings, numbered paragraphs, and ordinary bullets are not task substitutes and MUST NOT be counted as implementation or final-verifier tasks. Before handoff, run a structural self-check over the plan: verify that every implementation row and final-verifier row is column-zero, matches its required grammar, and appears in the intended `## Todos` or `## Final verification wave` section; verify that no prose heading or bullet is being used as a task; and repair the plan before handoff if any check fails.
 
 ### Final verification wave (after ALL todos)
 Runs in parallel; ALL must APPROVE; surface results and wait for the user's explicit okay before declaring complete: F1 plan compliance audit, F2 code quality review, F3 real manual QA, F4 scope fidelity.
+
+The scaffold emits a parser-readable reviewer marker on every final-verifier row: `<!-- role:plan-auditor -->`, `<!-- role:code-reviewer -->`, `<!-- role:qa-executor -->`, or `<!-- role:scope-auditor -->`. Codex treats these as prompt-level equivalents, not runtime role enforcement:
+
+| Final row | Role marker | Codex prompt-level equivalent |
+| --- | --- | --- |
+| F1. Plan compliance audit | `plan-auditor` | `lazycodex-gate-reviewer` |
+| F2. Code quality review | `code-reviewer` | `lazycodex-code-reviewer` |
+| F3. Real manual QA | `qa-executor` | `lazycodex-qa-executor` |
+| F4. Scope fidelity | `scope-auditor` | `lazycodex-gate-reviewer` |
 
 ## Phase 4 - Deliver
 - CLEAR with `review_required: false`: present the plan summary, then ask ONE question and stop - start work now, or run a high-accuracy review first? Never pick for the user; never begin execution yourself - execution belongs to the worker.

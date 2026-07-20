@@ -30,7 +30,19 @@ export interface ToolExecuteAfterOutput {
   metadata: Record<string, unknown>
 }
 
-export type TrackedTopLevelTaskRef = Pick<TopLevelTaskRef, "key" | "label" | "title">
+export type TrackedTopLevelTaskRef = Pick<TopLevelTaskRef, "key" | "label" | "title"> & {
+  readonly section?: TopLevelTaskRef["section"]
+  readonly expectedRole?: string
+  readonly expectedSubagent?: string
+  readonly launchId?: string
+}
+
+export function normalizeTrackedTopLevelTaskRef(task: TrackedTopLevelTaskRef): TrackedTopLevelTaskRef & {
+  readonly section: TopLevelTaskRef["section"]
+} {
+  const section = task.section ?? (task.key.startsWith("final-wave:") ? "final-wave" : "todo")
+  return { ...task, section }
+}
 
 export type PendingTaskRef =
   | { kind: "track"; task: TrackedTopLevelTaskRef }

@@ -1,5 +1,6 @@
 import { describe, test, expect } from "bun:test"
 import { getAtlasPromptSource } from "./agent"
+import { resolveAtlasPromptFamily } from "../atlas-runtime-prompt-reconciler"
 
 describe("getAtlasPromptSource routes each model family to its dedicated variant", () => {
   test("GPT models route to gpt", () => {
@@ -52,6 +53,15 @@ describe("getAtlasPromptSource routes each model family to its dedicated variant
 
   test("unrecognized model falls through to default", () => {
     expect(getAtlasPromptSource("opencode-go/big-pickle")).toBe("default")
+  })
+
+  test("Grok 4.5 uses default prompt source and grok reconciler family", () => {
+    // given
+    const model = "xai/grok-4.5"
+
+    // when / then — no dedicated grok.md; overlay rides on default body
+    expect(getAtlasPromptSource(model)).toBe("default")
+    expect(resolveAtlasPromptFamily(model)).toBe("grok")
   })
 
   test("GPT detection takes priority over Claude family naming", () => {

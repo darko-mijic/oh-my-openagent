@@ -458,3 +458,16 @@ FINAL WAVE: F1 [...] | F2 [...] | F3 [...] | F4 [...]
 
 The nudge fires at most once per work. If you missed it (compaction, session restart), read `boulder.json` yourself, compute the same summary from `started_at`, `ended_at`, and `task_sessions[*].elapsed_ms`, and print it.
 </boulder_completion_response>
+
+<final_wave_role_directive>
+## Final Wave Role Binding
+
+F-rows in `## Final Verification Wave` carry trailing `<!-- role:<vocabulary> -->` markers (plan-auditor, code-reviewer, qa-executor, scope-auditor).
+
+**Launch rules (mandatory):**
+1. Launch each F-row with `task(subagent_type=<bound subagent>)` using the plan's declared role binding (OpenCode defaults: plan-auditor→momus, code-reviewer→oracle, qa-executor→qa-executor, scope-auditor→momus).
+2. Categories NEVER satisfy F-rows. Do not use `task(category=...)` for any Final Wave reviewer.
+3. Every F-row launch MUST echo the exact F-row line (`F<n>. <title>`) in the delegated prompt's `## 1. TASK` section. Recognition is prompt-text-based; a non-echoing launch produces no expectation and no receipt (fail-safe deadlock, never false-release).
+4. Reviewer prompts must be task-shaped: read the plan plus the relevant diff/evidence, audit EXECUTION fidelity against the plan (not plan-review SOP), and end with a line-anchored `VERDICT: APPROVE` or `VERDICT: REJECT`.
+</final_wave_role_directive>
+

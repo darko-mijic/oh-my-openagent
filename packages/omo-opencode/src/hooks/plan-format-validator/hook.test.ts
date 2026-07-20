@@ -149,6 +149,123 @@ Describe the first implementation section here.
     }
   })
 
+  test("appends an unknown-role marker warning without rejecting the write", async () => {
+    // given
+    const fixture = createFixture(`# Plan
+
+## Final Verification Wave
+- [ ] F1. Audit <!-- role:security-hunter -->
+`)
+
+    try {
+      // when
+      await fixture.run()
+
+      // then
+      expect(fixture.output.output).toContain("unknown role: security-hunter")
+      expect(fixture.output.output).toContain("advisory only")
+    } finally {
+      fixture.cleanup()
+    }
+  })
+
+  test("appends a category-as-role marker warning", async () => {
+    // given
+    const fixture = createFixture(`# Plan
+
+## Final Verification Wave
+- [ ] F1. Audit <!-- role:deep -->
+`)
+
+    try {
+      // when
+      await fixture.run()
+
+      // then
+      expect(fixture.output.output).toContain("DC-1 category cannot be a reviewer role: deep")
+    } finally {
+      fixture.cleanup()
+    }
+  })
+
+  test("appends a duplicate-role marker warning", async () => {
+    // given
+    const fixture = createFixture(`# Plan
+
+## Final Verification Wave
+- [ ] F1. Audit <!-- role:plan-auditor role:code-reviewer -->
+`)
+
+    try {
+      // when
+      await fixture.run()
+
+      // then
+      expect(fixture.output.output).toContain("duplicate role attribute")
+    } finally {
+      fixture.cleanup()
+    }
+  })
+
+  test("appends a malformed-marker warning", async () => {
+    // given
+    const fixture = createFixture(`# Plan
+
+## Final Verification Wave
+- [ ] F1. Audit <!-- scope:src/a.ts -->
+`)
+
+    try {
+      // when
+      await fixture.run()
+
+      // then
+      expect(fixture.output.output).toContain("malformed Final Verification Wave role marker")
+    } finally {
+      fixture.cleanup()
+    }
+  })
+
+  test("does not append a marker warning for a legacy-unmarked final wave", async () => {
+    // given
+    const fixture = createFixture(`# Plan
+
+## Final Verification Wave
+- [ ] F1. Legacy review
+`)
+    const originalOutput = fixture.output.output
+
+    try {
+      // when
+      await fixture.run()
+
+      // then
+      expect(fixture.output.output).toBe(originalOutput)
+    } finally {
+      fixture.cleanup()
+    }
+  })
+
+  test("does not append a marker warning for a correctly marked final wave", async () => {
+    // given
+    const fixture = createFixture(`# Plan
+
+## Final Verification Wave
+- [ ] F1. Audit <!-- role:plan-auditor -->
+`)
+    const originalOutput = fixture.output.output
+
+    try {
+      // when
+      await fixture.run()
+
+      // then
+      expect(fixture.output.output).toBe(originalOutput)
+    } finally {
+      fixture.cleanup()
+    }
+  })
+
   test("warns when a structured plan has malformed checkboxes", async () => {
     // given
     const fixture = createFixture(`# Plan\n\n## Todos\n- [ ] missing a numeric task label`)
