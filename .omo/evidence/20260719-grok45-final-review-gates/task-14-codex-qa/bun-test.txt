@@ -14,7 +14,7 @@ packages/omo-opencode/src/shared/prompt-async-route-audit.test.ts:
 
 packages/omo-opencode/src/cli/cli-installer.telemetry.test.ts:
 
- oMoMoMoMo... Install 
+ oMoMoMoMo... Install
 
 [1/4] Checking OpenCode installation...
 [OK] OpenCode 1.4.0 detected
@@ -80,7 +80,7 @@ packages/omo-senpi/src/extension/index.test.ts:
 omo-senpi ulw-loop inactive; omo binary not found undefined
 [lsp] ignored shutdown request failure during cleanup: LSP server workspace-edit-fixture at /tmp/lsp-apply-edit-M546Qx exited with code 0
 
-  ⚙ read_file filePath=/src/index.ts  
+  ⚙ read_file filePath=/src/index.ts
 
 packages/omo-opencode/src/__tests__/perf/plugin-init.test.ts:
 empty-project: cold=301.1ms warm=[168.2, 179.7] median=179.7ms

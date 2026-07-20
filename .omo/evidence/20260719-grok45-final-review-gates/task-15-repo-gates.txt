@@ -2,7 +2,7 @@
 omo-senpi ulw-loop inactive; omo binary not found undefined
 [lsp] ignored shutdown request failure during cleanup: LSP server workspace-edit-fixture at /tmp/lsp-apply-edit-oX09Vi exited with code 0
 
-  ⚙ read_file filePath=/src/index.ts  
+  ⚙ read_file filePath=/src/index.ts
 
 packages/omo-opencode/src/__tests__/perf/plugin-init.test.ts:
 empty-project: cold=159.0ms warm=[184.2, 123.9] median=159.0ms

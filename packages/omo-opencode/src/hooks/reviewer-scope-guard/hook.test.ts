@@ -96,7 +96,7 @@ describe("createReviewerScopeGuardHook", () => {
     await expect(result).resolves.toBeUndefined()
   })
 
-  test("#given qa-executor #when writing evidence in its worktree #then allows the write", async () => {
+  test("#given qa-executor #when writing under .omo/evidence #then allows the write", async () => {
     // given
     const worktree = createWorktree()
 
@@ -112,7 +112,55 @@ describe("createReviewerScopeGuardHook", () => {
     await expect(result).resolves.toBeUndefined()
   })
 
-  test("#given qa-executor #when writing outside its session worktree #then denies the write", async () => {
+  test("#given qa-executor #when writing under worktree evidence/ #then allows the write", async () => {
+    // given
+    const worktree = createWorktree()
+
+    // when
+    const result = invoke({
+      agent: "qa-executor",
+      worktree,
+      tool: "Write",
+      toolArgs: { filePath: join(worktree, "evidence", "manual-qa", "result.md") },
+    })
+
+    // then
+    await expect(result).resolves.toBeUndefined()
+  })
+
+  test("#given qa-executor #when writing OS temp evidence #then allows the write", async () => {
+    // given
+    const worktree = createWorktree()
+
+    // when
+    const result = invoke({
+      agent: "qa-executor",
+      worktree,
+      tool: "Write",
+      toolArgs: { filePath: join(tmpdir(), "reviewer-scope-guard-temp", "result.md") },
+    })
+
+    // then
+    await expect(result).resolves.toBeUndefined()
+  })
+
+  test("#given qa-executor #when writing a product file under the worktree #then denies the write", async () => {
+    // given
+    const worktree = createWorktree()
+
+    // when
+    const result = invoke({
+      agent: "qa-executor",
+      worktree,
+      tool: "Write",
+      toolArgs: { filePath: join(worktree, "src", "index.ts") },
+    })
+
+    // then
+    await expect(result).rejects.toThrow(".omo/evidence/**, worktree evidence/**, or OS temp")
+  })
+
+  test("#given qa-executor #when writing outside evidence and temp roots #then denies the write", async () => {
     // given
     const worktree = createWorktree()
 
@@ -125,7 +173,7 @@ describe("createReviewerScopeGuardHook", () => {
     })
 
     // then
-    await expect(result).rejects.toThrow("QA evidence, OS temp, or its session worktree")
+    await expect(result).rejects.toThrow(".omo/evidence/**, worktree evidence/**, or OS temp")
   })
 
   test("#given qa-executor #when node test targets its worktree #then allows the QA command", async () => {

@@ -487,4 +487,3 @@ F-rows in `## Final Verification Wave` carry trailing `<!-- role:<vocabulary> --
 3. Every F-row launch MUST echo the exact F-row line (`F<n>. <title>`) in the delegated prompt's `## 1. TASK` section. Recognition is prompt-text-based; a non-echoing launch produces no expectation and no receipt (fail-safe deadlock, never false-release).
 4. Reviewer prompts must be task-shaped: read the plan plus the relevant diff/evidence, audit EXECUTION fidelity against the plan (not plan-review SOP), and end with a line-anchored `VERDICT: APPROVE` or `VERDICT: REJECT`.
 </final_wave_role_directive>
-

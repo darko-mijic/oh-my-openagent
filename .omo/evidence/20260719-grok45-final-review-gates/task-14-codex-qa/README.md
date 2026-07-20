@@ -1,7 +1,7 @@
 # Task 14 — Codex QA (ulw-plan role-marker parity)
 
-**Date:** 2026-07-20  
-**Plan todo:** `.omo/plans/grok45-final-review-gates.md` checkbox 14  
+**Date:** 2026-07-20
+**Plan todo:** `.omo/plans/grok45-final-review-gates.md` checkbox 14
 **Scope:** Prove regenerated `ulw-plan` scaffold emits F1–F4 role markers, dual-review drift pin is green, isolated local install works, and real `~/.codex/config.toml` is untouched.
 
 ## What was tested

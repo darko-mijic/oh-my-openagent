@@ -112,11 +112,17 @@ function isQaExecutorCommand(tokens: readonly string[], worktree: string): boole
 
 function isQaWritablePath(filePath: string, worktree: string): boolean {
   const resolvedPath = resolve(worktree, filePath)
-  const evidenceRoot = resolve(worktree, ".omo", "evidence")
+  const resolvedWorktree = resolve(worktree)
+  const omoEvidenceRoot = resolve(resolvedWorktree, ".omo", "evidence")
+  const worktreeEvidenceRoot = resolve(resolvedWorktree, "evidence")
   const tempRoot = resolve(tmpdir())
-  return isPathWithin(resolvedPath, evidenceRoot)
-    || isPathWithin(resolvedPath, tempRoot)
-    || isPathWithin(resolvedPath, worktree)
+  // Worktrees often live under OS temp (tests, disposable checkouts). Temp
+  // allowance must not reopen the whole worktree for product writes.
+  const isOutsideWorktreeTemp = isPathWithin(resolvedPath, tempRoot)
+    && !isPathWithin(resolvedPath, resolvedWorktree)
+  return isPathWithin(resolvedPath, omoEvidenceRoot)
+    || isPathWithin(resolvedPath, worktreeEvidenceRoot)
+    || isOutsideWorktreeTemp
 }
 
 async function getSessionWorktree(ctx: PluginInput, sessionID: string): Promise<string> {
@@ -145,7 +151,7 @@ export function createReviewerScopeGuardHook(ctx: PluginInput) {
         const filePath = readToolPath(output.args)
         const worktree = await getSessionWorktree(ctx, input.sessionID)
         if (filePath === undefined || !isQaWritablePath(filePath, worktree)) {
-          throw new Error("[reviewer-scope-guard] qa-executor writes are limited to QA evidence, OS temp, or its session worktree.")
+          throw new Error("[reviewer-scope-guard] qa-executor writes are limited to .omo/evidence/**, worktree evidence/**, or OS temp.")
         }
         return
       }
