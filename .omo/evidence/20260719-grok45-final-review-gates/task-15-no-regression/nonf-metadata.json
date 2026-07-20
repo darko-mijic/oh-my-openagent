@@ -1,0 +1,13 @@
+{
+  "agent": "Sisyphus-Junior",
+  "agent_normalized": "sisyphus-junior",
+  "category": "unspecified-high",
+  "model": {
+    "providerID": "xai",
+    "modelID": "grok-4.5",
+    "variant": "high"
+  },
+  "model_str": "xai/grok-4.5",
+  "agent_ok": true,
+  "model_ok": true
+}

@@ -1,0 +1,45 @@
+
+[1mVerify local plugin wiring + freshness[0m
+
+[1mLocal OmO plugin status[0m
+Repo:    /home/darko-mijic/dev-projects/oh-my-opencode-private
+Expect:  branch feat/grok-4.5-basic-support
+Plugin:  file:///home/darko-mijic/dev-projects/oh-my-opencode-private
+Config:  /home/darko-mijic/.config/opencode/opencode.jsonc
+Omo cfg: /home/darko-mijic/.config/opencode/oh-my-openagent.jsonc
+TUI cfg: /home/darko-mijic/.config/opencode/tui.json
+Branch:  feat/grok-4.5-basic-support
+HEAD:    c74bb2f22
+[32m✓[0m on expected branch
+[32m✓[0m dist/index.js present (2026-07-20 06:31:25 CEST, 5566199 bytes)
+
+[1mOpenCode config plugins[0m
+  - file:///home/darko-mijic/dev-projects/oh-my-opencode-private
+[32m✓[0m opencode.jsonc points at local file:// checkout
+
+[1mTUI config plugins[0m
+  - file:///home/darko-mijic/dev-projects/oh-my-opencode-private
+[32m✓[0m tui.json includes local file:// checkout
+[32m✓[0m oh-my-openagent.jsonc present
+[33m⚠[0m OpenCode is already running (PID(s): 181397 415440)
+  status/verify inspect files on disk; they cannot prove a running process reloaded dist or config
+  restart each affected OpenCode process after rebuild or config changes
+[32m✓[0m package.json present
+[32m✓[0m dist marker: Grok Prometheus process law
+[32m✓[0m dist marker: preferGrokHeuristicThinkingOptOut
+[32m✓[0m dist marker: xai/grok-4.5
+[32m✓[0m dist marker: isGrokModel
+dist mtime:    2026-07-20 06:31:25 CEST
+newest source: 2026-07-20 04:47:28 CEST  (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/subagent-completion-reminder.ts)
+[32m✓[0m dist is not older than tracked sources (heuristic)
+[32m✓[0m opencode.jsonc has local plugin
+[32m✓[0m exactly one OpenCode config is active: opencode.jsonc
+
+[1mProvider authentication[0m
+[32m✓[0m all configured providers are authenticated in OpenCode
+[33m⚠[0m git worktree has 74 dirty paths (ok if intentional)
+
+[1mResult[0m
+[32m✓[0m local plugin files look current and wired
+This is a disk check, not proof that an existing process reloaded dist/ or config.
+VERIFY_EXIT:0

@@ -1,0 +1,145 @@
+# Task 15 — No-regression proof: ordinary Grok category delegation + full repo gates
+
+Plan: grok45-final-review-gates on feat/grok-4.5-basic-support
+Date: 2026-07-20
+OpenCode: 1.18.3
+
+## WHAT WAS TESTED
+
+1. NON-F implementation category delegation on Grok-pinned config
+   - Isolated XDG sandbox + local file:// plugin + fake OpenAI/xAI Responses server
+   - Grok-pinned oh-my-openagent.json: sisyphus-junior + unspecified-high → xai/grok-4.5
+   - Fake model issued task(category="unspecified-high") without F-row echo
+   - Asserted tool metadata.agent normalizes to sisyphus-junior and model is xai/grok-4.5
+
+2. Polarity contrast: marked F-row category route rejected
+   - Same sandbox; marked F1–F4 plan + boulder parent session
+   - Fake model issued task(category="unspecified-high") with F2 echo
+   - Asserted final-wave-named-reviewer-rejection on the wire
+
+3. Repo gates (all exit 0)
+   - bun test --timeout 30000
+   - bun run typecheck
+   - bun run build
+   - dist/skills/ulw-plan/scripts/scaffold-plan.mjs emits F1–F4 role markers + reviewer-binding guidance
+
+4. Host local plugin refresh (FINAL step after green gates)
+   - ~/.config/opencode/doc/omo-local-plugin.sh refresh
+   - ~/.config/opencode/doc/omo-local-plugin.sh verify
+
+5. Host DB isolation for sandbox spawn
+   - Real ~/.local/share/opencode/opencode.db session count before/after
+
+## WHAT WAS OBSERVED
+
+### (1) Non-F category → sisyphus-junior + grok-4.5
+
+Artifact: task-15-no-regression/nonf-metadata.json
+
+```json
+{
+  "agent": "Sisyphus-Junior",
+  "agent_normalized": "sisyphus-junior",
+  "category": "unspecified-high",
+  "model": {
+    "providerID": "xai",
+    "modelID": "grok-4.5",
+    "variant": "high"
+  },
+  "model_str": "xai/grok-4.5",
+  "agent_ok": true,
+  "model_ok": true
+}
+```
+
+Agent list also showed sisyphus-junior model field {"modelID":"grok-4.5","providerID":"xai"}.
+
+### (2) F-row category polarity reject
+
+Artifact: task-15-no-regression/reject-message.txt / reject-run.jsonl / reject-sse.jsonl
+
+Contains:
+  <final-wave-named-reviewer-rejection>
+  REJECTED: Final-wave row F2 requires named reviewer subagent_type="oracle" (role:code-reviewer).
+  Requested route was category="unspecified-high". Categories never satisfy final-wave rows.
+
+### (3) Repo gates
+
+| Gate | Exit | Summary |
+|------|------|---------|
+| bun test --timeout 30000 | 0 | 12002 pass / 3 skip / 0 fail (1526 files, ~415s) |
+| bun run typecheck | 0 | tsgo root + script + packages clean |
+| bun run build | 0 | build: all steps completed |
+| scaffold-plan markers | 0 | F1–F4 <!-- role:... --> emitted; full-workflow binds momus/oracle/qa-executor/momus |
+
+Artifacts: task-15-repo-gates.txt, task-15-scaffold-markers.txt
+
+### (4) Host refresh + verify
+
+| Command | Exit |
+|---------|------|
+| omo-local-plugin.sh refresh | 0 |
+| omo-local-plugin.sh verify | 0 |
+
+verify highlights:
+  - branch feat/grok-4.5-basic-support
+  - opencode.jsonc + tui.json point at file:// local checkout
+  - dist markers include xai/grok-4.5 / isGrokModel
+  - sisyphus-junior: xai/grok-4.5 (medium)
+  - unspecified-high: xai/grok-4.5 (high)
+  - all configured providers authenticated
+  - warning only: OpenCode already running (restart needed for live process reload) — disk wiring OK
+
+Artifacts: task-15-refresh.log, task-15-verify.log
+
+### (5) Isolation
+
+```
+host_session_count_before=98
+host_session_count_after=98
+host_session_count_diff=0
+unchanged=yes
+sandbox_session_count=3
+```
+
+Overall sandbox gate: task-15-no-regression/qa-pass.txt
+```
+QA_PASS nonf_sisyphus_junior_grok=yes marked_f_category_reject=yes isolation_diff=0 atlas=Atlas - Plan Executor
+```
+
+## WHY IT IS ENOUGH
+
+- Real OpenCode harness (serve + run --format json + SSE), not unit tests alone.
+- ISSUE-8 no-regression proven: ordinary category task still resolves agent sisyphus-junior and model xai/grok-4.5 under Grok-pinned config.
+- Polarity contrast in the same sandbox proves F-row category misroutes remain hard-rejected while non-F category routes succeed.
+- All four repo gates green including post-build scaffold marker emission.
+- Host dogfood wiring refreshed and verified after gates (refresh was last).
+
+## WHAT WAS OMITTED
+
+- Real provider API calls (local fake Responses server; synthetic qa-nonsecret keys only).
+- Raw auth headers, env dumps, tokens.
+- Codex-side re-run (owned by Todo 14).
+- Full F1–F4 multi-reviewer wave (owned by final verification wave).
+- Live OpenCode process restart after refresh (disk verify passed; running PIDs warned).
+
+## HOW TO REPRODUCE
+
+```bash
+# sandbox polarity + Grok category route
+bash .omo/evidence/20260719-grok45-final-review-gates/task-15-no-regression/run-isolated-qa.sh
+
+# repo gates
+bun test --timeout 30000
+bun run typecheck
+bun run build
+# then assert dist/skills/ulw-plan/scripts/scaffold-plan.mjs F-rows
+
+# host wiring LAST
+~/.config/opencode/doc/omo-local-plugin.sh refresh
+~/.config/opencode/doc/omo-local-plugin.sh verify
+```
+
+## RESULT
+
+PASS — Todo 15 complete. All implementation todos done; only final verification wave F1–F4 remains.

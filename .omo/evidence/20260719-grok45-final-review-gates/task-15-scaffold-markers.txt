@@ -1,0 +1,39 @@
+=== scaffold-plan marker assertion (post-build) ===
+path=dist/skills/ulw-plan/scripts/scaffold-plan.mjs
+mtime=2026-07-20 06:26:22.922989411 +0200
+--- FINAL_VERIFICATION_ITEMS ---
+40:export const FINAL_VERIFICATION_ITEMS = [
+43:	{ n: 3, title: "Real manual QA", role: "qa-executor" },
+166:  momus:
+280:${FINAL_VERIFICATION_ITEMS.map((item) => `- [ ] F${item.n}. ${item.title} <!-- role:${item.role} -->`).join("\n")}
+--- emit line ---
+280:${FINAL_VERIFICATION_ITEMS.map((item) => `- [ ] F${item.n}. ${item.title} <!-- role:${item.role} -->`).join("\n")}
+--- dry-run emit ---
+-rw-rw-r-- 1 darko-mijic darko-mijic 2564 Jul 20 06:31 .omo/plans/todo15-marker-check.md
+/tmp/tmp.QbjmTsQg80/.omo/plans/todo15-marker-check.md
+/tmp/tmp.QbjmTsQg80/.omo/drafts/todo15-marker-check.md
+/tmp/tmp.QbjmTsQg80/run2.txt
+/tmp/tmp.QbjmTsQg80/scaffold-out.txt
+plan_candidate=/tmp/tmp.QbjmTsQg80/.omo/plans/todo15-marker-check.md
+--- plan F-rows ---
+53:- [ ] F1. Plan compliance audit <!-- role:plan-auditor -->
+54:- [ ] F2. Code quality review <!-- role:code-reviewer -->
+55:- [ ] F3. Real manual QA <!-- role:qa-executor -->
+56:- [ ] F4. Scope fidelity <!-- role:scope-auditor -->
+OK marker vocabulary: plan-auditor
+OK marker vocabulary: code-reviewer
+OK marker vocabulary: qa-executor
+OK marker vocabulary: scope-auditor
+OK emission template uses role markers
+59:    "momus": { "status": "pending", "workspace_root": null, "runtime_home": null, "target": ".omo/plans/<slug>.md", "round_id": null, "plan_sha256": null, "launch_id": null, "session": null, "result": null },
+82:    "momus": { "status": "pending", "workspace_root": "<literal-canonical-source-workspace-root>", "runtime_home": null, "target": ".omo/plans/<validated-slug>.md", "round_id": "<review-round-id>", "plan_sha256": "<plan-sha256>", "launch_id": null, "session": null, "result": null },
+166:The scaffold emits a parser-readable reviewer marker on every final-verifier row: `<!-- role:plan-auditor -->`, `<!-- role:code-reviewer -->`, `<!-- role:qa-executor -->`, or `<!-- role:scope-auditor -->`. OpenCode binds those markers to the following reviewers:
+170:| F1. Plan compliance audit | `plan-auditor` | `momus` |
+171:| F2. Code quality review | `code-reviewer` | `oracle` |
+172:| F3. Real manual QA | `qa-executor` | `qa-executor` |
+173:| F4. Scope fidelity | `scope-auditor` | `momus` |
+181:The high-accuracy review is DUAL and both passes must return OKAY before handoff: (1) the native `momus` reviewer subagent, and (2) an independent Oracle review via `task(subagent_type="oracle", ...)` on the strongest available reasoning model, in a fully isolated sub-session with normal approval and sandbox policy. Do not add flags that disable approvals or sandboxing. Momus runs at High and may take substantially longer than other agents. One round = exactly ONE `momus` + ONE independent review, dispatched together against the COMPLETE plan file (todos + TL;DR filled) at the draft's exact recorded `plan_path`. Keep Momus in flight and wait for its terminal result: elapsed time alone never justifies cancelling, duplicating, replacing, or treating it as failed. After both verdicts return, fix every cited issue and resubmit both fresh until each approves. CLEAR: runs when the user opts in or `review_required: true`. UNCLEAR: runs automatically unless Classify=Trivial.
+188:  "independent_reviewer": "oracle",
+189:  "lanes": ["momus", "independent"],
+219:Roles - the ONLY spawnable subagents (all read-only, plus `oracle` for the high-accuracy review): `explore`, `librarian`, `metis`, `momus`. Never dispatch with `category=` and never instruct a child to edit files. Spawn long plan/reviewer agents in the background through the OpenCode task surface; between waits, back off — double the timeout up to ~5 minutes — instead of spinning short cycles. Require the child to send `WORKING: <task> - <phase>` before long passes and `BLOCKED: <reason>` only when progress stops. A timeout only means no new update arrived; treat a running child as alive. Fall back only when the child completed without the deliverable, is ack-only after followup, explicitly `BLOCKED:`, or no longer running; then respawn a smaller delegated job. Close each agent after integrating its result.
+scaffold_assert_fail=0
