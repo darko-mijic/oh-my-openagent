@@ -28,6 +28,30 @@ describe("start-work plan checklist consumption", () => {
 		});
 	});
 
+	it("#given trailing HTML comments on checkbox labels #when parsed #then strips comments from labels without changing counts", () => {
+		// given
+		const planPath = createPlan(
+			[
+				"## TODOs",
+				"- [ ] 1. Implement checklist parser parity <!-- role:deep -->",
+				"- [x] 2. Done already <!-- note: keep count -->",
+				"## Final Verification Wave",
+				"- [ ] F1. Verify the result <!-- role:oracle -->",
+			].join("\n"),
+		);
+
+		// when
+		const checklist = getPlanChecklist(planPath);
+
+		// then
+		expect(checklist).toEqual({
+			completed: 1,
+			remaining: 2,
+			total: 3,
+			nextTaskLabel: "1. Implement checklist parser parity",
+		});
+	});
+
 	it("#given nested checkboxes #when parsed #then ignores non-column-zero items", () => {
 		// given
 		const planPath = createPlan(

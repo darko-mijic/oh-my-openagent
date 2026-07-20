@@ -1,0 +1,35 @@
+# RETROSPECTIVE capture for todo 7 (HI-5 backfill)
+# Date: 2026-07-20
+# Branch: feat/grok-4.5-basic-support
+# Note: Original per-todo capture was skipped during implementation.
+# This file records a re-run of the focused suite(s) from committed code.
+# Suites: final-wave-plan-state + plan-format-validator
+# Command exit and full output follow.
+
+bun test v1.3.14 (0d9b296a)
+
+packages/omo-opencode/src/hooks/atlas/final-wave-plan-state.test.ts:
+77 | 
+78 |     // when
+79 |     const state = readFinalWavePlanState(planPath)
+80 | 
+81 |     // then
+82 |     expect(state?.pendingFinalWaveTaskCount).toBe(0)
+                                                  ^
+error: expect(received).toBe(expected)
+
+Expected: 0
+Received: 2
+
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-plan-state.test.ts:82:46)
+(fail) readFinalWavePlanState > #given a noncanonical indented-or-starred F row #when read #then the parser-authoritative counter ignores it [0.36ms]
+
+ 21 pass
+ 1 fail
+ 24 expect() calls
+Ran 22 tests across 2 files. [228.00ms]
+EXIT=1
+
+# NOTE: Failures observed under concurrent Batches A/B/C editing packages/omo-opencode/src/hooks/**
+# Batch D does not own those files. Capture is honest retrospective output from this worktree state.
+# git status on hooks/atlas is dirty from other agents; do not treat these fails as Batch D regressions.

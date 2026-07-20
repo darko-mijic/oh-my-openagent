@@ -121,3 +121,17 @@ Session artifacts live here.
 - Unscoped code-reviewer fingerprints now union frozen-baseline committed diff paths with live `git status --porcelain -uall` paths using the canonical attestation parser. Modified, staged, and untracked product paths added after approval therefore invalidate the stored receipt at gate evaluation time.
 - Live `.omo/**` paths are excluded before the union, preserving convergence for receipt sidecars, evidence, and runtime churn. Explicit scopes, other reviewer roles, the frozen baseline, and non-git fallback behavior are unchanged.
 - TDD pinned tracked-uncommitted and untracked-product invalidation plus `.omo` polarity. Atlas passed 316 tests, the root suite passed 12086 with zero failures under `/tmp`, typecheck passed, and isolated OpenCode QA preserved the host session count at 119.
+
+## 2026-07-20 Batch D docs/evidence remediation
+
+- Count agents and Tool Guard slots from code, not prose: 12 agents (11 factories + Prometheus); Tool Guard type has 19 keys (18 base + team-tool-gating); hooks dir has 63 entries / 55 with index.ts.
+- Root and hooks AGENTS.md totals become 54 default-active / 59 composed slots / 63 max once reviewer-scope-guard is counted as always-on.
+- qa-executor plan letter is gpt-5.6-sol high -> gpt-5.5 high -> claude-opus-4-7 max (not terra/xhigh). Pin with model-requirements-agents.test.ts.
+- MAX_AGENTS plan letter is 16 (sidebar cap, not agent inventory size).
+- Codex plan-checklist labels must strip trailing HTML comments so nextTaskLabel stays human-readable; counting/section logic unchanged.
+- HI-5 backfill must be labeled RETROSPECTIVE. Concurrent Batches A/B/C dirty hooks/** can fail atlas suites during capture; do not "fix" those files from Batch D.
+- Stage only exact paths. Never git add -A while other agents commit in the same tree.
+
+## 2026-07-20 Batch B launch-path remediation
+
+- Atlas task-launch resolution now mirrors completion behavior: a parent session bound to a boulder work resolves that work's plan and sidecar, while unbound sessions retain the global-plan fallback. Final-wave authorization now validates before duplicate-key bookkeeping; enforced category or wrong-subagent duplicates reject, advisory duplicates warn, and bound-subagent retries remain ambiguous without replacing the original expectation.

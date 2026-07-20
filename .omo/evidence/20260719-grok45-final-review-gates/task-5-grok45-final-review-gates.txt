@@ -1,0 +1,93 @@
+# RETROSPECTIVE capture for todo 5 (HI-5 backfill)
+# Date: 2026-07-20
+# Branch: feat/grok-4.5-basic-support
+# Note: Original per-todo capture was skipped during implementation.
+# This file records a re-run of the focused suite(s) from committed code.
+# Suites: packages/omo-opencode/src/hooks/atlas/final-wave-receipts.test.ts
+# Command exit and full output follow.
+
+bun test v1.3.14 (0d9b296a)
+
+packages/omo-opencode/src/hooks/atlas/final-wave-receipts.test.ts:
+81 |     const recovery = quarantineCorruptReceiptStore(planPath, "123")
+82 |     expect(recovery.kind).toBe("advisory-recovery")
+83 |     expect(recovery.path).toEndWith("wave.receipts.corrupt-123.json")
+84 |     expect(existsSync(sidecarPath)).toBe(false)
+85 |     expect(existsSync(recovery.path)).toBe(true)
+86 |     const marker = JSON.parse(readFileSync(`${sidecarPath.slice(0, -".json".length)}.quarantine.json`, "utf-8"))
+                                   ^
+error: ENOENT: no such file or directory, open '/tmp/final-wave-receipts-03e4460f-5a4a-46ce-8317-110e175d3b04/.omo/plans/wave.receipts.quarantine.json'
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-receipts.test.ts:86:31)
+(fail) final-wave durable receipt store > #given a corrupt marked sidecar #when quarantined #then moves it to a recovery path [12.51ms]
+126 | 
+127 |     // when
+128 |     const result = writeReceipt(planPath, { fKey: "F1", launchId: "launch-f1", childSessionId: "ses_f1", actualAgent: "momus", fingerprint: refreshedFingerprint })
+129 | 
+130 |     // then
+131 |     expect(result.kind).toBe("written")
+                              ^
+error: expect(received).toBe(expected)
+
+Expected: "written"
+Received: "duplicate"
+
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-receipts.test.ts:131:25)
+(fail) final-wave durable receipt store > #given a fingerprint-stale receipt #when the row is re-issued #then the old receipt is archived and the new receipt is accepted [15.14ms]
+145 |     const result = writeReceipt(planPath, { fKey: "f1", launchId: "launch-lower", childSessionId: "ses_lower", actualAgent: "momus", fingerprint })
+146 | 
+147 |     // then
+148 |     expect(result.kind).toBe("written")
+149 |     const store = expectValidStore(planPath)
+150 |     expect(Object.keys(store.baseline?.fRowContract ?? {})).toContain("F1")
+                                                                  ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "F1"
+Received: [ "f1", "F2", "F3", "F4" ]
+
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-receipts.test.ts:150:61)
+(fail) final-wave durable receipt store > #given a lowercase marked row #when expectation binding and receipt are written #then every store boundary uses one uppercase key [19.95ms]
+157 |     // given
+158 |     const planPath = writePlan()
+159 |     const sidecarDirectory = dirname(receiptStorePathForPlan(planPath))
+160 |     let observedTempName = ""
+161 |     const tempObserved = new Promise<void>((resolve) => {
+162 |       const watcher = watch(sidecarDirectory, (_event, fileName) => {
+                            ^
+ENOSPC: no space left on device, watch '/tmp/final-wave-receipts-829e67ee-4f98-4ce6-bbe1-a3855c7a18bd/.omo/plans'
+     path: "/tmp/final-wave-receipts-829e67ee-4f98-4ce6-bbe1-a3855c7a18bd/.omo/plans",
+  syscall: "watch",
+    errno: -28,
+ filename: "/tmp/final-wave-receipts-829e67ee-4f98-4ce6-bbe1-a3855c7a18bd/.omo/plans",
+     code: "ENOSPC"
+
+      at new FSWatcher (node:fs:33:31)
+      at watch (node:fs:300:10)
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-receipts.test.ts:162:23)
+      at new Promise (1:11)
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-receipts.test.ts:161:26)
+(fail) final-wave durable receipt store > #given an atomic sidecar write #when its temporary file is observed #then the name includes pid and a random suffix [9.20ms]
+275 | 
+276 |     // when
+277 |     const resolved = resolveGitHead(planPath)
+278 | 
+279 |     // then
+280 |     expect(resolved).toBe(outerHead)
+                           ^
+error: expect(received).toBe(expected)
+
+Expected: "4105cc9b647c51676561208109c8a9328448fcec"
+Received: "20215e6eb513efbe085f96518320761a1af30ab1"
+
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-receipts.test.ts:280:22)
+(fail) final-wave durable receipt store > #given a plan path that is itself a nested git directory #when HEAD resolves #then the plan dirname repository wins [97.86ms]
+
+ 19 pass
+ 5 fail
+ 36 expect() calls
+Ran 24 tests across 1 file. [937.00ms]
+EXIT=1
+
+# NOTE: Failures observed under concurrent Batches A/B/C editing packages/omo-opencode/src/hooks/**
+# Batch D does not own those files. Capture is honest retrospective output from this worktree state.
+# git status on hooks/atlas is dirty from other agents; do not treat these fails as Batch D regressions.

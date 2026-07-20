@@ -331,4 +331,30 @@ describe("AGENT_MODEL_REQUIREMENTS", () => {
       variant: "medium",
     })
   })
+
+  test("qa-executor keeps gpt-5.6-sol high before gpt-5.5 high and claude-opus-4-7 max", () => {
+    // given
+    const qaExecutor = AGENT_MODEL_REQUIREMENTS["qa-executor"]
+
+    // when
+    const [primary, secondary, tertiary] = qaExecutor.fallbackChain
+
+    // then
+    expect(qaExecutor.fallbackChain).toHaveLength(3)
+    expect(primary).toEqual({
+      providers: ["openai", "github-copilot", "opencode", "vercel"],
+      model: "gpt-5.6-sol",
+      variant: "high",
+    })
+    expect(secondary).toEqual({
+      providers: ["openai", "github-copilot", "opencode", "vercel"],
+      model: "gpt-5.5",
+      variant: "high",
+    })
+    expect(tertiary).toEqual({
+      providers: ["anthropic", "github-copilot", "opencode", "vercel"],
+      model: "claude-opus-4-7",
+      variant: "max",
+    })
+  })
 })

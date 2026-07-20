@@ -1,22 +1,22 @@
-# Task 14 — Codex QA (ulw-plan role-marker parity)
+# Task 14 - Codex QA (ulw-plan role-marker parity)
 
 **Date:** 2026-07-20
 **Plan todo:** `.omo/plans/grok45-final-review-gates.md` checkbox 14
-**Scope:** Prove regenerated `ulw-plan` scaffold emits F1–F4 role markers, dual-review drift pin is green, isolated local install works, and real `~/.codex/config.toml` is untouched.
+**Scope:** Prove regenerated `ulw-plan` scaffold emits F1-F4 role markers, dual-review drift pin is green, isolated local install works, and real `~/.codex/config.toml` is untouched.
 
 ## What was tested
 
-1. `bun run test:codex` — full Codex compatibility gate.
+1. `bun run test:codex` - full Codex compatibility gate.
 2. Dual-review drift pin: `node --test test/ulw-plan-review-state-contract.test.mjs test/scaffold-plan.test.mjs` under `packages/omo-codex/plugin`.
 3. Isolated `CODEX_HOME` install via `node packages/omo-codex/scripts/install-local.mjs install --no-tui --no-codex-autonomous`.
-4. Scaffold run of the **installed** `scaffold-plan.mjs` under an isolated workspace; assert F1–F4 `<!-- role:... -->` markers.
+4. Scaffold run of the **installed** `scaffold-plan.mjs` under an isolated workspace; assert F1-F4 `<!-- role:... -->` markers.
 5. Byte-identity: shared-skills source ↔ plugin skills copy ↔ installed cache copy.
 6. Codex reviewer-binding guidance in installed `full-workflow.md` (prompt-level equivalents, not runtime enforcement).
 7. codex-qa first-party scripts:
-   - `scripts/lib/common.sh --self-check`
-   - `scripts/install-verify.sh --self-test` (retry after concurrent-race flake)
-   - `scripts/hook-unit-probe.sh --self-test`
-   - `scripts/app-server-drive.sh --plugin`
+ - `scripts/lib/common.sh --self-check`
+ - `scripts/install-verify.sh --self-test` (retry after concurrent-race flake)
+ - `scripts/hook-unit-probe.sh --self-test`
+ - `scripts/app-server-drive.sh --plugin`
 8. sha256 of real `~/.codex/config.toml` before and after the full QA run.
 
 ## What was observed
@@ -27,7 +27,7 @@
 | Dual-review + scaffold pin | **24 pass / 0 fail** (exit 0) | `dual-review-drift-pin.txt` |
 | Isolated install | **exit 0**; `omo@sisyphuslabs` enabled; plugin cache `4.19.0` | `isolated-install.txt`, `isolated-install-assertions.txt` |
 | Scaffold byte identity | **PASS** plugin≡shared and installed≡plugin | `scaffold-byte-identity.txt` |
-| F1–F4 role markers in scaffolded plan | **PASS** all 4 markers + all 4 rows | `scaffold-marker-assertions.txt`, `scaffolded-plan.md` |
+| F1-F4 role markers in scaffolded plan | **PASS** all 4 markers + all 4 rows | `scaffold-marker-assertions.txt`, `scaffolded-plan.md` |
 | Reviewer-binding guidance | **PASS** lazycodex-* bindings + "prompt-level equivalents" | `reviewer-binding-guidance.txt` |
 | hook-unit-probe | **PASS** ultrawork injects `<ultrawork-mode>` | `hook-unit-probe-self-test.txt` |
 | app-server-drive --plugin | **ok:true**; hooks `sessionStart`, `userPromptSubmit`, `stop`; `missingHooks: []` | `app-server-drive-plugin.txt` |

@@ -135,7 +135,7 @@ function parseStructuredCheckbox(line: string, section: "todo" | "final-wave"): 
 	const marker = match?.[1];
 	const label = match?.[2];
 	if (marker === undefined || label === undefined) return null;
-	return { checked: marker.toLowerCase() === "x", label };
+	return { checked: marker.toLowerCase() === "x", label: stripTrailingHtmlComment(label) };
 }
 
 function parseSimpleTopLevelCheckbox(line: string): ParsedCheckbox | null {
@@ -143,7 +143,11 @@ function parseSimpleTopLevelCheckbox(line: string): ParsedCheckbox | null {
 	const marker = match?.[1];
 	const label = match?.[2];
 	if (marker === undefined || label === undefined) return null;
-	return { checked: marker.toLowerCase() === "x", label };
+	return { checked: marker.toLowerCase() === "x", label: stripTrailingHtmlComment(label) };
+}
+
+function stripTrailingHtmlComment(label: string): string {
+	return label.replace(/[ \t]+<!--[\s\S]*?-->[ \t]*$/u, "").trimEnd();
 }
 
 function parseOpeningFence(line: string): MarkdownFence | null {

@@ -1,0 +1,38 @@
+# RETROSPECTIVE capture for todo 2 (HI-5 backfill)
+# Date: 2026-07-20
+# Branch: feat/grok-4.5-basic-support
+# Note: Original per-todo capture was skipped during implementation.
+# This file records a re-run of the focused suite(s) from committed code.
+# Suites: node --test packages/omo-codex/plugin/test/scaffold-plan.test.mjs + shared-skills marker check
+# Command exit and full output follow.
+
+✔ #given the scaffold script and the workflow reference #when compared #then every plan header the script emits is documented in full-workflow.md (no drift) (14.223317ms)
+✔ #given buildPlanSkeleton #when intent is unclear #then the human TL;DR leads the plan and surfaces the decisions veto block (0.946924ms)
+✔ #given buildPlanSkeleton #when intent is clear #then it surfaces a decisions-to-sanity-check block instead (0.164918ms)
+✔ #given buildPlanSkeleton #when it emits the final verification wave #then every row carries its fixed parser role marker (1.546179ms)
+✔ #given the shared and Codex scaffold sources #when their bytes are compared #then the dual-maintained copies remain identical (2.707187ms)
+✔ #given resolveSafeOmoPath #when the target escapes .omo or the workspace #then it is refused (the script never escapes .omo) (1.378427ms)
+✔ #given scaffold #when .omo/plans is a symlink outside the workspace #then it refuses before the plan write escapes (19.173271ms)
+✔ #given scaffold #when .omo/drafts is a symlink outside the workspace #then it refuses before the draft write escapes (2.528644ms)
+✔ #given parseArgs #when the slug is missing or unsafe #then it throws, and valid flags parse (0.411795ms)
+✔ #given an explicit review modifier at startup #when draft-only scaffold runs #then the first durable write contains the complete pending review request (11.764757ms)
+✔ #given automatic review for non-Trivial UNCLEAR intent #when draft-only scaffold runs #then the first durable write contains the complete pending review request (17.683552ms)
+✔ #given Trivial UNCLEAR pre-approval planning #when draft-only scaffold runs #then it creates a review-optional draft without creating a plan (18.629351ms)
+✔ #given an already-scaffolded plan #when the script is re-run plain #then it is a no-op that preserves appended todos (resume-safe, no crash, no clobber) (3.491402ms)
+✔ #given a hand-edited plan #when --reset is used #then it refuses without --force and overwrites with --force (9.140487ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 203.078599
+EXIT_SCAFFOLD=0
+--- shared-skills scaffold marker check ---
+PASS scaffold emits role markers
+PASS full-workflow has qa-executor
+PASS full-workflow has momus
+PASS full-workflow has oracle
+PASS full-workflow has F-wave rows
+EXIT_SHARED=0

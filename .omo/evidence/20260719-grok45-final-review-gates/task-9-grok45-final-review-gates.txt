@@ -1,0 +1,15 @@
+# RETROSPECTIVE capture for todo 9 (HI-5 backfill)
+# Date: 2026-07-20
+# Branch: feat/grok-4.5-basic-support
+# Note: Original per-todo capture was skipped during implementation.
+# This file records a re-run of the focused suite(s) from committed code.
+# Suites: completion-verification (final-wave-approval-gate + bypass-hardening + subagent-completion)
+# Command exit and full output follow.
+
+bun test v1.3.14 (0d9b296a)
+
+ 49 pass
+ 0 fail
+ 142 expect() calls
+Ran 49 tests across 3 files. [2.03s]
+EXIT=0

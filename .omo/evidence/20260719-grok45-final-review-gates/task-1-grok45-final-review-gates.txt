@@ -1,0 +1,42 @@
+# RETROSPECTIVE capture for todo 1 (HI-5 backfill)
+# Date: 2026-07-20
+# Branch: feat/grok-4.5-basic-support
+# Note: Original per-todo capture was skipped during implementation.
+# This file records a re-run of the focused suite(s) from committed code.
+# Suites: packages/omo-opencode/src/hooks/atlas/final-wave-role-parser.test.ts
+# Command exit and full output follow.
+
+bun test v1.3.14 (0d9b296a)
+
+packages/omo-opencode/src/hooks/atlas/final-wave-role-parser.test.ts:
+327 |     // when
+328 |     const result = parseFinalWaveRoles(plan)
+329 | 
+330 |     // then
+331 |     expect(result.status).toBe("marked")
+332 |     expect(result.rows.map((row) => row.fKey)).toEqual(["F1", "F2"])
+                                                     ^
+error: expect(received).toEqual(expected)
+
+  [
+-   "F1",
+-   "F2",
++   "f2",
+  ]
+
+- Expected  - 2
++ Received  + 1
+
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-role-parser.test.ts:332:48)
+(fail) parseFinalWaveRoles > #given lowercase and blocked F-row states #when parsed #then keys are canonical uppercase [0.38ms]
+
+ 18 pass
+ 1 fail
+ 38 expect() calls
+Ran 19 tests across 1 file. [282.00ms]
+EXIT=1
+
+# NOTE: 1 fail observed in parseFinalWaveRoles lowercase canonicalization.
+# packages/omo-opencode/src/hooks/atlas/final-wave-role-parser.test.ts is dirty in the worktree
+# (concurrent Batches A/B/C own hooks/**). Not modified by Batch D.
+# git status: M final-wave-role-parser.test.ts; last commit 1392f60b3.

@@ -1,0 +1,63 @@
+# RETROSPECTIVE capture for todo 8 (HI-5 backfill)
+# Date: 2026-07-20
+# Branch: feat/grok-4.5-basic-support
+# Note: Original per-todo capture was skipped during implementation.
+# This file records a re-run of the focused suite(s) from committed code.
+# Suites: launch-authorization (final-wave-enforcement + tool-execute-before)
+# Command exit and full output follow.
+
+bun test v1.3.14 (0d9b296a)
+
+packages/omo-opencode/src/hooks/atlas/final-wave-enforcement.test.ts:
+212 | 
+213 |     // when
+214 |     const enforcement = resolveFinalWaveEnforcement(planPath, directory)
+215 | 
+216 |     // then
+217 |     expect(enforcement.mode).toBe("blocked")
+                                   ^
+error: expect(received).toBe(expected)
+
+Expected: "blocked"
+Received: "advisory"
+
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-enforcement.test.ts:217:30)
+(fail) resolveFinalWaveEnforcement > #given a stamped marked git plan #when role markers are stripped #then enforcement stays blocked [27.25ms]
+229 | 
+230 |     // when
+231 |     const enforcement = resolveFinalWaveEnforcement(planPath, directory)
+232 | 
+233 |     // then
+234 |     expect(enforcement.mode).toBe("blocked")
+                                   ^
+error: expect(received).toBe(expected)
+
+Expected: "blocked"
+Received: "advisory"
+
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-enforcement.test.ts:234:30)
+(fail) resolveFinalWaveEnforcement > #given a stamped marked git plan #when the plan becomes unreadable #then enforcement stays blocked [32.09ms]
+267 |     // when
+268 |     const second = resolveFinalWaveEnforcement(planPath, directory)
+269 |     const stamp = stampBaseline(planPath)
+270 | 
+271 |     // then
+272 |     expect(second.mode).toBe("blocked")
+                              ^
+error: expect(received).toBe(expected)
+
+Expected: "blocked"
+Received: "enforced"
+
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-enforcement.test.ts:272:25)
+(fail) resolveFinalWaveEnforcement > #given a quarantined marked git sidecar #when enforcement runs again #then it remains blocked until marker removal [51.20ms]
+
+ 31 pass
+ 3 fail
+ 96 expect() calls
+Ran 34 tests across 2 files. [2.10s]
+EXIT=1
+
+# NOTE: Failures observed under concurrent Batches A/B/C editing packages/omo-opencode/src/hooks/**
+# Batch D does not own those files. Capture is honest retrospective output from this worktree state.
+# git status on hooks/atlas is dirty from other agents; do not treat these fails as Batch D regressions.

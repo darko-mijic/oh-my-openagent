@@ -175,13 +175,13 @@ export const AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
     fallbackChain: [
       {
         providers: ["openai", "github-copilot", "opencode", "vercel"],
-        model: "gpt-5.6-terra",
+        model: "gpt-5.6-sol",
         variant: "high",
       },
       {
         providers: ["openai", "github-copilot", "opencode", "vercel"],
         model: "gpt-5.5",
-        variant: "xhigh",
+        variant: "high",
       },
       {
         providers: ["anthropic", "github-copilot", "opencode", "vercel"],

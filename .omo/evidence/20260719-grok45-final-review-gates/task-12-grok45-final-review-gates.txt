@@ -1,0 +1,23 @@
+# RETROSPECTIVE capture for todo 12 (HI-5 backfill)
+# Date: 2026-07-20
+# Branch: feat/grok-4.5-basic-support
+# Note: Original per-todo capture was skipped during implementation.
+# This file records a re-run of the focused suite(s) from committed code.
+# Suites: packages/omo-opencode/src/agents/atlas/prompt-routing.test.ts + bun test packages/prompts-core
+# Command exit and full output follow.
+
+bun test v1.3.14 (0d9b296a)
+
+ 13 pass
+ 0 fail
+ 26 expect() calls
+Ran 13 tests across 1 file. [256.00ms]
+EXIT_PROMPT_ROUTING=0
+--- packages/prompts-core ---
+bun test v1.3.14 (0d9b296a)
+
+ 26 pass
+ 0 fail
+ 40 expect() calls
+Ran 26 tests across 5 files. [341.00ms]
+EXIT_PROMPTS_CORE=0

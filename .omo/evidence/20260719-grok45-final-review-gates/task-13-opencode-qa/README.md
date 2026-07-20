@@ -1,4 +1,4 @@
-# Task 13 — OpenCode real-harness QA (final-wave reviewer gates)
+# Task 13 - OpenCode real-harness QA (final-wave reviewer gates)
 
 Plan: `grok45-final-review-gates` on `feat/grok-4.5-basic-support`.
 Surface: OpenCode 1.18.3 HTTP server + `opencode run --attach --format json` with the local built plugin (`file://$REPO`), isolated XDG sandbox, local fake OpenAI Responses server (no real provider calls).
@@ -8,22 +8,22 @@ Driver: [`run-isolated-qa.sh`](./run-isolated-qa.sh)
 ## WHAT WAS TESTED
 
 1. **Marked plan + category-routed F-row launch is rejected at `tool.execute.before`**
-   - Fixture: git workspace + marked F1–F4 plan (role markers) + boulder parent session.
-   - Fake model issued `task(category="unspecified-high", prompt with F2 echo)`.
-   - Captured structured tool error + SSE `message.part.updated` with the rejection body.
+ - Fixture: git workspace + marked F1-F4 plan (role markers) + boulder parent session.
+ - Fake model issued `task(category="unspecified-high", prompt with F2 echo)`.
+ - Captured structured tool error + SSE `message.part.updated` with the rejection body.
 
 2. **Correctly-routed F-row completion writes a durable receipt**
-   - Same marked plan; fake model issued `task(subagent_type="oracle", F2 echo, sync)`.
-   - Child oracle session returned line-anchored `VERDICT: APPROVE`.
-   - Asserted `.omo/plans/marked-wave.receipts.json` contains F2 receipt with matching `launchId`, `childSessionId`, `actualAgent=oracle`, `verdict=approve`.
+ - Same marked plan; fake model issued `task(subagent_type="oracle", F2 echo, sync)`.
+ - Child oracle session returned line-anchored `VERDICT: APPROVE`.
+ - Asserted `.omo/plans/marked-wave.receipts.json` contains F2 receipt with matching `launchId`, `childSessionId`, `actualAgent=oracle`, `verdict=approve`.
 
 3. **Legacy-unmarked plan keeps old behavior**
-   - Unmarked F-wave plan; same category-routed F2 `task()` launch.
-   - Asserted no `final-wave-named-reviewer-rejection` and task attempt proceeded.
+ - Unmarked F-wave plan; same category-routed F2 `task()` launch.
+ - Asserted no `final-wave-named-reviewer-rejection` and task attempt proceeded.
 
 4. **Host DB isolation**
-   - `SELECT count(*) FROM session` on real `~/.local/share/opencode/opencode.db` before vs after.
-   - Required diff = 0.
+ - `SELECT count(*) FROM session` on real `~/.local/share/opencode/opencode.db` before vs after.
+ - Required diff = 0.
 
 ## WHAT WAS OBSERVED
 
@@ -33,7 +33,7 @@ Driver: [`run-isolated-qa.sh`](./run-isolated-qa.sh)
 | (1) SSE tool/message activity | PASS | `message.part.updated` with `tool=task`, `status=error`, rejection body |
 | (2) Durable F2 receipt | PASS | [`receipt-sidecar.json`](./receipt-sidecar.json), [`receipt-run.jsonl`](./receipt-run.jsonl), [`receipt-sse.jsonl`](./receipt-sse.jsonl) |
 | (3) Legacy no rejection | PASS | [`legacy-no-rejection.txt`](./legacy-no-rejection.txt), [`legacy-run.jsonl`](./legacy-run.jsonl), [`legacy-sse.jsonl`](./legacy-sse.jsonl) |
-| (4) Host session count unchanged | PASS | [`isolation.txt`](./isolation.txt) — before=97, after=97, diff=0 |
+| (4) Host session count unchanged | PASS | [`isolation.txt`](./isolation.txt) - before=97, after=97, diff=0 |
 
 Key rejection excerpt (from SSE + jsonl):
 
@@ -88,9 +88,9 @@ QA_PASS marked_reject=yes marked_receipt=yes legacy_no_reject=yes isolation_diff
 
 - Real provider API calls (local fake OpenAI Responses server only; synthetic `qa-nonsecret` key).
 - Raw auth headers, env dumps, and full model request bodies.
-- Host plugin refresh (`omo-local-plugin.sh refresh`) — owned by Todo 15.
-- Codex-side QA — owned by Todo 14.
-- Full F1–F4 multi-reviewer wave (Todo 13 requires one correctly-routed F-row receipt; F2/oracle is the representative path).
+- Host plugin refresh (`omo-local-plugin.sh refresh`) - owned by Todo 15.
+- Codex-side QA - owned by Todo 14.
+- Full F1-F4 multi-reviewer wave (Todo 13 requires one correctly-routed F-row receipt; F2/oracle is the representative path).
 - `sqlite3` CLI was unavailable on this host; session counts used Python's stdlib `sqlite3` against the same DB path.
 
 ## HOW TO REPRODUCE

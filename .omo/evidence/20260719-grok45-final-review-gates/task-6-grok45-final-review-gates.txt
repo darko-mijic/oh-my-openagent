@@ -1,0 +1,74 @@
+# RETROSPECTIVE capture for todo 6 (HI-5 backfill)
+# Date: 2026-07-20
+# Branch: feat/grok-4.5-basic-support
+# Note: Original per-todo capture was skipped during implementation.
+# This file records a re-run of the focused suite(s) from committed code.
+# Suites: packages/omo-opencode/src/hooks/atlas/final-wave-fingerprint.test.ts
+# Command exit and full output follow.
+
+bun test v1.3.14 (0d9b296a)
+
+packages/omo-opencode/src/hooks/atlas/final-wave-fingerprint.test.ts:
+101 |       })
+102 |       return [role, fingerprint.scopePaths]
+103 |     })
+104 | 
+105 |     // then
+106 |     expect(scopes).toEqual([
+                         ^
+error: expect(received).toEqual(expected)
+
+@@ -23,3 +23,3 @@
+        ".omo/plans/wave.md",
++       ".omo/evidence/",
+      ],
+
+- Expected  - 0
++ Received  + 1
+
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-fingerprint.test.ts:106:20)
+(fail) final-wave receipt fingerprints > #given no marker scopes #when every reviewer role is fingerprinted #then the locked default-scope table applies [86.17ms]
+126 |     const planPath = join(workspaceRoot, PLAN_PATH)
+127 |     writeFileSync(planPath, readFileSync(planPath, "utf-8").replace("- [ ] F1.", "- [~] F1."))
+128 |     const current = computeRowFingerprint({ planPath, row, workspaceRoot, baseline })
+129 | 
+130 |     // then
+131 |     expect(isReceiptValid(receipt, current)).toBe(true)
+                                                   ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-fingerprint.test.ts:131:46)
+(fail) final-wave receipt fingerprints > #given a plan-scoped receipt #when only an F-row checkbox state flips #then its fingerprint remains valid [36.77ms]
+171 |     const afterSiblings = computeRowFingerprint({ planPath: join(workspaceRoot, PLAN_PATH), row, workspaceRoot, baseline })
+172 |     writeWorkspaceFile(workspaceRoot, ".omo/evidence/20260720-wave/f3-qa/result.txt", "changed\n")
+173 |     const afterOwnArtifact = computeRowFingerprint({ planPath: join(workspaceRoot, PLAN_PATH), row, workspaceRoot, baseline })
+174 | 
+175 |     // then
+176 |     expect(receipt.scopePaths).toEqual([PLAN_PATH, ".omo/evidence/20260720-wave/f3-qa/"])
+                                     ^
+error: expect(received).toEqual(expected)
+
+@@ -2,3 +2,3 @@
+    ".omo/plans/wave.md",
+-   ".omo/evidence/20260720-wave/f3-qa/",
++   ".omo/evidence/",
+  ]
+
+- Expected  - 1
++ Received  + 1
+
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-fingerprint.test.ts:176:32)
+(fail) final-wave receipt fingerprints > #given F3 declares its evidence directory #when sibling evidence changes #then only F3-owned artifacts affect its fingerprint [55.78ms]
+
+ 6 pass
+ 3 fail
+ 14 expect() calls
+Ran 9 tests across 1 file. [673.00ms]
+EXIT=1
+
+# NOTE: Failures observed under concurrent Batches A/B/C editing packages/omo-opencode/src/hooks/**
+# Batch D does not own those files. Capture is honest retrospective output from this worktree state.
+# git status on hooks/atlas is dirty from other agents; do not treat these fails as Batch D regressions.
