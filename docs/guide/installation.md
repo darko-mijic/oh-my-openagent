@@ -2,7 +2,7 @@
 
 oh-my-openagent ships in **two editions** of the same product:
 
-- **Ultimate Edition (omo for [OpenCode](https://opencode.ai))** — the full omo experience. 11 discipline agents, 54+ lifecycle hooks, all built-in MCPs, every slash command, Team Mode, ulw-loop, hashline edits, the works.
+- **Ultimate Edition (omo for [OpenCode](https://opencode.ai))** — the full omo experience. 12 discipline agents, 54+ lifecycle hooks, all built-in MCPs, every slash command, Team Mode, ulw-loop, hashline edits, the works.
 - **Light Edition (omo for [OpenAI Codex CLI](https://github.com/openai/codex))** — the portable components that fit Codex's plugin system: `rules`, `comment-checker`, `git-bash`, `lsp`, `ultrawork`, `ulw-loop`, `start-work-continuation`, and `telemetry`, plus plugin-scoped MCPs for `grep_app`, `context7`, `codegraph`, `git_bash`, and `lsp`, and the shared `ast-grep` skill. No agent orchestration and no `team_*` tools — Codex CLI's native surface does that work.
 
 Most users want **Ultimate**. Pick **Light** if you are already invested in Codex CLI. Pick **both** if you want OMO available wherever you happen to be working that day.
@@ -17,7 +17,7 @@ Most users want **Ultimate**. Pick **Light** if you are already invested in Code
 
 ## For Humans
 
-**Strongly recommended: let an LLM agent install Ultimate for you.** Ultimate setup involves subscription detection, model selection across 11 agents, provider authentication, and config migration — humans fat-finger these. An LLM agent reads the full guide and walks every step correctly.
+**Strongly recommended: let an LLM agent install Ultimate for you.** Ultimate setup involves subscription detection, model selection across 12 agents, provider authentication, and config migration — humans fat-finger these. An LLM agent reads the full guide and walks every step correctly.
 
 ### Ultimate (OpenCode) — let an agent do it
 
@@ -229,7 +229,7 @@ Map their answer to:
    - **yes** → `--vercel-ai-gateway=yes`
    - **no** → `--vercel-ai-gateway=no` (default)
 
-**Provider selection is agent-specific.** There is no single global provider priority — each of the 11 agents has its own fallback chain.
+**Provider selection is agent-specific.** There is no single global provider priority — each of the 12 agents has its own fallback chain.
 
 **MUST STRONGLY WARN, WHEN USER SAID THEY DON'T HAVE CLAUDE SUBSCRIPTION, SISYPHUS AGENT MIGHT NOT WORK IDEALLY.**
 

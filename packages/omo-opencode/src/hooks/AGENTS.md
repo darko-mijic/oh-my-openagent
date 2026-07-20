@@ -1,10 +1,10 @@
-# src/hooks/ -- ~54 Lifecycle Hooks Across 62 Dirs
+# src/hooks/ -- ~54 Lifecycle Hooks Across 63 Dirs
 
 **Generated:** 2026-07-17
 
 ## OVERVIEW
 
-54 base registered hooks on default config (61 with team-mode; `monitor-status-injector` adds 1 more with `monitor.enabled` → 62 max), composed from 54 `index.ts` hook dirs (52 wired; `task-reminder/` and `ralph-loop/` unwired) plus 5 standalone hook `.ts` files at the `src/hooks/` top level (bash-file-read-guard, empty-task-response-detector, preemptive-compaction, session-notification, tool-output-truncator). The 62 directories = 54 with `index.ts` + 8 without (`shared/`, `team-session-events/`, `hashline-edit-diff-enhancer/` unwired, and 5 `zauc-mocks-*`/`zauc-sync-mocks`). 5-tier composition wired in `src/plugin/hooks/`. All hooks follow `createXXXHook(deps) -> HookFunction` factory pattern.
+54 base registered hooks on default config (61 with team-mode; `monitor-status-injector` adds 1 more with `monitor.enabled` → 62; `goal.enabled` adds 1 more → 63 max), composed from 55 `index.ts` hook dirs (53 wired; `task-reminder/` and `ralph-loop/` unwired) plus 5 standalone hook `.ts` files at the `src/hooks/` top level (bash-file-read-guard, empty-task-response-detector, preemptive-compaction, session-notification, tool-output-truncator). The 63 directories = 55 with `index.ts` + 8 without (`shared/`, `team-session-events/`, `hashline-edit-diff-enhancer/` unwired, and 5 `zauc-mocks-*`/`zauc-sync-mocks`). 5-tier composition wired in `src/plugin/hooks/`. All hooks follow `createXXXHook(deps) -> HookFunction` factory pattern.
 
 **Unwired WIP (do not modify casually):** `task-reminder/` (has `index.ts` + `createTaskReminderHook` but NOT exported from barrel, NOT imported by any composer), `ralph-loop/` (exported from barrel but NOT imported by any composer; retained for migration, superseded by `goal/`), and `hashline-edit-diff-enhancer/` (has only `hook.ts`, NOT registered). Treat as orphaned until wired in.
 
@@ -13,13 +13,13 @@
 | Tier | Composer | Base | With team-mode | Where |
 |------|----------|------|----------------|-------|
 | **Session** | `create-session-hooks.ts` | 24 | 24 | OpenCode session lifecycle + chat.params + chat.message |
-| **Tool Guard** | `create-tool-guard-hooks.ts` | 17 | 18 | Pre/post tool execution (+1: `team-tool-gating`) |
+| **Tool Guard** | `create-tool-guard-hooks.ts` | 18 | 19 | Pre/post tool execution (+1: `team-tool-gating`) |
 | **Transform** | `create-transform-hooks.ts` | 4 | 6 | `experimental.chat.messages.transform` (+2: `team-mode-status-injector`, `team-mailbox-injector`; `monitor-status-injector` is a further +1 gated on `monitor.enabled`, not team-mode) |
 | **Continuation** | `create-continuation-hooks.ts` | 7 | 7 | Boulder/atlas/compaction/notification |
 | **Skill** | `create-skill-hooks.ts` | 2 | 2 | Skill awareness (categorySkillReminder, autoSlashCommand) |
 | **Direct event handlers** | `src/plugin/event.ts` | 0 | +4 | `team-session-events/` sub-files: `team-idle-wake-hint`, `team-lead-orphan-handler`, `team-member-error-handler`, `team-member-status-handler` |
 
-Total exposed hooks: **54 base, 61 with team-mode, 62 with team-mode + monitor** (counts the 4 team-session-events handlers individually).
+Total exposed hooks: **54 base, 61 with team-mode, 62 with team-mode + monitor, 63 with team-mode + monitor + goal** (counts the 4 team-session-events handlers individually).
 
 Hook name allowlist for `disabled_hooks`: all configurable hook names enumerated in [`src/config/schema/hooks.ts`](../config/schema/hooks.ts) `HookNameSchema`. Team-session-event sub-hooks are not individually listed in the schema -- they activate together with `team_mode.enabled`.
 
@@ -52,7 +52,7 @@ Hook name allowlist for `disabled_hooks`: all configurable hook names enumerated
 | `runtimeFallback` | event | Reactive auto-switch on API provider errors |
 | `legacyPluginToast` | chat.message | Show toast when legacy plugin name detected |
 
-### Tier 2: Tool Guard Hooks (17)
+### Tier 2: Tool Guard Hooks (18)
 
 | Hook | Event | Purpose |
 |------|-------|---------|
@@ -73,6 +73,7 @@ Hook name allowlist for `disabled_hooks`: all configurable hook names enumerated
 | `fsyncSkipWarning` | tool.execute.after | Warn when fsync is skipped for atomic writes |
 | `notepadWriteGuard` | tool.execute.before | Block `Write` to append-only notepad paths (`.omo/notepads`, `.sisyphus/notepads`) |
 | `planFormatValidator` | tool.execute.before | Validate plan/todo checkbox format on `Write`/`Edit` of boulder plans |
+| `reviewerScopeGuard` | tool.execute.before | Constrain final-wave reviewers (momus/oracle/qa-executor) to role-scoped writes |
 
 ### Tier 3: Transform Hooks (4 base + 1 monitor-gated)
 
@@ -123,7 +124,7 @@ The 4 `team-session-events/` handlers live in `src/hooks/team-session-events/` (
 hooks/
 ├── shared/                                  # Cross-hook helpers (timing, prompt builders, etc.)
 ├── team-session-events/                     # 4 team event handlers (wired via src/plugin/event.ts)
-├── (54 index.ts hook directories incl. `task-reminder/` and `ralph-loop/` unwired -- see tier tables above)
+├── (55 index.ts hook directories incl. `task-reminder/` and `ralph-loop/` unwired -- see tier tables above)
 ├── zauc-mocks-{bg,cache,hook,ws}, zauc-sync-mocks  # 5 test mocks (NOT hooks; named for sort-order isolation)
 └── (each hook dir)/
     ├── index.ts        # createXXXHook factory + barrel

@@ -82,13 +82,14 @@ createHooks()
   │   │                             noHephaestusNonGpt, hephaestusAgentsMdInjector,
   │   │                             questionLabelTruncator, taskResumeInfo,
   │   │                             runtimeFallback, legacyPluginToast
-  │   ├─ createToolGuardHooks()   # 17 [+1 with team-mode]: commentChecker, toolOutputTruncator,
+  │   ├─ createToolGuardHooks()   # 18 [+1 with team-mode]: commentChecker, toolOutputTruncator,
   │   │                             directoryAgentsInjector, directoryReadmeInjector,
   │   │                             emptyTaskResponseDetector, rulesInjector, tasksTodowriteDisabler,
   │   │                             writeExistingFileGuard, bashFileReadGuard, hashlineReadEnhancer,
   │   │                             jsonErrorRecovery, readImageResizer, todoDescriptionOverride,
   │   │                             webfetchRedirectGuard, fsyncSkipWarning,
-  │   │                             notepadWriteGuard, planFormatValidator [+ teamToolGating]
+  │   │                             notepadWriteGuard, planFormatValidator, reviewerScopeGuard
+  │   │                             [+ teamToolGating]
   │   └─ createTransformHooks()   # 4 [+2 with team-mode]: claudeCodeHooks, keywordDetector,
   │                                  contextInjectorMessagesTransform,
   │                                  toolPairValidator [+ teamModeStatusInjector, teamMailboxInjector]
@@ -102,14 +103,14 @@ createHooks()
     team-member-error-handler, team-member-status-handler
 ```
 
-Total: 53 base, 60 with team-mode. Each tier produces an object whose values are `(input, output) => void` handlers; the matching OpenCode handler invokes them in registration order via `safeHook()` wrappers.
+Total: 54 base, 61 with team-mode. Each tier produces an object whose values are `(input, output) => void` handlers; the matching OpenCode handler invokes them in registration order via `safeHook()` wrappers.
 
 ## SUBSYSTEM INVENTORY
 
 | Subdir | Purpose | Has AGENTS.md |
 |--------|---------|---------------|
-| `agents/` | 11 agent factories + dynamic prompt builder | yes (+ atlas, hephaestus, prometheus, sisyphus, sisyphus-junior, builtin-agents) |
-| `hooks/` | 53-60 lifecycle hooks across 60 dirs | yes (+ atlas, anthropic-context-window-limit-recovery, auto-update-checker, claude-code-hooks, comment-checker, compaction-context-injector, keyword-detector, ralph-loop, rules-injector, runtime-fallback, todo-continuation-enforcer) |
+| `agents/` | 12 agent factories + dynamic prompt builder | yes (+ atlas, hephaestus, prometheus, sisyphus, sisyphus-junior, builtin-agents) |
+| `hooks/` | 54-63 lifecycle hooks across 63 dirs | yes (+ atlas, anthropic-context-window-limit-recovery, auto-update-checker, claude-code-hooks, comment-checker, compaction-context-injector, keyword-detector, ralph-loop, rules-injector, runtime-fallback, reviewer-scope-guard, todo-continuation-enforcer) |
 | `tools/` | 14 native tool dirs (+1 shared utilities dir); LSP + AST-grep moved to built-in MCPs | yes (+ background-task, call-omo-agent, delegate-task, hashline-edit, look-at, skill) |
 | `features/` | 23 feature modules (some now shimming `team-core`, `tmux-core`, `skills-loader-core`, `mcp-client-core`, and `claude-code-compat-core`) | yes (+ 11 sub-AGENTS.md including builtin-skills, team-mode, background-agent, claude-code-*) |
 | `shared/` | Cross-cutting adapter utilities plus shims over extracted Core packages, barrel-exported | yes |
