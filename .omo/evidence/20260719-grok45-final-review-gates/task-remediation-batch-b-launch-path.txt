@@ -1,0 +1,24 @@
+Batch B launch-path remediation QA
+Date: 2026-07-20
+
+WHAT WAS TESTED
+- TDD red: `bun test packages/omo-opencode/src/hooks/atlas/tool-execute-before.test.ts` failed the new concurrent-work assertion because the marked work sidecar was absent, and failed the duplicate category assertion because the promise resolved instead of rejecting.
+- Source-level launch exercise: `bun test packages/omo-opencode/src/hooks/atlas/tool-execute-before-work-scope.test.ts` ran the real before-hook handler against temporary boulder state, marked and legacy plans, Git enforcement, and receipt sidecars.
+- Focused regression suite: `bun test packages/omo-opencode/src/hooks/atlas/tool-execute-before.test.ts packages/omo-opencode/src/hooks/atlas/tool-execute-before-work-scope.test.ts`.
+- Atlas suite: `bun test packages/omo-opencode/src/hooks/atlas/`.
+- Repository gates: `bun test`, `bun run typecheck`, and `git diff --check dev...HEAD`.
+
+WHAT WAS OBSERVED
+- The red run had 8 pass / 2 fail. The failures were the intended gaps: no receipt sidecar beside the session-bound marked work, and no rejection for a duplicate category-routed F2 launch.
+- The source-level exercise passed 4/4: marked work F2 persisted only to its own sidecar; enforced duplicate category F2 rejected; advisory duplicate warned and stayed an ambiguous skip; correctly routed duplicate stayed an ambiguous skip and retained the first launch ID.
+- The focused suite passed 10/10. The final root suite passed 12,139 tests with 3 skips and 0 failures. Typecheck exited 0. The dev-range whitespace check exited 0.
+- LSP returned no diagnostics for `final-wave-launch-authorization.ts`; the other changed Atlas files repeatedly timed out waiting for fresh LSP results, while the repository typecheck completed cleanly.
+
+WHY IT IS ENOUGH
+- The concurrent-work fixture makes the global plan intentionally legacy and the session-bound work marked, so authorization and sidecar persistence can only pass when work-scoped resolution is used.
+- Duplicate route assertions cover the enforcement and advisory polarity at the before-hook decision boundary, while the same-agent retry assertion preserves the existing ambiguous-key contract and prevents expectation replacement.
+- Root tests and typecheck cover the integrated repository state after concurrent remediation landed.
+
+WHAT WAS OMITTED
+- Real OpenCode server/SSE rerun was not possible on this VM because `opencode-qa` self-check reported missing `sqlite3` and `tmux`; its SSE self-test timed out. Installing host dependencies was not authorized.
+- No build was run, per task instruction, so the existing built plugin was not used to make claims about this source-only change. No raw environment, auth, or provider logs were recorded.

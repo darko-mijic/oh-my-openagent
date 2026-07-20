@@ -33,6 +33,7 @@ export function authorizeMarkedFinalWaveLaunch(input: {
   readonly sessionID: string | undefined
   readonly callID: string
   readonly workspaceRoot?: string
+  readonly persistExpectation?: boolean
 }): AuthorizeMarkedFinalWaveLaunchResult {
   const planState = readFinalWavePlanState(input.planPath)
   if (planState?.finalWaveRoles.status !== "marked") {
@@ -100,6 +101,17 @@ export function authorizeMarkedFinalWaveLaunch(input: {
       expectedSubagent,
       reason: route.reason,
     })
+  }
+
+  if (input.persistExpectation === false) {
+    return {
+      kind: "authorized",
+      task: {
+        ...input.trackedTask,
+        expectedRole: roleRow.role,
+        expectedSubagent,
+      },
+    }
   }
 
   const launchId = randomUUID()

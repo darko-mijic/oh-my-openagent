@@ -110,6 +110,7 @@ describe("tool-execute-before final-wave launch authorization", () => {
     expect(pending.task.expectedSubagent).toBe("oracle")
     expect(typeof pending.task.launchId).toBe("string")
     expect(pending.task.launchId?.length).toBeGreaterThan(0)
+    if (pending.task.launchId === undefined) throw new Error("expected launch id")
 
     const store = readReceiptStore(planPath)
     if ("corrupt" in store) throw new Error("expected valid receipt store")
@@ -150,6 +151,7 @@ describe("tool-execute-before final-wave launch authorization", () => {
     if (pending?.kind !== "track") throw new Error("expected track ref")
     expect(pending.task.expectedSubagent).toBe("oracle")
     expect(pending.task.launchId).toBeDefined()
+    if (pending.task.launchId === undefined) throw new Error("expected launch id")
 
     const store = readReceiptStore(planPath)
     if ("corrupt" in store) throw new Error("expected valid receipt store")
@@ -306,10 +308,22 @@ describe("tool-execute-before final-wave launch authorization", () => {
       message: undefined as string | undefined,
     }
 
-    // when / then
-    await expect(
-      handler({ tool: "task", sessionID: "ses_atlas", callID: "call-f2-enforced-reject" }, toolOutput),
-    ).rejects.toThrow("REJECTED")
+    // when
+    const rejection = await handler(
+      { tool: "task", sessionID: "ses_atlas", callID: "call-f2-enforced-reject" },
+      toolOutput,
+    ).then(
+      () => {
+        throw new Error("expected enforced rejection")
+      },
+      (error: unknown) => {
+        if (error instanceof Error) return error
+        throw error
+      },
+    )
+
+    // then
+    expect(rejection.message).toContain("REJECTED")
     expect(toolOutput.message).toContain("final-wave-named-reviewer-rejection")
     expect(pendingTaskRefs.has("call-f2-enforced-reject")).toBe(false)
     const store = readReceiptStore(planPath)

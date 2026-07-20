@@ -96,10 +96,15 @@ export function createToolExecuteBeforeHandler(input: {
         } else {
           const prompt = typeof toolOutput.args.prompt === "string" ? toolOutput.args.prompt : ""
           const taskFromPrompt = parseTrackedTaskFromPrompt(prompt)
-          const boulderState = readBoulderState(ctx.directory)
-          const planPath = boulderState
-            ? resolveBoulderPlanPath(ctx.directory, boulderState)
+          const sessionWork = toolInput.sessionID
+            ? getWorkForSession(ctx.directory, toolInput.sessionID)
             : null
+          const boulderState = sessionWork ? null : readBoulderState(ctx.directory)
+          const planPath = sessionWork
+            ? resolveBoulderPlanPathForWork(ctx.directory, sessionWork)
+            : boulderState
+              ? resolveBoulderPlanPath(ctx.directory, boulderState)
+              : null
           const currentTask = planPath
             ? readCurrentTopLevelTask(planPath)
             : null
@@ -128,6 +133,28 @@ export function createToolExecuteBeforeHandler(input: {
               pendingTaskRef.kind === "track" && pendingTaskRef.task.key === trackedTask.key
             ))
 
+            if (
+              taskFromPrompt !== null
+              && trackedTask.section === "final-wave"
+              && planPath !== null
+            ) {
+              const authorization = authorizeMarkedFinalWaveLaunch({
+                planPath,
+                trackedTask,
+                args: toolOutput.args,
+                toolOutput,
+                sessionID: toolInput.sessionID,
+                callID: toolInput.callID,
+                workspaceRoot: ctx.directory,
+                persistExpectation: !hasExistingClaim,
+              })
+              if (authorization.kind === "rejected") {
+                // Hard reject: do not track or persist an expectation for a blocked launch.
+                throw new Error(authorization.message)
+              }
+              trackedTask = authorization.task
+            }
+
             if (hasExistingClaim) {
               pendingTaskRefs.set(toolInput.callID, {
                 kind: "skip",
@@ -140,28 +167,6 @@ export function createToolExecuteBeforeHandler(input: {
                 taskKey: trackedTask.key,
               })
             } else {
-              // F-row launch authorization is prompt-echo based: only taskFromPrompt
-              // final-wave rows on MARKED plans get expectations (fail-safe deadlock otherwise).
-              if (
-                taskFromPrompt !== null
-                && trackedTask.section === "final-wave"
-                && planPath !== null
-              ) {
-                const authorization = authorizeMarkedFinalWaveLaunch({
-                  planPath,
-                  trackedTask,
-                  args: toolOutput.args,
-                  toolOutput,
-                  sessionID: toolInput.sessionID,
-                  callID: toolInput.callID,
-                  workspaceRoot: ctx.directory,
-                })
-                if (authorization.kind === "rejected") {
-                  // Hard reject: do not track or persist an expectation for a blocked launch.
-                  throw new Error(authorization.message)
-                }
-                trackedTask = authorization.task
-              }
               trackTask(toolInput.callID, trackedTask)
             }
           }
