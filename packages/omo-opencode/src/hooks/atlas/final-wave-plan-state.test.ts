@@ -68,17 +68,18 @@ describe("readFinalWavePlanState", () => {
     expect(state?.finalWaveRoles.status).toBe("marked")
   })
 
-  test("#given a legacy F-wave with a noncanonical unchecked row #when read #then preserves existing counter semantics", () => {
+  test("#given a noncanonical indented-or-starred F row #when read #then the parser-authoritative counter ignores it", () => {
     // given
     const planPath = writePlan(`## Final Verification Wave
-* [ ] F0. Legacy progress row
+* [ ] F1. Starred legacy progress row
+  - [ ] F2. Indented legacy progress row
 `)
 
     // when
     const state = readFinalWavePlanState(planPath)
 
     // then
-    expect(state?.pendingFinalWaveTaskCount).toBe(1)
+    expect(state?.pendingFinalWaveTaskCount).toBe(0)
     expect(state?.finalWaveRoles.status).toBe("legacy-unmarked")
   })
 })

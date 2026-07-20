@@ -135,3 +135,10 @@ Session artifacts live here.
 ## 2026-07-20 Batch B launch-path remediation
 
 - Atlas task-launch resolution now mirrors completion behavior: a parent session bound to a boulder work resolves that work's plan and sidecar, while unbound sessions retain the global-plan fallback. Final-wave authorization now validates before duplicate-key bookkeeping; enforced category or wrong-subagent duplicates reject, advisory duplicates warn, and bound-subagent retries remain ambiguous without replacing the original expectation.
+
+## 2026-07-20 Batch A final-wave gate core remediation
+
+- Enforcement must inspect durable wave state before trusting the current plan parse: once a baseline exists, unreadable or unmarked role state is blocked rather than demoted to legacy advisory behavior.
+- Checkbox-normalized plan hashing and stale-receipt archival make receipt revalidation convergent; role markers remain hash-relevant, while F3 derives only its declared `f3-*` evidence directory and ignores sibling reviewer artifacts.
+- Wave-init porcelain snapshots allow pre-existing product dirt forever but reject newly dirty paths. Corrupt marked-git sidecars now leave an explicit quarantine marker that blocks re-stamping until the user inspects the archive and removes the marker.
+- Canonical uppercase F-keys at parse, read, write, binding, receipt, and lookup boundaries prevent lowercase rows from splitting one logical review across multiple store keys.

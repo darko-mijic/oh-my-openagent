@@ -379,6 +379,7 @@ describe("final-wave advisory completion receipts", () => {
       expectations: stamped.expectations,
       bindings: stamped.bindings,
       receipts: stamped.receipts,
+      receiptArchive: stamped.receiptArchive,
     })
 
     // when

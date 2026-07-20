@@ -1,5 +1,12 @@
 import { spawnSync } from "node:child_process"
+import { existsSync, readFileSync } from "node:fs"
 import { relative, resolve, sep } from "node:path"
+import { z } from "zod"
+import { receiptSidecarPathForPlan } from "./final-wave-receipt-sidecar-writer"
+
+const BaselineDirtyPathsSchema = z.object({
+  baseline: z.object({ dirtyPaths: z.array(z.string()).default([]) }).nullable(),
+})
 
 export type FinalWaveGitCommandResult = {
   readonly exitCode: number | null
@@ -28,8 +35,40 @@ export function attestCanonicalTreeClean(input: {
   }
 
   const planRelative = workspaceRelativePath(input.workspaceRoot, input.planPath)
-  const dirtyPaths = parsePorcelainPaths(status.stdout).filter((path) => !isExcludedFromAttestation(path, planRelative))
+  const baselineDirtyPaths = new Set(readBaselineDirtyPaths(input.planPath))
+  const dirtyPaths = canonicalDirtyPaths(status.stdout, planRelative)
+    .filter((path) => !baselineDirtyPaths.has(path))
   return dirtyPaths.length === 0 ? { ok: true } : { ok: false, dirtyPaths }
+}
+
+export function snapshotCanonicalDirtyPaths(input: {
+  readonly workspaceRoot: string
+  readonly planPath: string
+  readonly baselineGitHead: string | "nogit"
+  readonly spawnGit?: FinalWaveGitSpawn
+}): readonly string[] {
+  if (input.baselineGitHead === "nogit") return []
+  const status = (input.spawnGit ?? spawnGit)(["status", "--porcelain", "-uall"], input.workspaceRoot)
+  if (status.exitCode !== 0) return []
+  return canonicalDirtyPaths(status.stdout, workspaceRelativePath(input.workspaceRoot, input.planPath))
+}
+
+function canonicalDirtyPaths(stdout: string, planRelative: string): readonly string[] {
+  return [...new Set(parsePorcelainPaths(stdout)
+    .filter((path) => !isExcludedFromAttestation(path, planRelative)))]
+    .toSorted()
+}
+
+function readBaselineDirtyPaths(planPath: string): readonly string[] {
+  const sidecarPath = receiptSidecarPathForPlan(planPath)
+  if (!existsSync(sidecarPath)) return []
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(sidecarPath, "utf-8"))
+    const result = BaselineDirtyPathsSchema.safeParse(parsed)
+    return result.success ? result.data.baseline?.dirtyPaths ?? [] : []
+  } catch {
+    return []
+  }
 }
 
 function isExcludedFromAttestation(path: string, planRelative: string): boolean {

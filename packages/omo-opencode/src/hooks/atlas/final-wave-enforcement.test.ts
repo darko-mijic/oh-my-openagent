@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test"
 import { randomUUID } from "node:crypto"
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { spawnSync } from "node:child_process"
@@ -25,7 +25,7 @@ import {
   writeReceipt,
 } from "./final-wave-receipts"
 import { readFinalWavePlanState } from "./final-wave-plan-state"
-import { writeMalformedFinalWaveReceiptSidecar } from "./final-wave-receipt-sidecar-writer"
+import { writeMalformedFinalWaveReceiptSidecar } from "./final-wave-receipt-test-support"
 import type { SessionState } from "./types"
 
 const testDirectories: string[] = []
@@ -203,6 +203,38 @@ describe("resolveFinalWaveEnforcement", () => {
     expect(enforcement.reason).toBe("mixed-or-invalid")
   })
 
+  test("#given a stamped marked git plan #when role markers are stripped #then enforcement stays blocked", () => {
+    // given
+    const directory = createWorkspace(true)
+    const planPath = writeMarkedPlan(directory)
+    stampBaseline(planPath)
+    writeFileSync(planPath, readFileSync(planPath, "utf-8").replace(/ <!-- role:[^>]+ -->/g, ""))
+
+    // when
+    const enforcement = resolveFinalWaveEnforcement(planPath, directory)
+
+    // then
+    expect(enforcement.mode).toBe("blocked")
+    expect(enforcement.reason).toBe("stamped-plan-role-contract-lost")
+    if (enforcement.mode !== "blocked") throw new Error("expected blocked enforcement")
+    expect(enforcement.recovery).toBeDefined()
+  })
+
+  test("#given a stamped marked git plan #when the plan becomes unreadable #then enforcement stays blocked", () => {
+    // given
+    const directory = createWorkspace(true)
+    const planPath = writeMarkedPlan(directory)
+    stampBaseline(planPath)
+    unlinkSync(planPath)
+
+    // when
+    const enforcement = resolveFinalWaveEnforcement(planPath, directory)
+
+    // then
+    expect(enforcement.mode).toBe("blocked")
+    expect(enforcement.reason).toBe("stamped-plan-unreadable")
+  })
+
   test("#given corrupt sidecar on marked git plan #when resolved #then mode is blocked and quarantine runs", () => {
     // given
     const directory = createWorkspace(true)
@@ -220,8 +252,31 @@ describe("resolveFinalWaveEnforcement", () => {
     if (recoveryPath === undefined) throw new Error("expected recovery path")
     expect(recoveryPath.includes(".corrupt-")).toBe(true)
     expect(readFileSync(recoveryPath, "utf-8").length).toBeGreaterThan(0)
+    const markerPath = `${sidecarPath.slice(0, -".json".length)}.quarantine.json`
+    expect(JSON.parse(readFileSync(markerPath, "utf-8"))).toMatchObject({
+      version: 1,
+      quarantinedPath: recoveryPath,
+    })
     // Sidecar moved off the live path.
     expect(() => readFileSync(sidecarPath, "utf-8")).toThrow()
+  })
+
+  test("#given a quarantined marked git sidecar #when enforcement runs again #then it remains blocked until marker removal", () => {
+    // given
+    const directory = createWorkspace(true)
+    const planPath = writeMarkedPlan(directory)
+    writeMalformedFinalWaveReceiptSidecar(planPath)
+    const first = resolveFinalWaveEnforcement(planPath, directory)
+    if (first.mode !== "blocked") throw new Error("expected initial quarantine block")
+
+    // when
+    const second = resolveFinalWaveEnforcement(planPath, directory)
+    const stamp = stampBaseline(planPath)
+
+    // then
+    expect(second.mode).toBe("blocked")
+    expect(second.reason).toBe("quarantine-recovery-required")
+    expect(stamp.kind).toBe("quarantined")
   })
 
   test("#given corrupt sidecar on legacy plan #when resolved #then mode stays advisory", () => {
@@ -525,6 +580,27 @@ describe("receipt fingerprint revalidation", () => {
     const store = readReceiptStore(planPath)
     if ("corrupt" in store) throw new Error("expected valid store")
     expect(store.receipts.F2).toBeDefined()
+  })
+
+  test("#given all four receipts exist #when F-row checkbox states change #then every receipt remains valid", () => {
+    // given
+    const directory = createWorkspace(true)
+    const planPath = writeMarkedPlan(directory)
+    for (const fKey of ["F1", "F2", "F3", "F4"] as const) {
+      establishReceipt(planPath, directory, fKey)
+    }
+
+    // when
+    writeFileSync(planPath, readFileSync(planPath, "utf-8")
+      .replace("- [ ] F1.", "- [x] F1.")
+      .replace("- [ ] F2.", "- [X] F2.")
+      .replace("- [ ] F3.", "- [~] F3."))
+
+    // then
+    expect(hasAllFinalWaveReceipts(planPath, directory)).toBe(true)
+    for (const fKey of ["F1", "F2", "F3", "F4"] as const) {
+      expect(hasFinalWaveReceiptForRow(planPath, fKey, directory)).toBe(true)
+    }
   })
 
   test("#given receipts use the wave-init baseline #when a later out-of-scope commit lands #then every receipt still counts without moving the baseline", () => {

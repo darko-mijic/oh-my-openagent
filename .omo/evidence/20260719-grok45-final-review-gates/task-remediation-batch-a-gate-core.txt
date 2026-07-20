@@ -1,0 +1,80 @@
+Batch A final-wave gate remediation evidence
+Date: 2026-07-20
+
+WHAT WAS TESTED
+
+1. TDD red probe
+Command:
+  bun test packages/omo-opencode/src/hooks/atlas/final-wave-enforcement.test.ts packages/omo-opencode/src/hooks/atlas/final-wave-fingerprint.test.ts packages/omo-opencode/src/hooks/atlas/final-wave-receipts.test.ts packages/omo-opencode/src/hooks/atlas/final-wave-plan-state.test.ts packages/omo-opencode/src/hooks/atlas/final-wave-role-parser.test.ts packages/omo-opencode/src/hooks/atlas/final-wave-canonical-attestation.test.ts
+Observed before implementation:
+  69 pass, 14 fail.
+  Stamped role-marker stripping and stamped unreadable plans resolved advisory.
+  F-row checkbox mutation invalidated the plan fingerprint.
+  Fingerprint-stale receipt re-issue returned duplicate.
+  Pre-existing product dirt failed canonical attestation.
+  F3 used the entire .omo/evidence tree.
+  Quarantine did not persist a blocking recovery state.
+  Lowercase fKey state diverged, noncanonical rows inflated pending counts, and resolveGitHead selected the plan-path repository before its dirname.
+  The first LO-1 filesystem-watch probe also encountered the host ENOSPC watcher limit; it was replaced by a deterministic temp-path contract test, which then failed because the unique-path factory did not exist.
+
+2. TDD green probe
+Same six-file command after implementation.
+Observed:
+  84 pass, 0 fail, 172 expect() calls.
+
+3. Explicit CR-1 probe
+Command:
+  bun test packages/omo-opencode/src/hooks/atlas/final-wave-enforcement.test.ts --test-name-pattern "stamped marked git plan|all four receipts"
+Observed:
+  3 pass, 0 fail.
+  A marked git plan with a durable baseline remains blocked after marker stripping or plan deletion; all four receipts survive checkbox-only F-row state flips.
+
+4. Explicit CR-2 stale/duplicate probe
+Command:
+  bun test packages/omo-opencode/src/hooks/atlas/final-wave-receipts.test.ts --test-name-pattern "fingerprint-stale receipt|approved row"
+Observed:
+  2 pass, 0 fail.
+  A valid receipt remains duplicate; a fingerprint-stale receipt is archived under receiptArchive and superseded by the current receipt.
+
+5. Atlas regression suite
+Command:
+  bun test packages/omo-opencode/src/hooks/atlas/
+Observed:
+  334 pass, 0 fail, 783 expect() calls.
+
+6. Repository regression suite
+Command:
+  bun test
+Observed with default /tmp:
+  12139 pass, 3 skip, 0 fail, 2 snapshots, 29897 expect() calls across 1529 files.
+
+7. Type and source-policy gates
+Commands:
+  bun run typecheck
+  bun run dist/skills/programming/scripts/typescript/check-no-excuse-rules.ts <14 changed TypeScript implementation/test paths>
+Observed:
+  Full tsgo root/script/package chain exited 0.
+  No-excuse audit reported no violations in 14 files.
+  LSP diagnostics were clean for every changed TypeScript file.
+
+8. Real OpenCode isolation/event probe
+Surface:
+  OpenCode 1.18.3, launched under script/agent/qa-sandbox.sh with isolated XDG paths.
+Observed:
+  Isolated server health became ready and /global/event emitted server.connected once.
+  Host session count remained 128 before and after via opencode db read-only SQL.
+  Direct source-plugin /agent initialization was attempted with OPENCODE_CONFIG_CONTENT pointing at packages/omo-opencode/src/index.ts; the endpoint hit the repository's documented startup-health hang and timed out without changing the host DB.
+
+WHY THIS IS ENOUGH
+
+- CR-1 is exercised through resolveFinalWaveEnforcement with a real git repository, durable baseline, marker stripping, and plan deletion.
+- CR-2 is exercised both as the original four-receipt checkbox sequence and as a true stale-fingerprint supersession with durable archive inspection.
+- HI-1 uses real git porcelain before and after baseline stamping; HI-2 hashes real F3 and sibling evidence files.
+- MD-3/4/5 and LO-1/5/6 are covered at their persistence/parser/filesystem boundaries, while the full Atlas and root suites preserve legacy, non-git, corruption-polarity, verdict, and identity-chain behavior.
+- Real OpenCode was driven only in an isolated XDG sandbox, and the host session count stayed unchanged.
+
+WHAT WAS OMITTED
+
+- The bundled opencode-qa self-check reported host sqlite3 and tmux binaries unavailable, so DB isolation was verified with opencode db read-only SQL and no TUI smoke was attempted.
+- The source-plugin /agent request produced no useful response before timeout. No raw environment dumps, credentials, auth headers, or provider logs are included.
+- bun run build was intentionally not run per the Batch A task constraint.

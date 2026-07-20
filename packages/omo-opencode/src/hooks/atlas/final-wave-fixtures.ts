@@ -4,9 +4,9 @@ import type { FinalWaveRole } from "./final-wave-role-parser"
 import {
   createFinalWaveReceiptSidecar,
   receiptSidecarPathForPlan,
-  writeMalformedFinalWaveReceiptSidecar,
   type FinalWaveReceiptSidecar,
 } from "./final-wave-receipt-sidecar-writer"
+import { writeMalformedFinalWaveReceiptSidecar } from "./final-wave-receipt-test-support"
 
 export const FINAL_WAVE_FIXTURE_VARIANTS = [
   "legacy-unmarked",
@@ -90,6 +90,7 @@ export function createFinalWaveFixtureReceiptSidecar(): FinalWaveReceiptSidecar 
       gitHead: "fixture-git-head",
       planSha256: "fixture-plan-sha256",
       stampedAt: "2026-07-20T00:00:00.000Z",
+      dirtyPaths: [],
       fRowContract: Object.fromEntries(
         FINAL_WAVE_FIXTURE_KEYS.map((fKey) => {
           const row = FINAL_WAVE_FIXTURE_ROWS[fKey]

@@ -316,6 +316,22 @@ describe("parseFinalWaveRoles", () => {
     expect(result.rows.map((row) => row.fKey)).toEqual(["F1", "F2", "F3", "F4"])
   })
 
+  test("#given lowercase and blocked F-row states #when parsed #then keys are canonical uppercase", () => {
+    // given
+    const plan = [
+      "## Final Verification Wave",
+      "- [~] f1. Plan compliance audit <!-- role:plan-auditor -->",
+      "- [x] f2. Code quality review <!-- role:code-reviewer -->",
+    ].join("\n")
+
+    // when
+    const result = parseFinalWaveRoles(plan)
+
+    // then
+    expect(result.status).toBe("marked")
+    expect(result.rows.map((row) => row.fKey)).toEqual(["F1", "F2"])
+  })
+
   test("#given reviewer role vocabulary #when inspected #then matches the four locked roles", () => {
     // given / when / then
     expect([...FINAL_WAVE_REVIEWER_ROLES]).toEqual([

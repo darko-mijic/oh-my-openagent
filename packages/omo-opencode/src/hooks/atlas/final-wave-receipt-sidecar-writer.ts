@@ -1,5 +1,15 @@
+import { randomUUID } from "node:crypto"
+import {
+  closeSync,
+  existsSync,
+  mkdirSync,
+  openSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs"
 import { dirname } from "node:path"
-import { mkdirSync, writeFileSync } from "node:fs"
+import { tolerantFsyncSync } from "../../shared/tolerant-fsync"
 import type { FinalWaveRole } from "./final-wave-role-parser"
 
 export type FinalWaveReceiptFingerprint = {
@@ -18,6 +28,7 @@ export type FinalWaveReceiptBaseline = {
   readonly gitHead: string | "nogit"
   readonly planSha256: string
   readonly stampedAt: string
+  readonly dirtyPaths: readonly string[]
   readonly fRowContract: Readonly<Record<string, FinalWaveReceiptRowContract>>
 }
 
@@ -51,6 +62,7 @@ export type FinalWaveReceiptSidecar = {
   readonly expectations: Readonly<Record<string, FinalWaveReceiptExpectation>>
   readonly bindings: Readonly<Record<string, FinalWaveReceiptBinding>>
   readonly receipts: Readonly<Record<string, FinalWaveReceipt>>
+  readonly receiptArchive: Readonly<Record<string, readonly FinalWaveReceipt[]>>
 }
 
 export type CreateFinalWaveReceiptSidecarInput = {
@@ -58,11 +70,7 @@ export type CreateFinalWaveReceiptSidecarInput = {
   readonly expectations?: Readonly<Record<string, FinalWaveReceiptExpectation>>
   readonly bindings?: Readonly<Record<string, FinalWaveReceiptBinding>>
   readonly receipts?: Readonly<Record<string, FinalWaveReceipt>>
-}
-
-export type WriteFinalWaveReceiptSidecarInput = {
-  readonly planPath: string
-  readonly sidecar: FinalWaveReceiptSidecar
+  readonly receiptArchive?: Readonly<Record<string, readonly FinalWaveReceipt[]>>
 }
 
 export function receiptSidecarPathForPlan(planPath: string): string {
@@ -74,25 +82,65 @@ export function receiptSidecarPathForPlan(planPath: string): string {
 export function createFinalWaveReceiptSidecar(
   input: CreateFinalWaveReceiptSidecarInput,
 ): FinalWaveReceiptSidecar {
-  return {
+  return canonicalizeFinalWaveReceiptSidecar({
     version: 1,
     baseline: input.baseline,
     expectations: input.expectations ?? {},
     bindings: input.bindings ?? {},
     receipts: input.receipts ?? {},
+    receiptArchive: input.receiptArchive ?? {},
+  })
+}
+
+export function createFinalWaveReceiptSidecarTempPath(
+  sidecarPath: string,
+  pid = process.pid,
+  randomSuffix = randomUUID(),
+): string {
+  return `${sidecarPath}.tmp-${pid}-${randomSuffix}`
+}
+
+export function writeFinalWaveReceiptSidecarAtomically(input: {
+  readonly planPath: string
+  readonly sidecar: FinalWaveReceiptSidecar
+}): string {
+  const sidecarPath = receiptSidecarPathForPlan(input.planPath)
+  const tempPath = createFinalWaveReceiptSidecarTempPath(sidecarPath)
+  const sidecar = canonicalizeFinalWaveReceiptSidecar(input.sidecar)
+  mkdirSync(dirname(sidecarPath), { recursive: true })
+  try {
+    writeFileSync(tempPath, `${JSON.stringify(sidecar, null, 2)}\n`, "utf-8")
+    const descriptor = openSync(tempPath, "r+")
+    try {
+      tolerantFsyncSync(descriptor, `writeFinalWaveReceiptSidecar:${sidecarPath}`)
+    } finally {
+      closeSync(descriptor)
+    }
+    renameSync(tempPath, sidecarPath)
+    return sidecarPath
+  } finally {
+    if (existsSync(tempPath)) unlinkSync(tempPath)
   }
 }
 
-export function writeFinalWaveReceiptSidecar(input: WriteFinalWaveReceiptSidecarInput): string {
-  const sidecarPath = receiptSidecarPathForPlan(input.planPath)
-  mkdirSync(dirname(sidecarPath), { recursive: true })
-  writeFileSync(sidecarPath, JSON.stringify(input.sidecar, null, 2))
-  return sidecarPath
+function canonicalizeFinalWaveReceiptSidecar(sidecar: FinalWaveReceiptSidecar): FinalWaveReceiptSidecar {
+  const baseline = sidecar.baseline === null
+    ? null
+    : { ...sidecar.baseline, fRowContract: canonicalizeRecord(sidecar.baseline.fRowContract) }
+  const bindings = Object.fromEntries(Object.entries(sidecar.bindings).map(([launchId, binding]) => [
+    launchId,
+    { ...binding, fKey: binding.fKey.toUpperCase() },
+  ]))
+  return {
+    ...sidecar,
+    baseline,
+    expectations: canonicalizeRecord(sidecar.expectations),
+    bindings,
+    receipts: canonicalizeRecord(sidecar.receipts),
+    receiptArchive: canonicalizeRecord(sidecar.receiptArchive),
+  }
 }
 
-export function writeMalformedFinalWaveReceiptSidecar(planPath: string): string {
-  const sidecarPath = receiptSidecarPathForPlan(planPath)
-  mkdirSync(dirname(sidecarPath), { recursive: true })
-  writeFileSync(sidecarPath, '{"version":')
-  return sidecarPath
+function canonicalizeRecord<Value>(record: Readonly<Record<string, Value>>): Readonly<Record<string, Value>> {
+  return Object.fromEntries(Object.entries(record).map(([fKey, value]) => [fKey.toUpperCase(), value]))
 }

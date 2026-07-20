@@ -13,10 +13,12 @@ import {
   recordLaunchExpectation,
   reconstructFinalWaveState,
   receiptStorePathForPlan,
+  resolveGitHead,
   stampBaseline,
   writeReceipt,
 } from "./final-wave-receipts"
-import { writeMalformedFinalWaveReceiptSidecar } from "./final-wave-receipt-sidecar-writer"
+import { writeMalformedFinalWaveReceiptSidecar } from "./final-wave-receipt-test-support"
+import * as receiptSidecarWriter from "./final-wave-receipt-sidecar-writer"
 
 const testDirectories: string[] = []
 const fingerprint = { gitHead: "nogit" as const, scopePaths: [], scopeHash: "scope-hash" }
@@ -114,6 +116,56 @@ describe("final-wave durable receipt store", () => {
     expect(writeReceipt(planPath, { fKey: "F1", launchId: "launch-f1", childSessionId: "ses_f1", actualAgent: "momus", fingerprint }).kind).toBe("duplicate")
   })
 
+  test("#given a fingerprint-stale receipt #when the row is re-issued #then the old receipt is archived and the new receipt is accepted", () => {
+    // given
+    const planPath = writePlan()
+    establishF1(planPath)
+    writeReceipt(planPath, { fKey: "F1", launchId: "launch-f1", childSessionId: "ses_f1", actualAgent: "momus", fingerprint })
+    const refreshedFingerprint = { ...fingerprint, scopeHash: "refreshed-scope-hash" }
+
+    // when
+    const result = writeReceipt(planPath, { fKey: "F1", launchId: "launch-f1", childSessionId: "ses_f1", actualAgent: "momus", fingerprint: refreshedFingerprint })
+
+    // then
+    expect(result.kind).toBe("written")
+    const store = expectValidStore(planPath)
+    expect(store.receipts.F1?.fingerprint.scopeHash).toBe("refreshed-scope-hash")
+    expect(store.receiptArchive.F1?.map((receipt) => receipt.fingerprint.scopeHash)).toEqual(["scope-hash"])
+  })
+
+  test("#given a lowercase marked row #when expectation binding and receipt are written #then every store boundary uses one uppercase key", () => {
+    // given
+    const planPath = writePlan()
+    writeFileSync(planPath, readFileSync(planPath, "utf-8").replace(/F1/g, "f1"))
+
+    // when
+    recordLaunchExpectation(planPath, { fKey: "f1", role: "plan-auditor", subagent: "momus", launchId: "launch-lower" })
+    recordBinding(planPath, { launchId: "launch-lower", fKey: "f1", childSessionId: "ses_lower" })
+    const result = writeReceipt(planPath, { fKey: "f1", launchId: "launch-lower", childSessionId: "ses_lower", actualAgent: "momus", fingerprint })
+
+    // then
+    expect(result.kind).toBe("written")
+    const store = expectValidStore(planPath)
+    expect(Object.keys(store.baseline?.fRowContract ?? {})).toContain("F1")
+    expect(Object.keys(store.expectations)).toContain("F1")
+    expect(store.bindings["launch-lower"]?.fKey).toBe("F1")
+    expect(Object.keys(store.receipts)).toContain("F1")
+  })
+
+  test("#given a sidecar target #when its atomic temporary path is created #then the name includes pid and a random suffix", () => {
+    // given
+    const factory: unknown = Reflect.get(receiptSidecarWriter, "createFinalWaveReceiptSidecarTempPath")
+
+    // when
+    const tempPath = typeof factory === "function"
+      ? factory("/workspace/wave.receipts.json", 42, "random-suffix")
+      : null
+
+    // then
+    expect(typeof factory).toBe("function")
+    expect(tempPath).toBe("/workspace/wave.receipts.json.tmp-42-random-suffix")
+  })
+
   test("#given no expectation #when completed #then rejects it as late", () => {
     expect(writeReceipt(writePlan(), { fKey: "F1", launchId: "none", childSessionId: "ses_f1", actualAgent: "momus", fingerprint }).kind).toBe("late")
   })
@@ -189,4 +241,37 @@ describe("final-wave durable receipt store", () => {
     expect(getPlanProgress(planPath)).toMatchObject({ total: 1, completed: 1 })
     expect(readFinalWavePlanState(planPath)).toMatchObject({ pendingImplementationTaskCount: 0, pendingFinalWaveTaskCount: 4 })
   })
+
+  test("#given a plan path that is itself a nested git directory #when HEAD resolves #then the plan dirname repository wins", () => {
+    // given
+    const planPath = writePlan()
+    const workspaceRoot = dirname(dirname(dirname(planPath)))
+    runGit(workspaceRoot, ["init"])
+    runGit(workspaceRoot, ["config", "user.email", "outer@example.test"])
+    runGit(workspaceRoot, ["config", "user.name", "Outer"])
+    writeFileSync(join(workspaceRoot, "outer.txt"), "outer\n")
+    runGit(workspaceRoot, ["add", "outer.txt"])
+    runGit(workspaceRoot, ["commit", "-m", "outer"])
+    const outerHead = runGit(workspaceRoot, ["rev-parse", "HEAD"]).trim()
+    rmSync(planPath)
+    mkdirSync(planPath)
+    runGit(planPath, ["init"])
+    runGit(planPath, ["config", "user.email", "inner@example.test"])
+    runGit(planPath, ["config", "user.name", "Inner"])
+    writeFileSync(join(planPath, "inner.txt"), "inner\n")
+    runGit(planPath, ["add", "inner.txt"])
+    runGit(planPath, ["commit", "-m", "inner"])
+
+    // when
+    const resolved = resolveGitHead(planPath)
+
+    // then
+    expect(resolved).toBe(outerHead)
+  })
 })
+
+function runGit(cwd: string, arguments_: readonly string[]): string {
+  const result = Bun.spawnSync(["git", ...arguments_], { cwd, stdout: "pipe", stderr: "pipe" })
+  if (result.exitCode !== 0) throw new Error(result.stderr.toString())
+  return result.stdout.toString()
+}

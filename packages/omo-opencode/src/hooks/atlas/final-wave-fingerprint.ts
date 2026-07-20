@@ -10,7 +10,8 @@ import type {
 import { isOmoWorkspacePath, parsePorcelainPaths } from "./final-wave-canonical-attestation"
 import type { FinalWaveRoleRow } from "./final-wave-role-parser"
 
-const QA_EVIDENCE_SCOPE = ".omo/evidence/"
+const FINAL_WAVE_CHECKBOX_PATTERN = /^- \[[ xX~]\](?= F[1-9]\d*\. )/gim
+const FINAL_WAVE_ROW_PATTERN = /^- \[[ xX~]\] (F[1-9]\d*)\. /i
 
 export type FinalWaveFingerprintBaseline = {
   readonly gitHead: string | "nogit"
@@ -59,7 +60,7 @@ export function computeRowFingerprint(input: ComputeRowFingerprintInput): FinalW
   return {
     gitHead: gitDiffPaths === null ? "nogit" : input.baseline.gitHead,
     scopePaths,
-    scopeHash: hashScopedFiles(workspaceRoot, scopePaths),
+    scopeHash: hashScopedFiles(workspaceRoot, scopePaths, planScope),
   }
 }
 
@@ -82,7 +83,8 @@ export function revalidateFinalWaveReceipts(
   input: RevalidateFinalWaveReceiptsInput,
 ): Readonly<Record<string, FinalWaveReceipt>> {
   const workspaceRoot = input.workspaceRoot ?? inferWorkspaceRoot(input.planPath)
-  return Object.fromEntries(Object.entries(input.receipts).filter(([fKey, receipt]) => {
+  return Object.fromEntries(Object.entries(input.receipts).filter(([storedFKey, receipt]) => {
+    const fKey = storedFKey.toUpperCase()
     const contract = input.baseline.fRowContract[fKey]
     if (contract === undefined) return false
     return revalidateReceiptFingerprint({
@@ -92,7 +94,7 @@ export function revalidateFinalWaveReceipts(
       workspaceRoot,
       baseline: { gitHead: input.baseline.gitHead },
     })
-  }))
+  }).map(([fKey, receipt]) => [fKey.toUpperCase(), receipt]))
 }
 
 function effectiveScopePaths(input: {
@@ -114,7 +116,7 @@ function effectiveScopePaths(input: {
         ? [input.planScope]
         : input.gitDiffPaths.filter((path) => isProductDiffPath(path, input.planScope))
     case "qa-executor":
-      return [input.planScope, QA_EVIDENCE_SCOPE]
+      return qaEvidenceScope(input.workspaceRoot, input.planScope, input.row.fKey)
     default:
       return assertNever(input.row.role)
   }
@@ -150,7 +152,28 @@ function isProductDiffPath(path: string, planScope: string): boolean {
   return path === planScope || !path.startsWith(".omo/")
 }
 
-function hashScopedFiles(workspaceRoot: string, scopePaths: readonly string[]): string {
+function qaEvidenceScope(workspaceRoot: string, planScope: string, fKey: string): readonly string[] {
+  try {
+    const planContent = readFileSync(resolve(workspaceRoot, planScope), "utf-8")
+    const lines = planContent.split(/\r?\n/)
+    const rowIndex = lines.findIndex((line) => FINAL_WAVE_ROW_PATTERN.exec(line)?.[1]?.toUpperCase() === fKey.toUpperCase())
+    if (rowIndex < 0) return [planScope]
+
+    const sectionLines: string[] = []
+    for (const line of lines.slice(rowIndex)) {
+      if (sectionLines.length > 0 && (FINAL_WAVE_ROW_PATTERN.test(line) || /^#{1,2}(?:\s+|$)/.test(line))) break
+      sectionLines.push(line)
+    }
+    const evidencePath = sectionLines.join("\n").match(/\.omo\/evidence\/[A-Za-z0-9._/-]*\/f3-[A-Za-z0-9._-]+\//i)?.[0]
+    return evidencePath === undefined
+      ? [planScope]
+      : [planScope, normalizeScopePath(workspaceRoot, evidencePath)]
+  } catch {
+    return [planScope]
+  }
+}
+
+function hashScopedFiles(workspaceRoot: string, scopePaths: readonly string[], planScope: string): string {
   const filePaths = new Set<string>()
   for (const scopePath of scopePaths) {
     collectScopedFiles(workspaceRoot, resolve(workspaceRoot, scopePath), filePaths)
@@ -158,8 +181,17 @@ function hashScopedFiles(workspaceRoot: string, scopePaths: readonly string[]): 
 
   const entries = [...filePaths]
     .toSorted()
-    .map((filePath) => `${filePath}\u0000${createHash("sha256").update(readFileSync(resolve(workspaceRoot, filePath))).digest("hex")}`)
+    .map((filePath) => {
+      const content = filePath === planScope
+        ? normalizeFinalWaveCheckboxes(readFileSync(resolve(workspaceRoot, filePath), "utf-8"))
+        : readFileSync(resolve(workspaceRoot, filePath))
+      return `${filePath}\u0000${createHash("sha256").update(content).digest("hex")}`
+    })
   return createHash("sha256").update(entries.join("\n")).digest("hex")
+}
+
+function normalizeFinalWaveCheckboxes(planContent: string): string {
+  return planContent.replace(FINAL_WAVE_CHECKBOX_PATTERN, "- [ ]")
 }
 
 function collectScopedFiles(workspaceRoot: string, absolutePath: string, filePaths: Set<string>): void {

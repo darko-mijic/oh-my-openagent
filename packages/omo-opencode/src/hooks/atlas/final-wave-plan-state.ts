@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs"
-import { parseFinalWaveRoles } from "./final-wave-role-parser"
+import { FINAL_WAVE_TASK_ROW, parseFinalWaveRoles } from "./final-wave-role-parser"
 import type { FinalWaveRoleParseResult } from "./final-wave-role-parser"
 
 const TODO_HEADING_PATTERN = /^##\s+TODOs\b/i
@@ -7,7 +7,6 @@ const FINAL_VERIFICATION_HEADING_PATTERN = /^##\s+Final Verification Wave\b/i
 const SECOND_LEVEL_HEADING_PATTERN = /^##\s+/
 const UNCHECKED_CHECKBOX_PATTERN = /^\s*[-*]\s*\[\s*\]\s*(.+)$/
 const TODO_TASK_PATTERN = /^\d+\./
-const FINAL_WAVE_TASK_PATTERN = /^F\d+\./i
 const FENCE_PATTERN = /^[ \t]{0,3}(`{3,}|~{3,})(.*)$/
 
 type PlanSection = "todo" | "final-wave" | "other"
@@ -59,6 +58,13 @@ export function readFinalWavePlanState(planPath: string): FinalWavePlanState | n
         hasFinalVerificationWave ||= section === "final-wave"
       }
 
+      if (section === "final-wave") {
+        if (line.startsWith("- [ ] ") && FINAL_WAVE_TASK_ROW.test(line)) {
+          pendingFinalWaveTaskCount += 1
+        }
+        continue
+      }
+
       const uncheckedTaskMatch = line.match(UNCHECKED_CHECKBOX_PATTERN)
       if (!uncheckedTaskMatch) {
         continue
@@ -67,10 +73,6 @@ export function readFinalWavePlanState(planPath: string): FinalWavePlanState | n
       const taskLabel = uncheckedTaskMatch[1].trim()
       if (section === "todo" && TODO_TASK_PATTERN.test(taskLabel)) {
         pendingImplementationTaskCount += 1
-      }
-
-      if (section === "final-wave" && FINAL_WAVE_TASK_PATTERN.test(taskLabel)) {
-        pendingFinalWaveTaskCount += 1
       }
     }
 

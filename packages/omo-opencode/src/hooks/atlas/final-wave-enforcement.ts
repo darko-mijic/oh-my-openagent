@@ -3,6 +3,8 @@ import { readFinalWavePlanState } from "./final-wave-plan-state"
 import {
   quarantineCorruptReceiptStore,
   readReceiptStore,
+  readReceiptQuarantineMarker,
+  receiptQuarantineMarkerPathForPlan,
   reconstructFinalWaveState,
   resolveGitHead,
   type FinalWaveReceiptStoreRead,
@@ -34,26 +36,29 @@ export type FinalWaveEnforcement =
 
 export function resolveFinalWaveEnforcement(
   planPath: string,
-  workspaceRoot?: string,
+  _workspaceRoot?: string,
 ): FinalWaveEnforcement {
   const planState = readFinalWavePlanState(planPath)
-  if (planState === null) {
-    return { mode: "advisory", reason: "plan-unreadable" }
-  }
-
-  const roles = planState.finalWaveRoles
-  if (roles.status !== "marked") {
+  const gitHead = resolveGitHead(planPath)
+  const quarantineMarker = readReceiptQuarantineMarker(planPath)
+  if (quarantineMarker !== null) {
+    const markerPath = receiptQuarantineMarkerPathForPlan(planPath)
+    const quarantinedPath = "corrupt" in quarantineMarker
+      ? "the quarantined receipt named by the recovery record"
+      : quarantineMarker.quarantinedPath
+    const recovery = `Inspect ${quarantinedPath}, then delete ${markerPath} to authorize a fresh baseline and re-run every final-wave review.`
     return {
-      mode: "advisory",
-      reason: roles.status === "legacy-unmarked" ? "legacy-unmarked" : "mixed-or-invalid",
+      mode: "blocked",
+      reason: "quarantine-recovery-required",
+      message: `FINAL WAVE BLOCKED: corrupt-receipt recovery is still quarantined. ${recovery}`,
+      recovery,
     }
   }
 
-  const gitHead = resolveGitHead(workspaceRoot ?? planPath)
   const storeResult = readReceiptStore(planPath)
 
   if ("corrupt" in storeResult) {
-    if (gitHead === "nogit") {
+    if (gitHead === "nogit" || planState?.finalWaveRoles.status !== "marked") {
       return { mode: "advisory", reason: "corrupt-sidecar-non-git" }
     }
     const recovery = quarantineCorruptReceiptStore(planPath)
@@ -65,9 +70,42 @@ export function resolveFinalWaveEnforcement(
         "Release is impossible until recovery completes.",
         recovery.message,
         recovery.path !== "" ? `Quarantine path: ${recovery.path}` : "",
-        "Re-stamp the baseline and re-run all affected final-wave reviews.",
       ].filter(Boolean).join(" "),
       recovery: recovery.path,
+    }
+  }
+
+  if (storeResult.baseline !== null && planState === null) {
+    const recovery = "Restore the stamped plan file at its original path, including every frozen role marker, or explicitly remove the receipt sidecar to restart the wave and re-run every review."
+    return {
+      mode: "blocked",
+      reason: "stamped-plan-unreadable",
+      message: `FINAL WAVE BLOCKED: the stamped plan is unreadable. ${recovery}`,
+      recovery,
+      store: storeResult,
+    }
+  }
+
+  const roles = planState?.finalWaveRoles
+  if (storeResult.baseline !== null && roles?.status !== "marked") {
+    const recovery = "Restore every frozen F-row and role marker, or explicitly remove the receipt sidecar to restart the wave and re-run every review."
+    return {
+      mode: "blocked",
+      reason: "stamped-plan-role-contract-lost",
+      message: `FINAL WAVE BLOCKED: a stamped wave no longer has a readable marked role contract. ${recovery}`,
+      recovery,
+      store: storeResult,
+    }
+  }
+
+  if (planState === null) {
+    return { mode: "advisory", reason: "plan-unreadable" }
+  }
+
+  if (roles?.status !== "marked") {
+    return {
+      mode: "advisory",
+      reason: roles?.status === "legacy-unmarked" ? "legacy-unmarked" : "mixed-or-invalid",
     }
   }
 
@@ -140,7 +178,6 @@ export function hasFinalWaveReceiptForRow(planPath: string, fKey: string, worksp
   if ("corrupt" in store) return false
   const currentStore = revalidateReceiptStore({ planPath, workspaceRoot, store })
   return currentStore.receipts[fKey.toUpperCase()] !== undefined
-    || currentStore.receipts[fKey] !== undefined
 }
 
 export function hasAllFinalWaveReceipts(planPath: string, workspaceRoot?: string): boolean {

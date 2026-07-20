@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { randomUUID } from "node:crypto"
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { computeRowFingerprint, isReceiptValid } from "./final-wave-fingerprint"
@@ -107,8 +107,75 @@ describe("final-wave receipt fingerprints", () => {
       ["plan-auditor", [PLAN_PATH]],
       ["scope-auditor", [PLAN_PATH]],
       ["code-reviewer", ["src/changed.ts"]],
-      ["qa-executor", [PLAN_PATH, ".omo/evidence/"]],
+      ["qa-executor", [PLAN_PATH]],
     ])
+  })
+
+  test("#given a plan-scoped receipt #when only an F-row checkbox state flips #then its fingerprint remains valid", () => {
+    // given
+    writeWorkspaceFile(workspaceRoot, PLAN_PATH, [
+      "## Final Verification Wave",
+      "- [ ] F1. Plan audit <!-- role:plan-auditor -->",
+    ].join("\n"))
+    initializeGitRepository(workspaceRoot)
+    const baseline = { gitHead: runGit(workspaceRoot, ["rev-parse", "HEAD"]).trim() }
+    const row = createRow({ role: "plan-auditor" })
+    const receipt = computeRowFingerprint({ planPath: join(workspaceRoot, PLAN_PATH), row, workspaceRoot, baseline })
+
+    // when
+    const planPath = join(workspaceRoot, PLAN_PATH)
+    writeFileSync(planPath, readFileSync(planPath, "utf-8").replace("- [ ] F1.", "- [~] F1."))
+    const current = computeRowFingerprint({ planPath, row, workspaceRoot, baseline })
+
+    // then
+    expect(isReceiptValid(receipt, current)).toBe(true)
+  })
+
+  test("#given a plan-scoped receipt #when its role marker changes #then its fingerprint becomes invalid", () => {
+    // given
+    writeWorkspaceFile(workspaceRoot, PLAN_PATH, [
+      "## Final Verification Wave",
+      "- [ ] F1. Plan audit <!-- role:plan-auditor -->",
+    ].join("\n"))
+    initializeGitRepository(workspaceRoot)
+    const baseline = { gitHead: runGit(workspaceRoot, ["rev-parse", "HEAD"]).trim() }
+    const row = createRow({ role: "plan-auditor" })
+    const receipt = computeRowFingerprint({ planPath: join(workspaceRoot, PLAN_PATH), row, workspaceRoot, baseline })
+
+    // when
+    const planPath = join(workspaceRoot, PLAN_PATH)
+    writeFileSync(planPath, readFileSync(planPath, "utf-8").replace("role:plan-auditor", "role:scope-auditor"))
+    const current = computeRowFingerprint({ planPath, row, workspaceRoot, baseline })
+
+    // then
+    expect(isReceiptValid(receipt, current)).toBe(false)
+  })
+
+  test("#given F3 declares its evidence directory #when sibling evidence changes #then only F3-owned artifacts affect its fingerprint", () => {
+    // given
+    writeWorkspaceFile(workspaceRoot, PLAN_PATH, [
+      "## Final Verification Wave",
+      "- [ ] F3. Real manual QA <!-- role:qa-executor -->",
+      "  Evidence: `.omo/evidence/20260720-wave/f3-qa/`.",
+    ].join("\n"))
+    writeWorkspaceFile(workspaceRoot, ".omo/evidence/20260720-wave/f3-qa/result.txt", "pass\n")
+    initializeGitRepository(workspaceRoot)
+    const baseline = { gitHead: runGit(workspaceRoot, ["rev-parse", "HEAD"]).trim() }
+    const row = createRow({ fKey: "F3", role: "qa-executor" })
+    const receipt = computeRowFingerprint({ planPath: join(workspaceRoot, PLAN_PATH), row, workspaceRoot, baseline })
+
+    // when
+    writeWorkspaceFile(workspaceRoot, ".omo/evidence/20260720-wave/f1-review.md", "approve\n")
+    writeWorkspaceFile(workspaceRoot, ".omo/evidence/20260720-wave/f2-review.md", "approve\n")
+    writeWorkspaceFile(workspaceRoot, ".omo/evidence/20260720-wave/f4-review.md", "approve\n")
+    const afterSiblings = computeRowFingerprint({ planPath: join(workspaceRoot, PLAN_PATH), row, workspaceRoot, baseline })
+    writeWorkspaceFile(workspaceRoot, ".omo/evidence/20260720-wave/f3-qa/result.txt", "changed\n")
+    const afterOwnArtifact = computeRowFingerprint({ planPath: join(workspaceRoot, PLAN_PATH), row, workspaceRoot, baseline })
+
+    // then
+    expect(receipt.scopePaths).toEqual([PLAN_PATH, ".omo/evidence/20260720-wave/f3-qa/"])
+    expect(isReceiptValid(receipt, afterSiblings)).toBe(true)
+    expect(isReceiptValid(receipt, afterOwnArtifact)).toBe(false)
   })
 
   test("#given a non-git workspace #when git probing fails #then content hashing falls back to the plan scope", () => {
@@ -164,8 +231,8 @@ describe("final-wave receipt fingerprints", () => {
   })
 })
 
-function createRow(input: { readonly role: "plan-auditor" | "code-reviewer" | "qa-executor" | "scope-auditor"; readonly scope?: readonly string[] }) {
-  return { fKey: "F1", title: "Final review", role: input.role, scope: input.scope ?? [] } as const
+function createRow(input: { readonly fKey?: string; readonly role: "plan-auditor" | "code-reviewer" | "qa-executor" | "scope-auditor"; readonly scope?: readonly string[] }) {
+  return { fKey: input.fKey ?? "F1", title: "Final review", role: input.role, scope: input.scope ?? [] } as const
 }
 
 function initializeGitRepository(workspaceRoot: string): void {

@@ -1,12 +1,15 @@
 import { createHash } from "node:crypto"
-import { existsSync, mkdirSync, readFileSync, renameSync } from "node:fs"
+import { existsSync, readFileSync, renameSync } from "node:fs"
 import { spawnSync } from "node:child_process"
 import { dirname } from "node:path"
 import { z } from "zod"
 import { writeFileAtomically } from "../../shared/write-file-atomically"
+import { snapshotCanonicalDirtyPaths } from "./final-wave-canonical-attestation"
+import { isReceiptValid } from "./final-wave-fingerprint"
 import {
   createFinalWaveReceiptSidecar,
   receiptSidecarPathForPlan,
+  writeFinalWaveReceiptSidecarAtomically,
   type FinalWaveReceipt,
   type FinalWaveReceiptBaseline,
   type FinalWaveReceiptBinding,
@@ -23,6 +26,7 @@ const ReceiptStoreSchema = z.object({
     gitHead: z.union([z.string(), z.literal("nogit")]),
     planSha256: z.string(),
     stampedAt: z.string(),
+    dirtyPaths: z.array(z.string()).default([]),
     fRowContract: z.record(z.string(), z.object({ role: RoleSchema, title: z.string(), scope: z.array(z.string()) })),
   }).nullable(),
   expectations: z.record(z.string(), z.object({ role: RoleSchema, subagent: z.string(), launchId: z.string(), createdAt: z.string() })),
@@ -37,7 +41,25 @@ const ReceiptStoreSchema = z.object({
     fingerprint: z.object({ gitHead: z.union([z.string(), z.literal("nogit")]), scopePaths: z.array(z.string()), scopeHash: z.string() }),
     createdAt: z.string(),
   })),
+  receiptArchive: z.record(z.string(), z.array(z.object({
+    role: RoleSchema,
+    expectedSubagent: z.string(),
+    actualAgent: z.string(),
+    childSessionId: z.string(),
+    launchId: z.string(),
+    verdict: z.literal("approve"),
+    fingerprint: z.object({ gitHead: z.union([z.string(), z.literal("nogit")]), scopePaths: z.array(z.string()), scopeHash: z.string() }),
+    createdAt: z.string(),
+  }))).default({}),
 })
+
+const QuarantineMarkerSchema = z.object({
+  version: z.literal(1),
+  quarantinedPath: z.string(),
+  quarantinedAt: z.string(),
+})
+
+const FINAL_WAVE_CHECKBOX_PATTERN = /^- \[[ xX~]\](?= F[1-9]\d*\. )/gim
 
 export type FinalWaveContractStatus =
   | { readonly kind: "uninitialized" }
@@ -47,7 +69,7 @@ export type FinalWaveContractStatus =
 export type FinalWaveReceiptStore = FinalWaveReceiptSidecar
 export type FinalWaveReceiptStoreRead = FinalWaveReceiptStore & { readonly contract: FinalWaveContractStatus }
 export type ReceiptStoreReadResult = FinalWaveReceiptStoreRead | { readonly corrupt: true }
-export type ReceiptRejection = "duplicate" | "late" | "stale" | "mismatched" | "corrupt" | "contract-violation"
+export type ReceiptRejection = "duplicate" | "late" | "stale" | "mismatched" | "corrupt" | "contract-violation" | "quarantined"
 export type ReceiptWriteResult = { readonly kind: "written"; readonly store: FinalWaveReceiptStoreRead } | { readonly kind: ReceiptRejection }
 export type BindingWriteResult = { readonly kind: "recorded"; readonly store: FinalWaveReceiptStoreRead } | { readonly kind: ReceiptRejection }
 
@@ -88,12 +110,15 @@ export type QuarantineResult = {
   readonly message: string
 }
 
+export type ReceiptQuarantineMarker = z.infer<typeof QuarantineMarkerSchema>
+export type ReceiptQuarantineMarkerRead = ReceiptQuarantineMarker | { readonly corrupt: true }
+
 export function receiptStorePathForPlan(planPath: string): string {
   return receiptSidecarPathForPlan(planPath)
 }
 
 export function planSha256(planContent: string): string {
-  return createHash("sha256").update(planContent).digest("hex")
+  return createHash("sha256").update(planContent.replace(FINAL_WAVE_CHECKBOX_PATTERN, "- [ ]")).digest("hex")
 }
 
 export function readReceiptStore(planPath: string): ReceiptStoreReadResult {
@@ -111,13 +136,14 @@ export function readReceiptStore(planPath: string): ReceiptStoreReadResult {
 }
 
 export function writeFinalWaveReceiptStore(planPath: string, store: FinalWaveReceiptStore | FinalWaveReceiptStoreRead): string {
-  const sidecarPath = receiptStorePathForPlan(planPath)
-  mkdirSync(dirname(sidecarPath), { recursive: true })
-  writeFileAtomically(sidecarPath, `${JSON.stringify(persistedStore(store), null, 2)}\n`)
-  return sidecarPath
+  return writeFinalWaveReceiptSidecarAtomically({
+    planPath,
+    sidecar: canonicalizeStore(persistedStore(store)),
+  })
 }
 
 export function stampBaseline(planPath: string): ReceiptWriteResult {
+  if (readReceiptQuarantineMarker(planPath) !== null) return { kind: "quarantined" }
   const existing = readReceiptStore(planPath)
   if ("corrupt" in existing) return { kind: "corrupt" }
   if (existing.contract.kind === "violation") return { kind: "contract-violation" }
@@ -133,9 +159,10 @@ export function stampBaseline(planPath: string): ReceiptWriteResult {
 }
 
 export function recordLaunchExpectation(planPath: string, input: LaunchExpectationInput): ReceiptWriteResult {
+  const fKey = input.fKey.toUpperCase()
   const stamped = stampBaseline(planPath)
   if (stamped.kind !== "written") return stamped
-  if (stamped.store.baseline !== null && !Object.hasOwn(stamped.store.baseline.fRowContract, input.fKey)) {
+  if (stamped.store.baseline !== null && !Object.hasOwn(stamped.store.baseline.fRowContract, fKey)) {
     return { kind: "mismatched" }
   }
 
@@ -143,7 +170,7 @@ export function recordLaunchExpectation(planPath: string, input: LaunchExpectati
     ...persistedStore(stamped.store),
     expectations: {
       ...stamped.store.expectations,
-      [input.fKey]: { role: input.role, subagent: input.subagent, launchId: input.launchId, createdAt: input.createdAt ?? nowIso() },
+      [fKey]: { role: input.role, subagent: input.subagent, launchId: input.launchId, createdAt: input.createdAt ?? nowIso() },
     },
   }
   writeFinalWaveReceiptStore(planPath, store)
@@ -151,20 +178,21 @@ export function recordLaunchExpectation(planPath: string, input: LaunchExpectati
 }
 
 export function recordBinding(planPath: string, input: BindingInput): BindingWriteResult {
+  const fKey = input.fKey.toUpperCase()
   const result = readReceiptStore(planPath)
   if ("corrupt" in result) return { kind: "corrupt" }
   if (result.contract.kind === "violation") return { kind: "contract-violation" }
-  const expectation = result.expectations[input.fKey]
+  const expectation = result.expectations[fKey]
   if (expectation === undefined) return { kind: "late" }
   if (expectation.launchId !== input.launchId) return { kind: "stale" }
   const priorBinding = result.bindings[input.launchId]
-  if (priorBinding !== undefined && !isBindingMatch(priorBinding, input)) return { kind: "mismatched" }
+  if (priorBinding !== undefined && !isBindingMatch(priorBinding, { ...input, fKey })) return { kind: "mismatched" }
 
   const store = {
     ...persistedStore(result),
     bindings: {
       ...result.bindings,
-      [input.launchId]: { fKey: input.fKey, childSessionId: input.childSessionId, boundAt: input.boundAt ?? nowIso() },
+      [input.launchId]: { fKey, childSessionId: input.childSessionId, boundAt: input.boundAt ?? nowIso() },
     },
   }
   writeFinalWaveReceiptStore(planPath, store)
@@ -172,15 +200,19 @@ export function recordBinding(planPath: string, input: BindingInput): BindingWri
 }
 
 export function writeReceipt(planPath: string, input: ReceiptInput): ReceiptWriteResult {
+  const fKey = input.fKey.toUpperCase()
   const result = readReceiptStore(planPath)
   if ("corrupt" in result) return { kind: "corrupt" }
   if (result.contract.kind === "violation") return { kind: "contract-violation" }
-  if (result.receipts[input.fKey] !== undefined) return { kind: "duplicate" }
-  const expectation = result.expectations[input.fKey]
+  const existingReceipt = result.receipts[fKey]
+  if (existingReceipt !== undefined && isReceiptValid(existingReceipt.fingerprint, input.fingerprint)) {
+    return { kind: "duplicate" }
+  }
+  const expectation = result.expectations[fKey]
   if (expectation === undefined) return { kind: "late" }
   if (expectation.launchId !== input.launchId) return { kind: "stale" }
   const binding = result.bindings[input.launchId]
-  if (input.actualAgent !== expectation.subagent || !matchesReceiptBinding(binding, input)) return { kind: "mismatched" }
+  if (input.actualAgent !== expectation.subagent || !matchesReceiptBinding(binding, { ...input, fKey })) return { kind: "mismatched" }
 
   const receipt: FinalWaveReceipt = {
     role: expectation.role,
@@ -192,14 +224,21 @@ export function writeReceipt(planPath: string, input: ReceiptInput): ReceiptWrit
     fingerprint: input.fingerprint,
     createdAt: input.createdAt ?? nowIso(),
   }
-  const store = { ...persistedStore(result), receipts: { ...result.receipts, [input.fKey]: receipt } }
+  const receiptArchive = existingReceipt === undefined
+    ? result.receiptArchive
+    : { ...result.receiptArchive, [fKey]: [...(result.receiptArchive[fKey] ?? []), existingReceipt] }
+  const store = {
+    ...persistedStore(result),
+    receipts: { ...result.receipts, [fKey]: receipt },
+    receiptArchive,
+  }
   writeFinalWaveReceiptStore(planPath, store)
   return { kind: "written", store: evaluateContract(store, planPath) }
 }
 
 export function revokeReceiptsForFKey(store: FinalWaveReceiptStore | FinalWaveReceiptStoreRead, fKey: string): FinalWaveReceiptStore {
   const receipts = { ...store.receipts }
-  delete receipts[fKey]
+  delete receipts[fKey.toUpperCase()]
   return { ...persistedStore(store), receipts }
 }
 
@@ -227,18 +266,41 @@ export function quarantineCorruptReceiptStore(planPath: string, timestamp = Stri
   }
 
   const recoveryPath = `${sidecarPath.slice(0, -".json".length)}.corrupt-${timestamp}.json`
-  renameSync(sidecarPath, recoveryPath)
   const isGitWorkspace = resolveGitHead(planPath) !== "nogit"
+  if (isGitWorkspace) {
+    writeFileAtomically(
+      receiptQuarantineMarkerPathForPlan(planPath),
+      `${JSON.stringify({ version: 1, quarantinedPath: recoveryPath, quarantinedAt: timestamp }, null, 2)}\n`,
+    )
+  }
+  renameSync(sidecarPath, recoveryPath)
   return isGitWorkspace
-    ? { kind: "blocking-recovery", path: recoveryPath, message: "Re-stamp the baseline and re-run all affected final-wave reviews." }
+    ? { kind: "blocking-recovery", path: recoveryPath, message: `Inspect the quarantined receipt, then delete ${receiptQuarantineMarkerPathForPlan(planPath)} to authorize a fresh baseline and re-run every final-wave review.` }
     : { kind: "advisory-recovery", path: recoveryPath, message: "Non-git workspaces remain advisory; re-stamp before the next wave." }
+}
+
+export function receiptQuarantineMarkerPathForPlan(planPath: string): string {
+  const sidecarPath = receiptStorePathForPlan(planPath)
+  return `${sidecarPath.slice(0, -".json".length)}.quarantine.json`
+}
+
+export function readReceiptQuarantineMarker(planPath: string): ReceiptQuarantineMarkerRead | null {
+  const markerPath = receiptQuarantineMarkerPathForPlan(planPath)
+  if (!existsSync(markerPath)) return null
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(markerPath, "utf-8"))
+    const result = QuarantineMarkerSchema.safeParse(parsed)
+    return result.success ? result.data : { corrupt: true }
+  } catch {
+    return { corrupt: true }
+  }
 }
 
 function parseReceiptStore(raw: string): FinalWaveReceiptStore | null {
   try {
     const parsed: unknown = JSON.parse(raw)
     const result = ReceiptStoreSchema.safeParse(parsed)
-    return result.success ? result.data : null
+    return result.success ? canonicalizeStore(result.data) : null
   } catch {
     return null
   }
@@ -248,7 +310,7 @@ function evaluateContract(store: FinalWaveReceiptStore, planPath: string): Final
   if (store.baseline === null) return { ...store, contract: { kind: "uninitialized" } }
   const material = readPlanMaterial(planPath)
   const currentRows = material?.parsed.status === "marked" ? material.parsed.rows : []
-  const rowsByKey = new Map(currentRows.map((row) => [row.fKey, normalizeRowContract(row)]))
+  const rowsByKey = new Map(currentRows.map((row) => [row.fKey.toUpperCase(), normalizeRowContract(row)]))
   const violatedFKeys = Object.entries(store.baseline.fRowContract)
     .filter(([fKey, frozen]) => !contractsMatch(frozen, rowsByKey.get(fKey)))
     .map(([fKey]) => fKey)
@@ -261,11 +323,14 @@ function evaluateContract(store: FinalWaveReceiptStore, planPath: string): Final
 }
 
 function createBaseline(planContent: string, rows: readonly FinalWaveRoleRow[], planPath: string): FinalWaveReceiptBaseline {
+  const gitHead = resolveGitHead(planPath)
+  const workspaceRoot = resolveGitWorkspaceRoot(planPath)
   return {
-    gitHead: resolveGitHead(planPath),
+    gitHead,
     planSha256: planSha256(planContent),
     stampedAt: nowIso(),
-    fRowContract: Object.fromEntries(rows.map((row) => [row.fKey, normalizeRowContract(row)])),
+    dirtyPaths: snapshotCanonicalDirtyPaths({ workspaceRoot, planPath, baselineGitHead: gitHead }),
+    fRowContract: Object.fromEntries(rows.map((row) => [row.fKey.toUpperCase(), normalizeRowContract(row)])),
   }
 }
 
@@ -294,19 +359,19 @@ function readPlanMaterial(planPath: string): { readonly content: string; readonl
 }
 
 export function resolveGitHead(path: string): string | "nogit" {
-  const result = spawnSync("git", ["-C", path, "rev-parse", "HEAD"], {
-    encoding: "utf-8",
-    stdio: ["ignore", "pipe", "ignore"],
-  })
-  if (result.status === 0 && typeof result.stdout === "string" && result.stdout.trim().length > 0) {
-    return result.stdout.trim()
-  }
   const fromParent = spawnSync("git", ["-C", dirname(path), "rev-parse", "HEAD"], {
     encoding: "utf-8",
     stdio: ["ignore", "pipe", "ignore"],
   })
-  return fromParent.status === 0 && typeof fromParent.stdout === "string" && fromParent.stdout.trim().length > 0
-    ? fromParent.stdout.trim()
+  if (fromParent.status === 0 && typeof fromParent.stdout === "string" && fromParent.stdout.trim().length > 0) {
+    return fromParent.stdout.trim()
+  }
+  const fromPath = spawnSync("git", ["-C", path, "rev-parse", "HEAD"], {
+    encoding: "utf-8",
+    stdio: ["ignore", "pipe", "ignore"],
+  })
+  return fromPath.status === 0 && typeof fromPath.stdout === "string" && fromPath.stdout.trim().length > 0
+    ? fromPath.stdout.trim()
     : "nogit"
 }
 
@@ -319,7 +384,46 @@ function isBindingMatch(binding: FinalWaveReceiptBinding, input: BindingInput): 
 }
 
 function persistedStore(store: FinalWaveReceiptStore | FinalWaveReceiptStoreRead): FinalWaveReceiptStore {
-  return { version: 1, baseline: store.baseline, expectations: store.expectations, bindings: store.bindings, receipts: store.receipts }
+  return {
+    version: 1,
+    baseline: store.baseline,
+    expectations: store.expectations,
+    bindings: store.bindings,
+    receipts: store.receipts,
+    receiptArchive: store.receiptArchive,
+  }
+}
+
+function canonicalizeStore(store: FinalWaveReceiptStore): FinalWaveReceiptStore {
+  const baseline = store.baseline === null
+    ? null
+    : { ...store.baseline, fRowContract: canonicalizeRecord(store.baseline.fRowContract) }
+  const bindings = Object.fromEntries(Object.entries(store.bindings).map(([launchId, binding]) => [
+    launchId,
+    { ...binding, fKey: binding.fKey.toUpperCase() },
+  ]))
+  return {
+    ...store,
+    baseline,
+    expectations: canonicalizeRecord(store.expectations),
+    bindings,
+    receipts: canonicalizeRecord(store.receipts),
+    receiptArchive: canonicalizeRecord(store.receiptArchive),
+  }
+}
+
+function canonicalizeRecord<Value>(record: Readonly<Record<string, Value>>): Readonly<Record<string, Value>> {
+  return Object.fromEntries(Object.entries(record).map(([fKey, value]) => [fKey.toUpperCase(), value]))
+}
+
+function resolveGitWorkspaceRoot(planPath: string): string {
+  const result = spawnSync("git", ["-C", dirname(planPath), "rev-parse", "--show-toplevel"], {
+    encoding: "utf-8",
+    stdio: ["ignore", "pipe", "ignore"],
+  })
+  return result.status === 0 && typeof result.stdout === "string" && result.stdout.trim().length > 0
+    ? result.stdout.trim()
+    : dirname(planPath)
 }
 
 function nowIso(): string {

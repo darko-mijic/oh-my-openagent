@@ -7,7 +7,7 @@ export const FINAL_WAVE_REVIEWER_ROLES = [
   "scope-auditor",
 ] as const
 
-export const FINAL_WAVE_TASK_ROW = /^- \[[ xX]\] F[1-9]\d*\. .+$/i
+export const FINAL_WAVE_TASK_ROW = /^- \[[ xX~]\] F[1-9]\d*\. .+$/i
 
 export type FinalWaveRole = (typeof FINAL_WAVE_REVIEWER_ROLES)[number]
 
@@ -137,7 +137,7 @@ function parseFinalWaveRow(line: string): RowParseResult {
   const task = line.slice("- [ ] ".length)
   const separatorIndex = task.indexOf(". ")
   const title = task.slice(separatorIndex + 2, commentStart - "- [ ] ".length).trimEnd()
-  const fKey = task.slice(0, separatorIndex)
+  const fKey = task.slice(0, separatorIndex).toUpperCase()
   const scope = parseScope(attributes)
 
   return {

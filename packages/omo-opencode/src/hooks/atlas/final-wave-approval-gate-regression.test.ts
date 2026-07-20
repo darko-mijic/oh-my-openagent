@@ -14,7 +14,7 @@ import {
   writeFinalWaveFixturePlan,
 } from "./final-wave-fixtures"
 import { parseFinalWaveRoles } from "./final-wave-role-parser"
-import { writeFinalWaveReceiptSidecar } from "./final-wave-receipt-sidecar-writer"
+import { writeFinalWaveReceiptSidecar } from "./final-wave-receipt-test-support"
 
 const TEST_STORAGE_ROOT = join(tmpdir(), `atlas-final-wave-regression-storage-${randomUUID()}`)
 const TEST_MESSAGE_STORAGE = join(TEST_STORAGE_ROOT, "message")
