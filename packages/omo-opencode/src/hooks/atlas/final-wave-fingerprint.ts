@@ -7,6 +7,7 @@ import type {
   FinalWaveReceiptBaseline,
   FinalWaveReceiptFingerprint,
 } from "./final-wave-receipt-sidecar-writer"
+import { isOmoWorkspacePath, parsePorcelainPaths } from "./final-wave-canonical-attestation"
 import type { FinalWaveRoleRow } from "./final-wave-role-parser"
 
 const QA_EVIDENCE_SCOPE = ".omo/evidence/"
@@ -51,6 +52,7 @@ export function computeRowFingerprint(input: ComputeRowFingerprintInput): FinalW
     workspaceRoot,
     baseline: input.baseline,
     spawnGit: input.spawnGit ?? spawnGit,
+    includeWorktree: input.row.role === "code-reviewer" && input.row.scope.length === 0,
   })
   const scopePaths = effectiveScopePaths({ row: input.row, planScope, gitDiffPaths, workspaceRoot })
 
@@ -122,6 +124,7 @@ function diffPathsSinceBaseline(input: {
   readonly workspaceRoot: string
   readonly baseline: FinalWaveFingerprintBaseline
   readonly spawnGit: FinalWaveGitSpawn
+  readonly includeWorktree: boolean
 }): readonly string[] | null {
   if (input.baseline.gitHead === "nogit") return null
 
@@ -134,7 +137,13 @@ function diffPathsSinceBaseline(input: {
   )
   if (diff.exitCode !== 0) return null
 
-  return uniqueScopePaths(diff.stdout.split(/\r?\n/).filter(Boolean).map(normalizeGitPath))
+  const committedPaths = diff.stdout.split(/\r?\n/).filter(Boolean).map(normalizeGitPath)
+  if (!input.includeWorktree) return uniqueScopePaths(committedPaths)
+
+  const status = input.spawnGit(["status", "--porcelain", "-uall"], input.workspaceRoot)
+  if (status.exitCode !== 0) return null
+  const worktreePaths = parsePorcelainPaths(status.stdout).filter((path) => !isOmoWorkspacePath(path))
+  return uniqueScopePaths([...committedPaths, ...worktreePaths])
 }
 
 function isProductDiffPath(path: string, planScope: string): boolean {

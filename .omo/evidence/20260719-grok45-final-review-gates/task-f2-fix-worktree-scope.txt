@@ -1,0 +1,308 @@
+TASK F2 FOLLOW-UP: implicit code-reviewer worktree scope
+Date: 2026-07-20
+
+TDD RED
+- Before implementation, the modified tracked-path and new untracked-path gate tests failed because hasAllFinalWaveReceipts returned true.
+- The .omo churn polarity test passed.
+
+WHAT WAS TESTED
+$ TMPDIR=/home/darko-mijic/.qa-tmp bun test packages/omo-opencode/src/hooks/atlas/
+bun test v1.3.14 (0d9b296a)
+
+ 316 pass
+ 0 fail
+ 736 expect() calls
+Ran 316 tests across 36 files. [10.32s]
+
+ROOT GATE (REQUESTED TMPDIR)
+$ TMPDIR=/home/darko-mijic/.qa-tmp bun test
+bun test v1.3.14 (0d9b296a)
+
+script/agent-env.test.ts:
+130 |         })
+131 |
+132 |         // then
+133 |         expect(result.exitCode).toBe(0)
+134 |         expect(read(join(fixture.repo, "worker.marker"))).toBe("worker-ran\n")
+135 |         expect(read(join(fixture.logDir, "oh-my-openagent-cleanup.log"))).toContain("worker-log")
+                     ^
+error: ENOENT: no such file or directory, open '/home/darko-mijic/.qa-tmp/omo-cleanup-hook-log-A6T67J/oh-my-openagent-cleanup.log'
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/script/agent-env.test.ts:135:16)
+(fail) agent dev-environment scripts > cleanup.sh > #given the Claude SessionEnd launcher #when sync mode runs #then it executes cleanup and exits successfully [24.38ms]
+171 |         for (let attempt = 0; attempt < 30 && !existsSync(join(fixture.repo, "worker.marker")); attempt += 1) {
+172 |           await new Promise((resolve) => setTimeout(resolve, 100))
+173 |         }
+174 |
+175 |         expect(read(join(fixture.repo, "worker.marker"))).toBe("worker-finished\n")
+176 |         expect(read(join(fixture.logDir, "oh-my-openagent-cleanup.log"))).toContain("worker-started")
+                     ^
+ENOENT: no such file or directory, open '/home/darko-mijic/.qa-tmp/omo-cleanup-hook-log-vROmmN/oh-my-openagent-cleanup.log'
+    path: "/home/darko-mijic/.qa-tmp/omo-cleanup-hook-log-vROmmN/oh-my-openagent-cleanup.log",
+ syscall: "open",
+   errno: -2,
+    code: "ENOENT"
+
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/script/agent-env.test.ts:176:16)
+(fail) agent dev-environment scripts > cleanup.sh > #given the Claude SessionEnd launcher #when async mode runs #then it returns before cleanup finishes [1040.58ms]
+205 |         })
+206 |
+207 |         // then
+208 |         expect(result.exitCode).toBe(0)
+209 |         expect(read(hostileLog)).toBe("preserve-me\n")
+210 |         expect(read(join(fixture.logDir, "oh-my-openagent-cleanup.log"))).toContain("safe-log")
+                     ^
+error: ENOENT: no such file or directory, open '/home/darko-mijic/.qa-tmp/omo-cleanup-hook-log-GJJmub/oh-my-openagent-cleanup.log'
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/script/agent-env.test.ts:210:16)
+(fail) agent dev-environment scripts > cleanup.sh > #given a hostile cleanup log override #when the launcher runs #then it keeps logs in temp [20.33ms]
+
+script/sync-lazycodex-marketplace.test.ts:
+[sync-lazycodex-marketplace] previous-payload reconstruction: skipping missing LSP daemon dist at /home/darko-mijic/.qa-tmp/omo-sync-prev-source-7rZLSk/packages/lsp-daemon/dist
+[sync-lazycodex-marketplace] previous-payload reconstruction: skipping missing OMO root CLI dist at /home/darko-mijic/.qa-tmp/omo-sync-prev-source-7rZLSk/dist/cli
+[sync-lazycodex-marketplace] previous-payload reconstruction: skipping missing OMO node fallback CLI dist at /home/darko-mijic/.qa-tmp/omo-sync-prev-source-7rZLSk/dist/cli-node
+[materialize] wrote 148 frontend reference files from submodules
+[materialize] wrote 148 frontend reference files from submodules
+[materialize] wrote 148 frontend reference files from submodules
+
+packages/omo-opencode/src/cli/cli-installer.telemetry.test.ts:
+
+ oMoMoMoMo... Install
+
+[1/4] Checking OpenCode installation...
+[OK] OpenCode 1.4.0 detected
+[2/4] Adding oh-my-openagent plugin...
+[OK] Plugin added -> /tmp/opencode.jsonc
+[3/4] Writing oh-my-openagent configuration...
+[OK] Config written -> /tmp/oh-my-opencode.jsonc
+
+┌─ Installation Complete ───────────────────────────────────────────────────────────────────┐
+│ Configuration Summary                                                                      │
+│                                                                                            │
+│   [i] Platform: opencode                                                                   │
+│                                                                                            │
+│   ○ Claude                                                                                 │
+│   [OK] OpenAI/ChatGPT (GPT-5.4 for Oracle)                                                 │
+│   ○ Gemini                                                                                 │
+│   [OK] GitHub Copilot (fallback)                                                           │
+│   ○ OpenCode Zen (opencode/ models)                                                        │
+│   ○ Z.ai Coding Plan (GLM fallbacks)                                                       │
+│   ○ Kimi For Coding (Sisyphus/Prometheus fallback)                                         │
+│   ○ Bailian Coding Plan (Qwen/GLM/Kimi fallback)                                           │
+│   ○ MiniMax Coding Plan (minimaxi.com) (MiniMax-M3 fallback)                               │
+│   ○ MiniMax Coding Plan (minimax.io) (MiniMax-M3 fallback)                                 │
+│   ○ Vercel AI Gateway (universal proxy)                                                    │
+│                                                                                            │
+│ ────────────────────────────────────────                                                   │
+│                                                                                            │
+│ Model Assignment                                                                           │
+│                                                                                            │
+│   [i] Models auto-configured based on provider priority                                    │
+│   * Priority: Native > Copilot > OpenCode Zen > Z.ai > Kimi > Bailian > MiniMax > Vercel   │
+└────────────────────────────────────────────────────────────────────────────────────────────┘
+
+[i] Note: Sisyphus agent performs best with Claude Opus 4.5+. Other models work but may have reduced orchestration quality.
+* Installation complete!
+  Run opencode to start!
+
+[i] Anonymous telemetry is enabled by default. Disable it with OMO_SEND_ANONYMOUS_TELEMETRY=0 or OMO_DISABLE_POSTHOG=1.
+[i] Docs: docs/legal/privacy-policy.md and docs/legal/terms-of-service.md
+
+
+┌─ The Magic Word ─────────────────────────────────────────────────┐
+│ Pro Tip: Include ultrawork (or ulw) in your prompt.               │
+│ All features work like magic-parallel agents, background tasks,   │
+│ deep exploration, and relentless execution until completion.      │
+└───────────────────────────────────────────────────────────────────┘
+
+oMoMoMoMo... Enjoy!
+
+
+┌─ Authenticate Your Providers ──────────────────────┐
+│ Run opencode auth login and select your provider:   │
+│   * GitHub → Copilot                                │
+└─────────────────────────────────────────────────────┘
+
+
+packages/omo-senpi/src/extension/compose.test.ts:
+omo-senpi component disabled by flag {
+  component: "beta",
+}
+
+packages/omo-senpi/src/extension/index.test.ts:
+omo-senpi ulw-loop inactive; omo binary not found undefined
+[lsp] ignored shutdown request failure during cleanup: LSP server workspace-edit-fixture at /home/darko-mijic/.qa-tmp/lsp-apply-edit-FFkVx1 exited with code 0
+
+packages/omo-codex/src/install/install-codex-project-local-cleanup.test.ts:
+126 |       gitBashResolver: resolveTestGitBash,
+127 |       runCommand: async () => undefined,
+128 |     })
+129 |
+130 |     // then
+131 |     expect(result.projectCleanup.configPath).toBeNull()
+                                                   ^
+error: expect(received).toBeNull()
+
+Received: "/home/darko-mijic/.codex/config.toml"
+
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-codex/src/install/install-codex-project-local-cleanup.test.ts:131:46)
+(fail) install-codex project-local cleanup > #given only global CODEX_HOME config under a parent directory #when installing Codex Light #then project cleanup leaves it to the global config updater [342.44ms]
+
+packages/omo-codex/src/install/codex-project-local-cleanup.test.ts:
+201 |       startDirectory: projectDirectory,
+202 |       codexHome,
+203 |     })
+204 |
+205 |     // then
+206 |     expect(result.configPath).toBeNull()
+                                    ^
+error: expect(received).toBeNull()
+
+Received: "/home/darko-mijic/.codex/config.toml"
+
+      at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-codex/src/install/codex-project-local-cleanup.test.ts:206:31)
+(fail) codex project-local cleanup > #given no project-local config and CODEX_HOME in the parent chain #when repairing #then does not treat global Codex home as project state [50.50ms]
+
+  ⚙ read_file filePath=/src/index.ts
+
+packages/omo-opencode/src/__tests__/perf/plugin-init.test.ts:
+empty-project: cold=274.6ms warm=[258.3, 169.9] median=258.3ms
+in-tree-fixture: cold=269.3ms warm=[101.3, 185.5] median=185.5ms
+
+ 12081 pass
+ 3 skip
+ 5 fail
+ 2 snapshots, 29797 expect() calls
+Ran 12089 tests across 1527 files. [485.73s]
+
+ROOT GATE (REPOSITORY-COMPATIBLE TMPDIR)
+The requested HOME-nested TMPDIR produced 5 unrelated environment failures. Retrying with literal /tmp, which cleanup-hook.sh explicitly permits and which is outside the Codex parent walk.
+$ TMPDIR=/tmp bun test
+bun test v1.3.14 (0d9b296a)
+
+script/sync-lazycodex-marketplace.test.ts:
+[sync-lazycodex-marketplace] previous-payload reconstruction: skipping missing LSP daemon dist at /tmp/omo-sync-prev-source-euTGW3/packages/lsp-daemon/dist
+[sync-lazycodex-marketplace] previous-payload reconstruction: skipping missing OMO root CLI dist at /tmp/omo-sync-prev-source-euTGW3/dist/cli
+[sync-lazycodex-marketplace] previous-payload reconstruction: skipping missing OMO node fallback CLI dist at /tmp/omo-sync-prev-source-euTGW3/dist/cli-node
+[materialize] wrote 148 frontend reference files from submodules
+[materialize] wrote 148 frontend reference files from submodules
+[materialize] wrote 148 frontend reference files from submodules
+
+packages/omo-opencode/src/cli/cli-installer.telemetry.test.ts:
+
+ oMoMoMoMo... Install
+
+[1/4] Checking OpenCode installation...
+[OK] OpenCode 1.4.0 detected
+[2/4] Adding oh-my-openagent plugin...
+[OK] Plugin added -> /tmp/opencode.jsonc
+[3/4] Writing oh-my-openagent configuration...
+[OK] Config written -> /tmp/oh-my-opencode.jsonc
+
+┌─ Installation Complete ───────────────────────────────────────────────────────────────────┐
+│ Configuration Summary                                                                      │
+│                                                                                            │
+│   [i] Platform: opencode                                                                   │
+│                                                                                            │
+│   ○ Claude                                                                                 │
+│   [OK] OpenAI/ChatGPT (GPT-5.4 for Oracle)                                                 │
+│   ○ Gemini                                                                                 │
+│   [OK] GitHub Copilot (fallback)                                                           │
+│   ○ OpenCode Zen (opencode/ models)                                                        │
+│   ○ Z.ai Coding Plan (GLM fallbacks)                                                       │
+│   ○ Kimi For Coding (Sisyphus/Prometheus fallback)                                         │
+│   ○ Bailian Coding Plan (Qwen/GLM/Kimi fallback)                                           │
+│   ○ MiniMax Coding Plan (minimaxi.com) (MiniMax-M3 fallback)                               │
+│   ○ MiniMax Coding Plan (minimax.io) (MiniMax-M3 fallback)                                 │
+│   ○ Vercel AI Gateway (universal proxy)                                                    │
+│                                                                                            │
+│ ────────────────────────────────────────                                                   │
+│                                                                                            │
+│ Model Assignment                                                                           │
+│                                                                                            │
+│   [i] Models auto-configured based on provider priority                                    │
+│   * Priority: Native > Copilot > OpenCode Zen > Z.ai > Kimi > Bailian > MiniMax > Vercel   │
+└────────────────────────────────────────────────────────────────────────────────────────────┘
+
+[i] Note: Sisyphus agent performs best with Claude Opus 4.5+. Other models work but may have reduced orchestration quality.
+* Installation complete!
+  Run opencode to start!
+
+[i] Anonymous telemetry is enabled by default. Disable it with OMO_SEND_ANONYMOUS_TELEMETRY=0 or OMO_DISABLE_POSTHOG=1.
+[i] Docs: docs/legal/privacy-policy.md and docs/legal/terms-of-service.md
+
+
+┌─ The Magic Word ─────────────────────────────────────────────────┐
+│ Pro Tip: Include ultrawork (or ulw) in your prompt.               │
+│ All features work like magic-parallel agents, background tasks,   │
+│ deep exploration, and relentless execution until completion.      │
+└───────────────────────────────────────────────────────────────────┘
+
+oMoMoMoMo... Enjoy!
+
+
+┌─ Authenticate Your Providers ──────────────────────┐
+│ Run opencode auth login and select your provider:   │
+│   * GitHub → Copilot                                │
+└─────────────────────────────────────────────────────┘
+
+
+packages/omo-senpi/src/extension/compose.test.ts:
+omo-senpi component disabled by flag {
+  component: "beta",
+}
+
+packages/omo-senpi/src/extension/index.test.ts:
+omo-senpi ulw-loop inactive; omo binary not found undefined
+[lsp] ignored shutdown request failure during cleanup: LSP server workspace-edit-fixture at /tmp/lsp-apply-edit-hEJLlx exited with code 0
+
+  ⚙ read_file filePath=/src/index.ts
+
+packages/omo-opencode/src/__tests__/perf/plugin-init.test.ts:
+empty-project: cold=241.8ms warm=[132.1, 113.0] median=132.1ms
+in-tree-fixture: cold=251.1ms warm=[237.8, 133.0] median=237.8ms
+
+ 12086 pass
+ 3 skip
+ 0 fail
+ 2 snapshots, 29807 expect() calls
+Ran 12089 tests across 1527 files. [481.07s]
+
+STATIC GATES
+$ bun run typecheck
+$ tsgo --noEmit && bun run typecheck:script && bun run typecheck:packages
+$ tsgo --noEmit -p script/tsconfig.json
+$ tsgo --noEmit -p packages/rules-engine/tsconfig.json && tsgo --noEmit -p packages/delegate-core/tsconfig.json && tsgo --noEmit -p packages/mcp-stdio-core/tsconfig.json && tsgo --noEmit -p packages/mcp-client-core/tsconfig.json && tsgo --noEmit -p packages/git-bash-mcp/tsconfig.json && tsgo --noEmit -p packages/lsp-core/tsconfig.json && tsgo --noEmit -p packages/utils/tsconfig.json && tsgo --noEmit -p packages/model-core/tsconfig.json && tsgo --noEmit -p packages/omo-config-core/tsconfig.json && tsgo --noEmit -p packages/prompts-core/tsconfig.json && tsgo --noEmit -p packages/comment-checker-core/tsconfig.json && tsgo --noEmit -p packages/hashline-core/tsconfig.json && tsgo --noEmit -p packages/tmux-core/tsconfig.json && tsgo --noEmit -p packages/team-core/tsconfig.json && tsgo --noEmit -p packages/openclaw-core/tsconfig.json && tsgo --noEmit -p packages/boulder-state/tsconfig.json && tsgo --noEmit -p packages/telemetry-core/tsconfig.json && tsgo --noEmit -p packages/claude-code-compat-core/tsconfig.json && tsgo --noEmit -p packages/skills-loader-core/tsconfig.json && tsgo --noEmit -p packages/agents-md-core/tsconfig.json && tsgo --noEmit -p packages/omo-codex/plugin/shared/tsconfig.json && tsgo --noEmit -p packages/omo-codex/tsconfig.json && tsgo --noEmit -p packages/omo-senpi/tsconfig.json && tsgo --noEmit -p packages/senpi-task/tsconfig.json && tsgo --noEmit -p packages/pi-goal/tsconfig.json && tsgo --noEmit -p packages/pi-webfetch/tsconfig.json && tsgo --noEmit -p packages/omo-opencode/tsconfig.json
+
+$ GIT_MASTER=1 git diff --check
+
+$ GIT_MASTER=1 git diff --check dev...HEAD
+
+ISOLATED OPENCODE QA
+$ bash .omo/evidence/20260719-grok45-final-review-gates/task-f2-worktree-opencode-qa/run-isolated-qa.sh
+host_db=/home/darko-mijic/.local/share/opencode/opencode.db
+host_session_count_before=119
+OK: (1) marked category F launch rejected
+OK: (1) SSE captured tool/message activity for rejection
+OK receipt F2 approve oracle
+OK: (2) durable F2 receipt written
+legacy_rejection=none
+legacy_task_attempted=yes
+legacy_behavior=unchanged_advisory_passthrough
+OK: (3) legacy-unmarked plan not rejected
+host_session_count_after=119
+host_session_count_diff=0
+unchanged=yes
+sandbox_session_db=/tmp/oqa-xdg.1fkYUe/data/opencode/opencode.db
+sandbox_session_count=5
+sandbox_proj=/tmp/oqa-xdg.1fkYUe/proj
+OK: (4) host DB session count unchanged
+QA_PASS marked_reject=yes marked_receipt=yes legacy_no_reject=yes isolation_diff=0 atlas=Atlas - Plan Executor
+
+WHY THIS IS ENOUGH
+- Source tests exercised hasAllFinalWaveReceipts with tracked, untracked, and .omo worktree states through the production fingerprint path.
+- Real OpenCode QA proved the Atlas event/tool transport, durable receipt path, advisory legacy polarity, and XDG isolation remain intact.
+- The local bundle was not rebuilt, as explicitly prohibited; no source-specific bundled behavior is claimed.
+
+WHAT WAS OMITTED
+- No bun run build.
+- No push.
+- No provider credentials or secret-bearing logs.

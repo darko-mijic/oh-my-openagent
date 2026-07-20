@@ -34,11 +34,14 @@ export function attestCanonicalTreeClean(input: {
 
 function isExcludedFromAttestation(path: string, planRelative: string): boolean {
   if (path === planRelative) return true
-  if (path === ".omo" || path.startsWith(".omo/")) return true
-  return false
+  return isOmoWorkspacePath(path)
 }
 
-function parsePorcelainPaths(stdout: string): readonly string[] {
+export function isOmoWorkspacePath(path: string): boolean {
+  return path === ".omo" || path.startsWith(".omo/")
+}
+
+export function parsePorcelainPaths(stdout: string): readonly string[] {
   const paths: string[] = []
   for (const line of stdout.split(/\r?\n/)) {
     if (line.length < 4) continue

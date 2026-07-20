@@ -145,9 +145,12 @@ describe("final-wave receipt fingerprints", () => {
       baseline,
       spawnGit: (arguments_, _cwd) => {
         calls.push(arguments_)
-        return arguments_[0] === "rev-parse"
-          ? { exitCode: 0, stdout: "live-head-must-not-be-stamped\n" }
-          : { exitCode: 0, stdout: "src/changed.ts\n" }
+        if (arguments_[0] === "rev-parse") {
+          return { exitCode: 0, stdout: "live-head-must-not-be-stamped\n" }
+        }
+        return arguments_[0] === "diff"
+          ? { exitCode: 0, stdout: "src/changed.ts\n" }
+          : { exitCode: 0, stdout: "" }
       },
     })
 
@@ -156,6 +159,7 @@ describe("final-wave receipt fingerprints", () => {
     expect(calls).toEqual([
       ["rev-parse", "HEAD"],
       ["diff", "--name-only", "frozen-baseline..HEAD"],
+      ["status", "--porcelain", "-uall"],
     ])
   })
 })

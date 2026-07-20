@@ -128,6 +128,22 @@ function establishReceipt(
   })
 }
 
+function establishImplicitCodeReviewerWave(directory: string): string {
+  const planPath = writeMarkedPlan(directory)
+  mkdirSync(join(directory, "src"), { recursive: true })
+  writeFileSync(join(directory, "src", "baseline.ts"), "export const baseline = 1\n")
+  runGit(directory, ["add", "src/baseline.ts"])
+  runGit(directory, ["commit", "-m", "baseline product file"])
+  stampBaseline(planPath)
+  writeFileSync(join(directory, "src", "implementation.ts"), "export const implementation = 1\n")
+  runGit(directory, ["add", "src/implementation.ts"])
+  runGit(directory, ["commit", "-m", "implementation"])
+  for (const fKey of ["F1", "F2", "F3", "F4"] as const) {
+    establishReceipt(planPath, directory, fKey)
+  }
+  return planPath
+}
+
 afterEach(() => {
   for (const directory of testDirectories.splice(0)) {
     rmSync(directory, { recursive: true, force: true })
@@ -560,6 +576,45 @@ describe("receipt fingerprint revalidation", () => {
     // then
     expect(() => hasFinalWaveReceiptForRow(planPath, "F2", directory)).not.toThrow()
     expect(hasFinalWaveReceiptForRow(planPath, "F2", directory)).toBe(false)
+  })
+
+  test("#given an unscoped code-reviewer receipt #when a previously out-of-scope product path is modified but uncommitted #then the release gate stays closed", () => {
+    // given
+    const directory = createWorkspace(true)
+    const planPath = establishImplicitCodeReviewerWave(directory)
+    expect(hasAllFinalWaveReceipts(planPath, directory)).toBe(true)
+
+    // when
+    writeFileSync(join(directory, "src", "baseline.ts"), "export const baseline = 2\n")
+
+    // then
+    expect(hasAllFinalWaveReceipts(planPath, directory)).toBe(false)
+  })
+
+  test("#given an unscoped code-reviewer receipt #when a new untracked product file appears #then the release gate stays closed", () => {
+    // given
+    const directory = createWorkspace(true)
+    const planPath = establishImplicitCodeReviewerWave(directory)
+    expect(hasAllFinalWaveReceipts(planPath, directory)).toBe(true)
+
+    // when
+    writeFileSync(join(directory, "src", "untracked.ts"), "export const untracked = true\n")
+
+    // then
+    expect(hasAllFinalWaveReceipts(planPath, directory)).toBe(false)
+  })
+
+  test("#given an unscoped code-reviewer receipt #when an untracked file appears under .omo #then the receipt remains valid", () => {
+    // given
+    const directory = createWorkspace(true)
+    const planPath = establishImplicitCodeReviewerWave(directory)
+
+    // when
+    mkdirSync(join(directory, ".omo", "scratch"), { recursive: true })
+    writeFileSync(join(directory, ".omo", "scratch", "runtime.txt"), "runtime churn\n")
+
+    // then
+    expect(hasAllFinalWaveReceipts(planPath, directory)).toBe(true)
   })
 })
 

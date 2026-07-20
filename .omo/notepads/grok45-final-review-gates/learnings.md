@@ -115,3 +115,9 @@ Session artifacts live here.
 - Split the qa-executor policy from the unchanged Momus/Oracle grammar: exact `&&` tokenization validates every segment, explicit environment assignments and QA command families are allowlisted, and eval/redirection/substitution or unscoped writes remain denied.
 - Path targets now canonicalize through their nearest existing ancestor before containment checks, closing symlink escapes while allowing the canonical `ctx.directory/.omo/evidence/**` root even when the qa-executor session runs in a disposable temp worktree.
 - Real OpenCode source-plugin QA must spawn `qa-executor` through `task(subagent_type="qa-executor")`; `opencode run --agent qa-executor` falls back because the reviewer is intentionally subagent-only.
+
+## 2026-07-20 F2 implicit code-reviewer worktree scope
+
+- Unscoped code-reviewer fingerprints now union frozen-baseline committed diff paths with live `git status --porcelain -uall` paths using the canonical attestation parser. Modified, staged, and untracked product paths added after approval therefore invalidate the stored receipt at gate evaluation time.
+- Live `.omo/**` paths are excluded before the union, preserving convergence for receipt sidecars, evidence, and runtime churn. Explicit scopes, other reviewer roles, the frozen baseline, and non-git fallback behavior are unchanged.
+- TDD pinned tracked-uncommitted and untracked-product invalidation plus `.omo` polarity. Atlas passed 316 tests, the root suite passed 12086 with zero failures under `/tmp`, typecheck passed, and isolated OpenCode QA preserved the host session count at 119.
