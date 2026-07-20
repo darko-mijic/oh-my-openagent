@@ -19,10 +19,10 @@ packages/omo-opencode/src/hooks/atlas/final-wave-receipts.test.ts:
 error: ENOENT: no such file or directory, open '/tmp/final-wave-receipts-03e4460f-5a4a-46ce-8317-110e175d3b04/.omo/plans/wave.receipts.quarantine.json'
       at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-receipts.test.ts:86:31)
 (fail) final-wave durable receipt store > #given a corrupt marked sidecar #when quarantined #then moves it to a recovery path [12.51ms]
-126 | 
+126 |
 127 |     // when
 128 |     const result = writeReceipt(planPath, { fKey: "F1", launchId: "launch-f1", childSessionId: "ses_f1", actualAgent: "momus", fingerprint: refreshedFingerprint })
-129 | 
+129 |
 130 |     // then
 131 |     expect(result.kind).toBe("written")
                               ^
@@ -34,7 +34,7 @@ Received: "duplicate"
       at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-receipts.test.ts:131:25)
 (fail) final-wave durable receipt store > #given a fingerprint-stale receipt #when the row is re-issued #then the old receipt is archived and the new receipt is accepted [15.14ms]
 145 |     const result = writeReceipt(planPath, { fKey: "f1", launchId: "launch-lower", childSessionId: "ses_lower", actualAgent: "momus", fingerprint })
-146 | 
+146 |
 147 |     // then
 148 |     expect(result.kind).toBe("written")
 149 |     const store = expectValidStore(planPath)
@@ -67,10 +67,10 @@ ENOSPC: no space left on device, watch '/tmp/final-wave-receipts-829e67ee-4f98-4
       at new Promise (1:11)
       at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-receipts.test.ts:161:26)
 (fail) final-wave durable receipt store > #given an atomic sidecar write #when its temporary file is observed #then the name includes pid and a random suffix [9.20ms]
-275 | 
+275 |
 276 |     // when
 277 |     const resolved = resolveGitHead(planPath)
-278 | 
+278 |
 279 |     // then
 280 |     expect(resolved).toBe(outerHead)
                            ^

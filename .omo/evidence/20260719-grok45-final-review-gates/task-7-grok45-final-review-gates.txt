@@ -9,10 +9,10 @@
 bun test v1.3.14 (0d9b296a)
 
 packages/omo-opencode/src/hooks/atlas/final-wave-plan-state.test.ts:
-77 | 
+77 |
 78 |     // when
 79 |     const state = readFinalWavePlanState(planPath)
-80 | 
+80 |
 81 |     // then
 82 |     expect(state?.pendingFinalWaveTaskCount).toBe(0)
                                                   ^

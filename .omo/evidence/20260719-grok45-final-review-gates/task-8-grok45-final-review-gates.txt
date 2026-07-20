@@ -9,10 +9,10 @@
 bun test v1.3.14 (0d9b296a)
 
 packages/omo-opencode/src/hooks/atlas/final-wave-enforcement.test.ts:
-212 | 
+212 |
 213 |     // when
 214 |     const enforcement = resolveFinalWaveEnforcement(planPath, directory)
-215 | 
+215 |
 216 |     // then
 217 |     expect(enforcement.mode).toBe("blocked")
                                    ^
@@ -23,10 +23,10 @@ Received: "advisory"
 
       at <anonymous> (/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/hooks/atlas/final-wave-enforcement.test.ts:217:30)
 (fail) resolveFinalWaveEnforcement > #given a stamped marked git plan #when role markers are stripped #then enforcement stays blocked [27.25ms]
-229 | 
+229 |
 230 |     // when
 231 |     const enforcement = resolveFinalWaveEnforcement(planPath, directory)
-232 | 
+232 |
 233 |     // then
 234 |     expect(enforcement.mode).toBe("blocked")
                                    ^
@@ -40,7 +40,7 @@ Received: "advisory"
 267 |     // when
 268 |     const second = resolveFinalWaveEnforcement(planPath, directory)
 269 |     const stamp = stampBaseline(planPath)
-270 | 
+270 |
 271 |     // then
 272 |     expect(second.mode).toBe("blocked")
                               ^

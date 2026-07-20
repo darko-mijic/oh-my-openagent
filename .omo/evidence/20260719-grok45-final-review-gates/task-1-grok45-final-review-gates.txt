@@ -11,7 +11,7 @@ bun test v1.3.14 (0d9b296a)
 packages/omo-opencode/src/hooks/atlas/final-wave-role-parser.test.ts:
 327 |     // when
 328 |     const result = parseFinalWaveRoles(plan)
-329 | 
+329 |
 330 |     // then
 331 |     expect(result.status).toBe("marked")
 332 |     expect(result.rows.map((row) => row.fKey)).toEqual(["F1", "F2"])

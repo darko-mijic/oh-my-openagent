@@ -149,3 +149,8 @@ Session artifacts live here.
 - Curl is safest as an explicit flag grammar: unknown options deny, output targets are path-scoped, mutating methods and upload/config/data/form flags deny, and even allowlisted `--header` must reject `@file` local-header exfiltration.
 - Executable trust and write trust are distinct. `.omo/**` remains an evidence write root but is excluded lexically and canonically from `bun test`, Node, Bash, and shell-script execution.
 - Real source-plugin QA can temporarily override reviewer mode to `primary` in an isolated config so `opencode run` selects the exact reviewer; without that override, OpenCode falls back from subagent-only roles and the guard is not exercised under the intended identity.
+
+## 2026-07-20 Post-Batch-D whitespace + agent-count cleanup
+
+- `git diff --check dev...HEAD` failed again on Batch D retrospective evidence captures (task-1/5/6/7/8 + batch-d-docs-evidence): trailing whitespace from tool output, same failure mode as the earlier F2 R2 rejection. Claimed "diff-check clean" without re-running the range check against committed content is not enough; working-tree-only checks miss what `dev...HEAD` reports.
+- Remaining stale "11 agents" mentions lived in `packages/AGENTS.md` and `packages/model-core/AGENTS.md` after Batch D; real roster is 12 (11 factories + Prometheus / sisyphus-junior included). Trim evidence whitespace and sync those two counts in one fix commit.
