@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "baseline": {
+    "gitHead": "00ee6c85e67f7ffc67d56623db4d8e7e0b9c18eb",
+    "planSha256": "0c0e4cd33c40e7dc39acf65522f2427b17886d926f5904f9cba60647b49e77c3",
+    "stampedAt": "2026-07-20T14:43:16.000Z",
+    "dirtyPaths": [],
+    "fRowContract": {
+      "F1": {
+        "role": "plan-auditor",
+        "title": "Plan compliance audit",
+        "scope": []
+      },
+      "F2": {
+        "role": "code-reviewer",
+        "title": "Code quality review",
+        "scope": []
+      },
+      "F3": {
+        "role": "qa-executor",
+        "title": "Real manual QA",
+        "scope": []
+      },
+      "F4": {
+        "role": "scope-auditor",
+        "title": "Scope fidelity check",
+        "scope": []
+      }
+    }
+  },
+  "expectations": {
+    "F2": {
+      "role": "code-reviewer",
+      "subagent": "oracle",
+      "launchId": "250113b0-dcbb-45e3-96a7-81b1993d7b02",
+      "createdAt": "2026-07-20T14:43:16.006Z"
+    }
+  },
+  "bindings": {
+    "250113b0-dcbb-45e3-96a7-81b1993d7b02": {
+      "fKey": "F2",
+      "childSessionId": "ses_08004cf6fffegcP74DshJ11qjQ",
+      "boundAt": "2026-07-20T14:43:17.480Z"
+    }
+  },
+  "receipts": {
+    "F2": {
+      "role": "code-reviewer",
+      "expectedSubagent": "oracle",
+      "actualAgent": "oracle",
+      "childSessionId": "ses_08004cf6fffegcP74DshJ11qjQ",
+      "launchId": "250113b0-dcbb-45e3-96a7-81b1993d7b02",
+      "verdict": "approve",
+      "fingerprint": {
+        "gitHead": "00ee6c85e67f7ffc67d56623db4d8e7e0b9c18eb",
+        "scopePaths": [],
+        "scopeHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "createdAt": "2026-07-20T14:43:17.503Z"
+    }
+  },
+  "receiptArchive": {}
+}

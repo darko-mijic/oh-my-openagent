@@ -1,0 +1,3 @@
+legacy_rejection=none
+legacy_task_attempted=yes
+legacy_behavior=unchanged_advisory_passthrough

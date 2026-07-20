@@ -1,0 +1,3 @@
+{"branch":"nonf-category","call":1,"args":{"description":"Ordinary impl category task","prompt":"## 1. TASK\nOrdinary non-final-wave implementation work.\n\nTouch nothing. Reply DONE_IMPL when finished.","category":"unspecified-high","load_skills":[],"run_in_background":false}}
+{"branch":"child-impl","call":2}
+{"branch":"marked-reject","call":5,"args":{"description":"F2 category misroute","prompt":"## 1. TASK\nF2. Code quality review\n\nAudit the implementation fidelity against the plan.\nEnd with a line-anchored VERDICT: APPROVE|REJECT.","category":"unspecified-high","load_skills":[],"run_in_background":false}}

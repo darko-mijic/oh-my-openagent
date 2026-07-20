@@ -1,0 +1,14 @@
+host_db=/home/darko-mijic/.local/share/opencode/opencode.db
+host_session_count_before=134
+opencode_version=1.18.3
+atlas_agent=Atlas - Plan Executor
+sisyphus_junior_name=Sisyphus-Junior
+sisyphus_junior_model_field={"modelID": "grok-4.5", "providerID": "xai"}
+parent_nonf=ses_080032f7dffeROe2lc2QOagpdy
+parent_reject=ses_0800302afffe5rjZsPMhrHx05r
+host_session_count_after=134
+host_session_count_diff=0
+unchanged=yes
+sandbox_session_db=/tmp/oqa-xdg.vGQxEj/data/opencode/opencode.db
+sandbox_session_count=3
+sandbox_proj=/tmp/oqa-xdg.vGQxEj/proj
