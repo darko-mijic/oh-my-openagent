@@ -3,14 +3,14 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import { getAgentFromSession } from "../prometheus-md-only/agent-resolution"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
 import { isQaExecutorCommand } from "./qa-command-policy"
+import { isReadOnlyFindCommand, isReadOnlySgCommand } from "./qa-command-tokenizer"
 import { createQaPathPolicy } from "./qa-path-policy"
 
 const FILE_WRITE_TOOLS = new Set(["write", "edit", "hashline_edit", "apply_patch"])
 const BASH_TOOLS = new Set(["bash", "interactive_bash"])
 const READ_ONLY_REVIEWERS = new Set(["momus", "oracle"])
 const READ_ONLY_GIT_SUBCOMMANDS = new Set(["log", "diff", "status", "show"])
-const READ_ONLY_COMMANDS = new Set(["ls", "grep", "rg", "sg", "cat", "head", "tail", "less", "more"])
-const UNSAFE_FIND_TOKENS = new Set(["-exec", "-execdir", "-ok", "-okdir", "-delete", "-fprint", "-fprint0", "-fls"])
+const READ_ONLY_COMMANDS = new Set(["ls", "grep", "rg", "sg", "cat", "head", "tail"])
 const SHELL_METACHARACTERS = /[;|`\n\r><&]/
 
 type ReviewerRole = "read-only" | "qa-executor" | undefined
@@ -81,7 +81,10 @@ function isReadOnlyReviewerCommand(tokens: readonly string[]): boolean {
     return tokens.length >= 2 && READ_ONLY_GIT_SUBCOMMANDS.has(tokens[1] ?? "")
   }
   if (command === "find") {
-    return !tokens.some((token) => UNSAFE_FIND_TOKENS.has(token))
+    return isReadOnlyFindCommand(tokens)
+  }
+  if (command === "sg") {
+    return isReadOnlySgCommand(tokens)
   }
   return command !== undefined && READ_ONLY_COMMANDS.has(command)
 }

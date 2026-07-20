@@ -1,5 +1,10 @@
 import { createQaPathPolicy, type QaPathPolicy } from "./qa-path-policy"
-import { tokenizeQaCommand } from "./qa-command-tokenizer"
+import {
+  inspectSafeCurlCommand,
+  isReadOnlyFindCommand,
+  isReadOnlySgCommand,
+  tokenizeQaCommand,
+} from "./qa-command-tokenizer"
 
 const QA_ENV_KEYS = new Set([
   "TMPDIR", "TEMP", "TMP",
@@ -25,7 +30,7 @@ const SAFE_TMUX_SUBCOMMANDS = new Set([
 ])
 const SAFE_OPENCODE_SUBCOMMANDS = new Set(["run", "serve", "db", "export", "models", "version"])
 const FORBIDDEN_NODE_FLAGS = new Set(["-e", "--eval", "--input-type"])
-const UNSAFE_FIND_PREFIXES = ["-exec", "-ok", "-delete", "-fprint", "-fls"] as const
+const SAFE_BUN_RUN_SCRIPTS = new Set(["build", "typecheck", "test", "test:codex"])
 
 type QaCommandContext = {
   readonly paths: QaPathPolicy
@@ -112,7 +117,7 @@ function isBunCommand({ paths, tokens }: QaCommandContext): boolean {
   }
   if (subcommand === "run") {
     const script = tokens[2]
-    return script !== undefined && /^[A-Za-z0-9:_.-]+$/.test(script)
+    return script !== undefined && SAFE_BUN_RUN_SCRIPTS.has(script)
   }
   return subcommand === "install" && tokens.slice(2).every((token) => token.startsWith("-"))
 }
@@ -137,58 +142,19 @@ function isShellScriptCommand({ paths, tokens }: QaCommandContext): boolean {
     && paths.isTrustedScript(script)
 }
 
-function isFindCommand(tokens: readonly string[]): boolean {
-  return !tokens.some((token) => UNSAFE_FIND_PREFIXES.some((prefix) => token.startsWith(prefix)))
-}
-
 function isCurlCommand({ paths, tokens }: QaCommandContext): boolean {
-  let outputPath: string | undefined
-  for (let index = 1; index < tokens.length; index += 1) {
-    const token = tokens[index] ?? ""
-    if (token === "-d" || token.startsWith("-d") || token.startsWith("--data") || token === "-F" || token.startsWith("--form")) {
-      return false
-    }
-    if (token === "-X" || token === "--request") {
-      const method = tokens[index + 1]?.toUpperCase()
-      if (method === undefined || ["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
-        return false
-      }
-      index += 1
-      continue
-    }
-    if (token.startsWith("--request=")) {
-      const method = token.slice("--request=".length).toUpperCase()
-      if (["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
-        return false
-      }
-    }
-    if (token.startsWith("-X") && ["POST", "PUT", "DELETE", "PATCH"].includes(token.slice(2).toUpperCase())) {
-      return false
-    }
-    if (token === "-o" || token === "--output") {
-      outputPath = tokens[index + 1]
-      if (outputPath === undefined) {
-        return false
-      }
-      index += 1
-      continue
-    }
-    if (token.startsWith("--output=")) {
-      outputPath = token.slice("--output=".length)
-    } else if (token.startsWith("-o") && token.length > 2) {
-      outputPath = token.slice(2)
-    }
-  }
-  return outputPath === undefined || paths.isCreationTarget(outputPath)
+  const inspected = inspectSafeCurlCommand(tokens)
+  return inspected !== undefined && inspected.outputPaths.every(paths.isCreationTarget)
 }
 
-function isSqliteCommand(tokens: readonly string[]): boolean {
+function isSqliteCommand({ paths, tokens }: QaCommandContext): boolean {
   const databasePath = tokens[1] ?? ""
   if (tokens.length !== 3 || databasePath.startsWith("-")) {
     return false
   }
   const query = tokens[2] ?? ""
-  return /^SELECT\b/i.test(query.trim())
+  return (paths.isCreationTarget(databasePath) || paths.isExistingFile(databasePath))
+    && /^SELECT\b/i.test(query.trim())
     && !/\b(?:INSERT|UPDATE|DELETE|PRAGMA|ATTACH|DROP|CREATE)\b/i.test(query)
     && !/\b(?:load_extension|writefile)\s*\(/i.test(query)
 }
@@ -205,18 +171,13 @@ function isQaSegmentAllowed(tokens: readonly string[], paths: QaPathPolicy): boo
   if (command === "bun") return isBunCommand(context)
   if (command === "node") return isNodeCommand(context)
   if (command === "bash" || command === "sh") return isShellScriptCommand(context)
-  if (command === "find") return isFindCommand(commandTokens)
+  if (command === "find") return isReadOnlyFindCommand(commandTokens)
   if (command === "curl") return isCurlCommand(context)
-  if (command === "sqlite3") return isSqliteCommand(commandTokens)
+  if (command === "sqlite3") return isSqliteCommand(context)
   if (command === "tmux") return commandTokens[1] !== undefined && SAFE_TMUX_SUBCOMMANDS.has(commandTokens[1])
   if (command === "opencode") return commandTokens[1] !== undefined && SAFE_OPENCODE_SUBCOMMANDS.has(commandTokens[1])
   if (command === "env") return commandTokens.slice(1).every((token) => token.startsWith("-"))
-  if (command === "sg") return READ_ONLY_COMMANDS.has(command)
-    && !commandTokens.some((token) => token === "-r"
-      || token === "--rewrite"
-      || token.startsWith("--rewrite=")
-      || token === "--update-all"
-      || token === "--interactive")
+  if (command === "sg") return READ_ONLY_COMMANDS.has(command) && isReadOnlySgCommand(commandTokens)
   return command !== undefined && READ_ONLY_COMMANDS.has(command)
 }
 

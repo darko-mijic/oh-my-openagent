@@ -1,9 +1,10 @@
-import { existsSync, realpathSync } from "node:fs"
+import { existsSync, realpathSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, isAbsolute, relative, resolve } from "node:path"
 
 export type QaPathPolicy = {
   readonly isCreationTarget: (path: string) => boolean
+  readonly isExistingFile: (path: string) => boolean
   readonly isTestPath: (path: string) => boolean
   readonly isTrustedScript: (path: string) => boolean
   readonly isWritablePath: (path: string) => boolean
@@ -53,6 +54,21 @@ function canonicalizeExistingPath(path: string, base: string): string | undefine
   }
 }
 
+function isExistingFile(path: string, base: string): boolean {
+  const target = canonicalizeExistingPath(path, base)
+  if (target === undefined) {
+    return false
+  }
+  try {
+    return statSync(target).isFile()
+  } catch (error) {
+    if (error instanceof Error) {
+      return false
+    }
+    throw error
+  }
+}
+
 export function createQaPathPolicy(projectRoot: string, worktree: string): QaPathPolicy {
   const canonicalProjectRoot = canonicalizePath(projectRoot, projectRoot)
   const canonicalWorktree = canonicalizePath(worktree, worktree)
@@ -60,6 +76,7 @@ export function createQaPathPolicy(projectRoot: string, worktree: string): QaPat
   if (canonicalProjectRoot === undefined || canonicalWorktree === undefined || canonicalTempRoot === undefined) {
     return {
       isCreationTarget: () => false,
+      isExistingFile: () => false,
       isTestPath: () => false,
       isTrustedScript: () => false,
       isWritablePath: () => false,
@@ -69,6 +86,23 @@ export function createQaPathPolicy(projectRoot: string, worktree: string): QaPat
   const canonicalEvidenceRoot = canonicalizePath(resolve(canonicalProjectRoot, ".omo", "evidence"), canonicalProjectRoot)
   const worktreeOmoEvidenceRoot = canonicalizePath(resolve(canonicalWorktree, ".omo", "evidence"), canonicalWorktree)
   const worktreeEvidenceRoot = canonicalizePath(resolve(canonicalWorktree, "evidence"), canonicalWorktree)
+  const canonicalProjectOmoRoot = resolve(canonicalProjectRoot, ".omo")
+  const canonicalWorktreeOmoRoot = resolve(canonicalWorktree, ".omo")
+
+  const isExecutablePath = (path: string, existingOnly: boolean): boolean => {
+    const lexicalTarget = resolve(canonicalWorktree, path)
+    if (isPathWithin(lexicalTarget, canonicalWorktreeOmoRoot)
+      || isPathWithin(lexicalTarget, canonicalProjectOmoRoot)) {
+      return false
+    }
+    const target = existingOnly
+      ? canonicalizeExistingPath(path, canonicalWorktree)
+      : canonicalizePath(path, canonicalWorktree)
+    return target !== undefined
+      && !isPathWithin(target, canonicalWorktreeOmoRoot)
+      && !isPathWithin(target, canonicalProjectOmoRoot)
+      && (isPathWithin(target, canonicalWorktree) || isPathWithin(target, canonicalProjectRoot))
+  }
 
   return {
     isCreationTarget: (path): boolean => {
@@ -79,22 +113,18 @@ export function createQaPathPolicy(projectRoot: string, worktree: string): QaPat
         || (canonicalEvidenceRoot !== undefined && isPathWithin(target, canonicalEvidenceRoot))
       )
     },
+    isExistingFile: (path): boolean => isExistingFile(path, canonicalWorktree),
     isTestPath: (path): boolean => {
       if (path.startsWith("-")) {
         return true
       }
-      const target = resolve(canonicalWorktree, path)
-      return isPathWithin(target, canonicalWorktree) || isPathWithin(target, canonicalProjectRoot)
+      return isExecutablePath(path, false)
     },
     isTrustedScript: (path): boolean => {
       if (path.startsWith("-")) {
         return false
       }
-      const target = canonicalizeExistingPath(path, canonicalWorktree)
-      return target !== undefined && (
-        isPathWithin(target, canonicalWorktree)
-        || isPathWithin(target, canonicalProjectRoot)
-      )
+      return isExecutablePath(path, true)
     },
     isWritablePath: (path): boolean => {
       const target = canonicalizePath(path, canonicalWorktree)

@@ -155,17 +155,22 @@ describe("read-only agent tool restrictions", () => {
   })
 
   describe("qa-executor", () => {
-    test("permits scoped file tools while denying unscopeable apply_patch", () => {
+    test("permits scoped file tools while shared prompt restrictions deny delegation", () => {
       // given
       const agent = createQaExecutorAgent("openai/gpt-5.5")
 
       // when
       const permission = (agent.permission ?? {}) as Record<string, string>
+      const sessionRestrictions = getAgentToolRestrictions("qa-executor")
 
       // then
       expect(agent.mode).toBe("subagent")
       expect(agent.temperature).toBe(0.1)
       expect(permission.apply_patch).toBe("deny")
+      expect(permission.task).toBeUndefined()
+      expect(permission.call_omo_agent).toBeUndefined()
+      expect(sessionRestrictions.task).toBe(false)
+      expect(sessionRestrictions.call_omo_agent).toBe(false)
     })
   })
 

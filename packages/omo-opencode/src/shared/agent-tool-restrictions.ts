@@ -50,6 +50,11 @@ const AGENT_RESTRICTIONS: Record<string, Record<string, boolean>> = {
     edit: false,
   },
 
+  "qa-executor": {
+    task: false,
+    call_omo_agent: false,
+  },
+
   "multimodal-looker": {
     read: true,
   },

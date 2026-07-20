@@ -17,8 +17,6 @@ End every review with exactly one line anchored to the reviewed files: \`VERDICT
 export const createQaExecutorAgent: AgentFactory = (model: string): AgentConfig => {
   const restrictions = createAgentToolRestrictions([
     "apply_patch",
-    "task",
-    "call_omo_agent",
   ])
   const base = {
     description: "Final-wave manual QA executor that records evidence-backed surface verification. (QA Executor - OhMyOpenCode)",
