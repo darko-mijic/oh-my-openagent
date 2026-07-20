@@ -60,6 +60,7 @@ export async function buildSubagentCompletionReminder(input: {
     isFinalWaveTask,
     currentTask: input.currentTask,
     planPath: input.planPath,
+    workspaceRoot: input.ctx.directory,
     enforcementMode: enforcement.mode,
   })
 
@@ -149,6 +150,7 @@ export async function buildSubagentCompletionReminder(input: {
     isFinalWaveTask,
     currentTask: input.currentTask,
     planPath: input.planPath,
+    workspaceRoot: input.ctx.directory,
     enforcementMode: enforcement.mode,
   })) {
     return {
@@ -183,6 +185,7 @@ function resolveIsAlreadyVerified(input: {
   readonly isFinalWaveTask: boolean
   readonly currentTask: CurrentTask
   readonly planPath: string
+  readonly workspaceRoot: string
   readonly enforcementMode: "enforced" | "advisory" | "blocked"
 }): boolean {
   if (!input.isFinalWaveTask || input.currentTask === null) {
@@ -192,7 +195,7 @@ function resolveIsAlreadyVerified(input: {
     return false
   }
   if (input.enforcementMode === "enforced") {
-    return hasFinalWaveReceiptForRow(input.planPath, input.currentTask.label)
+    return hasFinalWaveReceiptForRow(input.planPath, input.currentTask.label, input.workspaceRoot)
   }
   return input.isAlreadyVerified
 }
@@ -201,6 +204,7 @@ function canAdvanceAfterVerified(input: {
   readonly isFinalWaveTask: boolean
   readonly currentTask: CurrentTask
   readonly planPath: string
+  readonly workspaceRoot: string
   readonly enforcementMode: "enforced" | "advisory" | "blocked"
 }): boolean {
   if (!input.isFinalWaveTask || input.currentTask === null) {
@@ -210,7 +214,7 @@ function canAdvanceAfterVerified(input: {
     return false
   }
   if (input.enforcementMode === "enforced") {
-    return hasFinalWaveReceiptForRow(input.planPath, input.currentTask.label)
+    return hasFinalWaveReceiptForRow(input.planPath, input.currentTask.label, input.workspaceRoot)
   }
   return true
 }

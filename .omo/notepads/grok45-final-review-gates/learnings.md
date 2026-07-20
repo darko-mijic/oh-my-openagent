@@ -104,6 +104,12 @@ Session artifacts live here.
 
 - Cleared `git diff --check dev...HEAD` failures that caused F2 code-quality REJECT: trimmed trailing whitespace and removed blank lines at EOF in 12 committed evidence files under `.omo/evidence/20260718-grok45-baseline/`, `20260718-prometheus-grok-gaps/`, `20260718-prometheus-grok-reasoning-effort/`, and `20260719-grok45-final-review-gates/task-{13,15}-*/` (JSONL kept single trailing newline after last record). Content bytes otherwise unchanged.
 
+## 2026-07-20 F2 receipt fingerprint revalidation
+
+- Final-wave gate evaluation now filters an in-memory receipt view through DC-2 fingerprint revalidation before aggregate counts, per-row advance checks, user-message release, or compaction reconstruction. The durable sidecar remains unchanged when a receipt becomes stale.
+- Revalidation rebuilds each current fingerprint from the frozen `baseline.gitHead` and frozen F-row contract. Scoped edits invalidate approval; out-of-scope remediation remains convergent; non-git workspaces use the same content-hash fallback and degrade to a non-counting receipt on filesystem errors.
+- TDD coverage includes stale aggregate release, advance bypass, user-message clearing, restart reconstruction, non-git hashing, out-of-scope commits, and baseline immutability. Atlas passed 313 tests; typecheck passed; the root suite had only the exempt 5-second prompt-route audit timeout, which passed alone with a 30-second budget. Isolated OpenCode QA retained host session count 115 before and after.
+
 ## 2026-07-20 F3 qa-executor grammar fix
 
 - Split the qa-executor policy from the unchanged Momus/Oracle grammar: exact `&&` tokenization validates every segment, explicit environment assignments and QA command families are allowlisted, and eval/redirection/substitution or unscoped writes remain denied.

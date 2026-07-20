@@ -6,9 +6,11 @@ import { join } from "node:path"
 import { spawnSync } from "node:child_process"
 import { shouldPauseForFinalWaveApproval } from "./final-wave-approval-gate"
 import {
+  hasAllFinalWaveReceipts,
   hasFinalWaveReceiptForRow,
   resolveFinalWaveEnforcement,
 } from "./final-wave-enforcement"
+import { computeRowFingerprint } from "./final-wave-fingerprint"
 import {
   buildFinalWaveFixturePlan,
   FINAL_WAVE_FIXTURE_ROWS,
@@ -22,6 +24,7 @@ import {
   stampBaseline,
   writeReceipt,
 } from "./final-wave-receipts"
+import { readFinalWavePlanState } from "./final-wave-plan-state"
 import { writeMalformedFinalWaveReceiptSidecar } from "./final-wave-receipt-sidecar-writer"
 import type { SessionState } from "./types"
 
@@ -86,7 +89,11 @@ function emptySessionState(): SessionState {
   return { promptFailureCount: 0 }
 }
 
-function establishReceipt(planPath: string, fKey: "F1" | "F2" | "F3" | "F4"): void {
+function establishReceipt(
+  planPath: string,
+  workspaceRoot: string,
+  fKey: "F1" | "F2" | "F3" | "F4",
+): void {
   const row = FINAL_WAVE_FIXTURE_ROWS[fKey]
   const launchId = `launch-${fKey}`
   recordLaunchExpectation(planPath, {
@@ -100,12 +107,24 @@ function establishReceipt(planPath: string, fKey: "F1" | "F2" | "F3" | "F4"): vo
     fKey,
     childSessionId: `ses_${fKey}`,
   })
+  const store = readReceiptStore(planPath)
+  const planState = readFinalWavePlanState(planPath)
+  if ("corrupt" in store || store.baseline === null || planState?.finalWaveRoles.status !== "marked") {
+    throw new Error("expected initialized final-wave receipt fixture")
+  }
+  const fingerprintRow = planState.finalWaveRoles.rows.find((candidate) => candidate.fKey === fKey)
+  if (fingerprintRow === undefined) throw new Error(`expected ${fKey} fixture row`)
   writeReceipt(planPath, {
     fKey,
     launchId,
     childSessionId: `ses_${fKey}`,
     actualAgent: row.subagent,
-    fingerprint: { gitHead: "nogit", scopePaths: [], scopeHash: "hash" },
+    fingerprint: computeRowFingerprint({
+      planPath,
+      row: fingerprintRow,
+      workspaceRoot,
+      baseline: { gitHead: store.baseline.gitHead },
+    }),
   })
 }
 
@@ -181,9 +200,10 @@ describe("resolveFinalWaveEnforcement", () => {
     expect(enforcement.mode).toBe("blocked")
     expect(enforcement.reason).toBe("corrupt-sidecar")
     if (enforcement.mode !== "blocked") throw new Error("expected blocked")
-    expect(enforcement.recovery).toBeDefined()
-    expect(enforcement.recovery?.includes(".corrupt-")).toBe(true)
-    expect(readFileSync(enforcement.recovery!, "utf-8").length).toBeGreaterThan(0)
+    const recoveryPath = enforcement.recovery
+    if (recoveryPath === undefined) throw new Error("expected recovery path")
+    expect(recoveryPath.includes(".corrupt-")).toBe(true)
+    expect(readFileSync(recoveryPath, "utf-8").length).toBeGreaterThan(0)
     // Sidecar moved off the live path.
     expect(() => readFileSync(sidecarPath, "utf-8")).toThrow()
   })
@@ -220,7 +240,7 @@ describe("resolveFinalWaveEnforcement", () => {
     // given
     const directory = createWorkspace(true)
     const planPath = writeMarkedPlan(directory)
-    establishReceipt(planPath, "F1")
+    establishReceipt(planPath, directory, "F1")
     writeFileSync(
       planPath,
       readFileSync(planPath, "utf-8").replace("Plan compliance audit", "Mutated plan audit"),
@@ -264,7 +284,7 @@ describe("shouldPauseForFinalWaveApproval under enforcement", () => {
     const directory = createWorkspace(true)
     const planPath = writeMarkedPlan(directory)
     for (const fKey of ["F1", "F2", "F3", "F4"] as const) {
-      establishReceipt(planPath, fKey)
+      establishReceipt(planPath, directory, fKey)
     }
     const sessionState = emptySessionState()
 
@@ -457,11 +477,89 @@ describe("hasFinalWaveReceiptForRow", () => {
     // given
     const directory = createWorkspace(true)
     const planPath = writeMarkedPlan(directory)
-    establishReceipt(planPath, "F3")
+    establishReceipt(planPath, directory, "F3")
 
     // when / then
     expect(hasFinalWaveReceiptForRow(planPath, "F3")).toBe(true)
     expect(hasFinalWaveReceiptForRow(planPath, "F1")).toBe(false)
+  })
+})
+
+describe("receipt fingerprint revalidation", () => {
+  test("#given all receipts approve explicit scopes #when an in-scope file changes #then the release gate rejects the stale receipt without deleting it", () => {
+    // given
+    const directory = createWorkspace(true)
+    const planPath = writeMarkedPlan(directory)
+    writeFileSync(planPath, readFileSync(planPath, "utf-8").replace(
+      "<!-- role:code-reviewer -->",
+      "<!-- role:code-reviewer scope:src/review.ts -->",
+    ))
+    mkdirSync(join(directory, "src"), { recursive: true })
+    writeFileSync(join(directory, "src", "review.ts"), "export const version = 1\n")
+    for (const fKey of ["F1", "F2", "F3", "F4"] as const) {
+      establishReceipt(planPath, directory, fKey)
+    }
+    expect(hasAllFinalWaveReceipts(planPath, directory)).toBe(true)
+
+    // when
+    writeFileSync(join(directory, "src", "review.ts"), "export const version = 2\n")
+
+    // then
+    expect(hasAllFinalWaveReceipts(planPath, directory)).toBe(false)
+    const store = readReceiptStore(planPath)
+    if ("corrupt" in store) throw new Error("expected valid store")
+    expect(store.receipts.F2).toBeDefined()
+  })
+
+  test("#given receipts use the wave-init baseline #when a later out-of-scope commit lands #then every receipt still counts without moving the baseline", () => {
+    // given
+    const directory = createWorkspace(true)
+    const planPath = writeMarkedPlan(directory)
+    stampBaseline(planPath)
+    const stamped = readReceiptStore(planPath)
+    if ("corrupt" in stamped || stamped.baseline === null) throw new Error("expected stamped baseline")
+    const frozenGitHead = stamped.baseline.gitHead
+    mkdirSync(join(directory, "src"), { recursive: true })
+    writeFileSync(join(directory, "src", "review.ts"), "export const version = 1\n")
+    runGit(directory, ["add", "-f", planPath, join(directory, "src", "review.ts")])
+    runGit(directory, ["commit", "-m", "implementation"])
+    for (const fKey of ["F1", "F2", "F3", "F4"] as const) {
+      establishReceipt(planPath, directory, fKey)
+    }
+
+    // when
+    mkdirSync(join(directory, ".omo", "notepads"), { recursive: true })
+    const remediationPath = join(directory, ".omo", "notepads", "remediation.md")
+    writeFileSync(remediationPath, "out of scope\n")
+    runGit(directory, ["add", "-f", remediationPath])
+    runGit(directory, ["commit", "-m", "out-of-scope remediation"])
+
+    // then
+    expect(hasAllFinalWaveReceipts(planPath, directory)).toBe(true)
+    const current = readReceiptStore(planPath)
+    if ("corrupt" in current) throw new Error("expected valid store")
+    expect(current.baseline?.gitHead).toBe(frozenGitHead)
+  })
+
+  test("#given a receipt in a non-git workspace #when scoped content changes #then hash revalidation returns false without throwing", () => {
+    // given
+    const directory = createWorkspace(false)
+    const planPath = writeMarkedPlan(directory)
+    writeFileSync(planPath, readFileSync(planPath, "utf-8").replace(
+      "<!-- role:code-reviewer -->",
+      "<!-- role:code-reviewer scope:src/review.ts -->",
+    ))
+    mkdirSync(join(directory, "src"), { recursive: true })
+    writeFileSync(join(directory, "src", "review.ts"), "export const version = 1\n")
+    establishReceipt(planPath, directory, "F2")
+    expect(hasFinalWaveReceiptForRow(planPath, "F2", directory)).toBe(true)
+
+    // when
+    writeFileSync(join(directory, "src", "review.ts"), "export const version = 2\n")
+
+    // then
+    expect(() => hasFinalWaveReceiptForRow(planPath, "F2", directory)).not.toThrow()
+    expect(hasFinalWaveReceiptForRow(planPath, "F2", directory)).toBe(false)
   })
 })
 

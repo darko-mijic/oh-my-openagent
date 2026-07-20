@@ -1,8 +1,12 @@
 import { spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
 import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs"
-import { relative, resolve, sep } from "node:path"
-import type { FinalWaveReceiptFingerprint } from "./final-wave-receipt-sidecar-writer"
+import { dirname, relative, resolve, sep } from "node:path"
+import type {
+  FinalWaveReceipt,
+  FinalWaveReceiptBaseline,
+  FinalWaveReceiptFingerprint,
+} from "./final-wave-receipt-sidecar-writer"
 import type { FinalWaveRoleRow } from "./final-wave-role-parser"
 
 const QA_EVIDENCE_SCOPE = ".omo/evidence/"
@@ -29,6 +33,17 @@ export type ComputeRowFingerprintInput = {
   readonly spawnGit?: FinalWaveGitSpawn
 }
 
+export type RevalidateReceiptFingerprintInput = ComputeRowFingerprintInput & {
+  readonly receipt: FinalWaveReceiptFingerprint
+}
+
+export type RevalidateFinalWaveReceiptsInput = {
+  readonly planPath: string
+  readonly workspaceRoot?: string
+  readonly baseline: FinalWaveReceiptBaseline
+  readonly receipts: Readonly<Record<string, FinalWaveReceipt>>
+}
+
 export function computeRowFingerprint(input: ComputeRowFingerprintInput): FinalWaveReceiptFingerprint {
   const workspaceRoot = resolve(input.workspaceRoot)
   const planScope = workspaceRelativePath(workspaceRoot, input.planPath)
@@ -51,6 +66,31 @@ export function isReceiptValid(
   current: FinalWaveReceiptFingerprint,
 ): boolean {
   return receipt.scopeHash === current.scopeHash && sameScopePaths(receipt.scopePaths, current.scopePaths)
+}
+
+export function revalidateReceiptFingerprint(input: RevalidateReceiptFingerprintInput): boolean {
+  try {
+    return isReceiptValid(input.receipt, computeRowFingerprint(input))
+  } catch {
+    return false
+  }
+}
+
+export function revalidateFinalWaveReceipts(
+  input: RevalidateFinalWaveReceiptsInput,
+): Readonly<Record<string, FinalWaveReceipt>> {
+  const workspaceRoot = input.workspaceRoot ?? inferWorkspaceRoot(input.planPath)
+  return Object.fromEntries(Object.entries(input.receipts).filter(([fKey, receipt]) => {
+    const contract = input.baseline.fRowContract[fKey]
+    if (contract === undefined) return false
+    return revalidateReceiptFingerprint({
+      receipt: receipt.fingerprint,
+      planPath: input.planPath,
+      row: { fKey, ...contract },
+      workspaceRoot,
+      baseline: { gitHead: input.baseline.gitHead },
+    })
+  }))
 }
 
 function effectiveScopePaths(input: {
@@ -156,6 +196,10 @@ function uniqueScopePaths(paths: readonly string[]): readonly string[] {
 
 function sameScopePaths(left: readonly string[], right: readonly string[]): boolean {
   return left.length === right.length && left.every((path, index) => path === right[index])
+}
+
+function inferWorkspaceRoot(planPath: string): string {
+  return dirname(dirname(dirname(resolve(planPath))))
 }
 
 function spawnGit(arguments_: readonly string[], workspaceRoot: string): FinalWaveGitCommandResult {

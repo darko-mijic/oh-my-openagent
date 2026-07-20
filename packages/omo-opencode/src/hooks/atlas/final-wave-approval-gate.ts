@@ -83,47 +83,57 @@ export function shouldPauseForFinalWaveApproval(input: {
   }
 
   if (enforcement.mode === "enforced") {
-    return shouldPauseFromReceipts(input.planPath, input.sessionState, planState.finalWaveRoles)
+    return shouldPauseFromReceipts({
+      planPath: input.planPath,
+      workspaceRoot: input.workspaceRoot,
+      sessionState: input.sessionState,
+      finalWaveRoles: planState.finalWaveRoles,
+    })
   }
 
   return shouldPauseFromCheckboxVerdict(input, planState)
 }
 
-function shouldPauseFromReceipts(
-  planPath: string,
-  sessionState: SessionState,
-  finalWaveRoles: FinalWaveRoleParseResult,
-): boolean {
+function shouldPauseFromReceipts(input: {
+  readonly planPath: string
+  readonly workspaceRoot?: string
+  readonly sessionState: SessionState
+  readonly finalWaveRoles: FinalWaveRoleParseResult
+}): boolean {
   // Ensure a frozen contract exists once the wave is under enforcement.
-  if (finalWaveRoles.status === "marked") {
-    stampBaseline(planPath)
+  if (input.finalWaveRoles.status === "marked") {
+    stampBaseline(input.planPath)
   }
 
-  const enforcement = resolveFinalWaveEnforcement(planPath)
+  const enforcement = resolveFinalWaveEnforcement(input.planPath, input.workspaceRoot)
   if (enforcement.mode !== "enforced") {
-    clearFinalWaveApprovalTracking(sessionState)
+    clearFinalWaveApprovalTracking(input.sessionState)
     return enforcement.mode === "blocked"
   }
 
-  const counts = countFinalWaveReceiptApprovals(enforcement.store)
+  const counts = countFinalWaveReceiptApprovals({
+    planPath: input.planPath,
+    workspaceRoot: input.workspaceRoot,
+    store: enforcement.store,
+  })
   let requiredCount = counts.requiredCount
   let approvedCount = counts.approvedCount
 
   // Empty-valid sidecar before any stamp: require every marked F-row.
-  if (requiredCount === 0 && finalWaveRoles.status === "marked") {
-    requiredCount = finalWaveRoles.rows.length
+  if (requiredCount === 0 && input.finalWaveRoles.status === "marked") {
+    requiredCount = input.finalWaveRoles.rows.length
     approvedCount = 0
   }
 
   if (requiredCount === 0) {
-    clearFinalWaveApprovalTracking(sessionState)
+    clearFinalWaveApprovalTracking(input.sessionState)
     return false
   }
 
   // Checkbox state and bare verdict text never authorize under enforcement.
   const shouldPause = approvedCount >= requiredCount
   if (shouldPause) {
-    clearFinalWaveApprovalTracking(sessionState)
+    clearFinalWaveApprovalTracking(input.sessionState)
   }
   return shouldPause
 }

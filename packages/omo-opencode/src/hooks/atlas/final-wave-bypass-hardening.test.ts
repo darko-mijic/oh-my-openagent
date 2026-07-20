@@ -23,12 +23,14 @@ import {
   reconstructFinalWavePauseState,
   resolveFinalWaveEnforcement,
 } from "./final-wave-enforcement"
+import { computeRowFingerprint } from "./final-wave-fingerprint"
 import {
   FINAL_WAVE_FIXTURE_KEYS,
   FINAL_WAVE_FIXTURE_ROWS,
   writeFinalWaveFixturePlan,
 } from "./final-wave-fixtures"
 import { createFinalWaveTaskCompletion } from "./final-wave-mock-completion"
+import { readFinalWavePlanState } from "./final-wave-plan-state"
 import {
   readReceiptStore,
   recordBinding,
@@ -78,7 +80,11 @@ function emptySessionState(): SessionState {
   return { promptFailureCount: 0 }
 }
 
-function establishReceipt(planPath: string, fKey: keyof typeof FINAL_WAVE_FIXTURE_ROWS): void {
+function establishReceipt(
+  planPath: string,
+  workspaceRoot: string,
+  fKey: keyof typeof FINAL_WAVE_FIXTURE_ROWS,
+): void {
   const row = FINAL_WAVE_FIXTURE_ROWS[fKey]
   const launchId = `launch-${fKey}`
   recordLaunchExpectation(planPath, {
@@ -92,18 +98,30 @@ function establishReceipt(planPath: string, fKey: keyof typeof FINAL_WAVE_FIXTUR
     fKey,
     childSessionId: `ses_${fKey}`,
   })
+  const store = readReceiptStore(planPath)
+  const planState = readFinalWavePlanState(planPath)
+  if ("corrupt" in store || store.baseline === null || planState?.finalWaveRoles.status !== "marked") {
+    throw new Error("expected initialized final-wave receipt fixture")
+  }
+  const fingerprintRow = planState.finalWaveRoles.rows.find((candidate) => candidate.fKey === fKey)
+  if (fingerprintRow === undefined) throw new Error(`expected ${fKey} fixture row`)
   writeReceipt(planPath, {
     fKey,
     launchId,
     childSessionId: `ses_${fKey}`,
     actualAgent: row.subagent,
-    fingerprint: { gitHead: "nogit", scopePaths: [], scopeHash: "hash" },
+    fingerprint: computeRowFingerprint({
+      planPath,
+      row: fingerprintRow,
+      workspaceRoot,
+      baseline: { gitHead: store.baseline.gitHead },
+    }),
   })
 }
 
-function establishAllReceipts(planPath: string): void {
+function establishAllReceipts(planPath: string, workspaceRoot: string): void {
   for (const fKey of FINAL_WAVE_FIXTURE_KEYS) {
-    establishReceipt(planPath, fKey)
+    establishReceipt(planPath, workspaceRoot, fKey)
   }
 }
 
@@ -211,7 +229,7 @@ describe("final-wave bypass hardening — advance path", () => {
     // given
     const directory = createWorkspace(true)
     const planPath = writeMarkedPlan(directory)
-    establishReceipt(planPath, "F1")
+    establishReceipt(planPath, directory, "F1")
     const sessionState = emptySessionState()
     const ctx = createMockPluginInput(directory)
 
@@ -237,6 +255,42 @@ describe("final-wave bypass hardening — advance path", () => {
     expect(decision.leadReminder).toContain("TASK ALREADY COMPLETE")
     expect(decision.leadReminder).toContain("ADVANCE TO NEXT")
     expect(decision.shouldPauseForApproval).toBe(false)
+  })
+
+  test("#given an enforced F-row receipt #when its reviewed scope changes #then the stale receipt cannot authorize advance", async () => {
+    // given
+    const directory = createWorkspace(true)
+    const planPath = writeMarkedPlan(directory)
+    writeFileSync(planPath, readFileSync(planPath, "utf-8").replace(
+      "<!-- role:code-reviewer -->",
+      "<!-- role:code-reviewer scope:src/review.ts -->",
+    ))
+    mkdirSync(join(directory, "src"), { recursive: true })
+    writeFileSync(join(directory, "src", "review.ts"), "export const version = 1\n")
+    establishReceipt(planPath, directory, "F2")
+    writeFileSync(join(directory, "src", "review.ts"), "export const version = 2\n")
+
+    // when
+    const decision = await buildSubagentCompletionReminder({
+      ctx: createMockPluginInput(directory),
+      planPath,
+      planName: "bypass-wave",
+      progress: { total: 5, completed: 2 },
+      preferredSessionId: "ses_f2",
+      originalResponse: "VERDICT: APPROVE",
+      currentTask: {
+        key: "final-wave:F2",
+        label: "F2",
+        section: "final-wave",
+      },
+      sessionState: emptySessionState(),
+      isAlreadyVerified: true,
+      autoCommit: false,
+    })
+
+    // then
+    expect(decision.leadReminder).not.toContain("TASK ALREADY COMPLETE")
+    expect(decision.leadReminder).not.toContain("ADVANCE TO NEXT")
   })
 })
 
@@ -360,8 +414,8 @@ describe("final-wave bypass hardening — user message", () => {
     // given
     const directory = createWorkspace(true)
     const planPath = writeMarkedPlan(directory)
-    establishReceipt(planPath, "F1")
-    establishReceipt(planPath, "F2")
+    establishReceipt(planPath, directory, "F1")
+    establishReceipt(planPath, directory, "F2")
     const sessionID = "atlas-bypass-session"
     writeBoulder(directory, planPath, sessionID)
     const sessionState = emptySessionState()
@@ -386,6 +440,44 @@ describe("final-wave bypass hardening — user message", () => {
 
     // then
     expect(hasAllFinalWaveReceipts(planPath, directory)).toBe(false)
+    expect(sessionState.waitingForFinalWaveApproval).toBe(true)
+  })
+
+  test("#given a paused wave whose receipt became stale #when a user message arrives #then the release pause stays set", async () => {
+    // given
+    const directory = createWorkspace(true)
+    const planPath = writeMarkedPlan(directory)
+    writeFileSync(planPath, readFileSync(planPath, "utf-8").replace(
+      "<!-- role:code-reviewer -->",
+      "<!-- role:code-reviewer scope:src/review.ts -->",
+    ))
+    mkdirSync(join(directory, "src"), { recursive: true })
+    writeFileSync(join(directory, "src", "review.ts"), "export const version = 1\n")
+    establishAllReceipts(planPath, directory)
+    writeFileSync(join(directory, "src", "review.ts"), "export const version = 2\n")
+    const sessionID = "atlas-stale-receipt-session"
+    writeBoulder(directory, planPath, sessionID)
+    const sessionState = emptySessionState()
+    sessionState.waitingForFinalWaveApproval = true
+    const sessions = new Map<string, SessionState>([[sessionID, sessionState]])
+    const handler = createAtlasEventHandler({
+      ctx: createMockPluginInput(directory),
+      sessions,
+      getState: (id) => sessions.get(id) ?? emptySessionState(),
+    })
+
+    // when
+    await handler({
+      event: {
+        type: "message.updated",
+        properties: {
+          info: { role: "user", sessionID },
+          sessionID,
+        },
+      },
+    })
+
+    // then
     expect(sessionState.waitingForFinalWaveApproval).toBe(true)
   })
 
@@ -466,8 +558,8 @@ describe("final-wave bypass hardening — compaction/restart reconstruction", ()
     // given
     const directory = createWorkspace(true)
     const planPath = writeMarkedPlan(directory)
-    establishReceipt(planPath, "F1")
-    establishReceipt(planPath, "F2")
+    establishReceipt(planPath, directory, "F1")
+    establishReceipt(planPath, directory, "F2")
     // simulate compaction: fresh session state
     const sessionState = emptySessionState()
 
@@ -495,7 +587,7 @@ describe("final-wave bypass hardening — compaction/restart reconstruction", ()
     // given
     const directory = createWorkspace(true)
     const planPath = writeMarkedPlan(directory)
-    establishAllReceipts(planPath)
+    establishAllReceipts(planPath, directory)
     const sessionState = emptySessionState()
 
     // when
@@ -508,11 +600,34 @@ describe("final-wave bypass hardening — compaction/restart reconstruction", ()
     expect(sessionState.waitingForFinalWaveApproval).toBe(true)
   })
 
+  test("#given all receipts before compaction #when one reviewed scope changes #then reconstruction excludes the stale receipt", () => {
+    // given
+    const directory = createWorkspace(true)
+    const planPath = writeMarkedPlan(directory)
+    writeFileSync(planPath, readFileSync(planPath, "utf-8").replace(
+      "<!-- role:code-reviewer -->",
+      "<!-- role:code-reviewer scope:src/review.ts -->",
+    ))
+    mkdirSync(join(directory, "src"), { recursive: true })
+    writeFileSync(join(directory, "src", "review.ts"), "export const version = 1\n")
+    establishAllReceipts(planPath, directory)
+    writeFileSync(join(directory, "src", "review.ts"), "export const version = 2\n")
+    const sessionState = emptySessionState()
+
+    // when
+    const reconstructed = reconstructFinalWavePauseState(sessionState, planPath, directory)
+
+    // then
+    expect(reconstructed.approvedCount).toBe(3)
+    expect(reconstructed.requiredCount).toBe(4)
+    expect(reconstructed.waitingForApproval).toBe(false)
+  })
+
   test("#given session.compacted then idle after full receipts #when handled #then idle does not auto-continue", async () => {
     // given
     const directory = createWorkspace(true)
     const planPath = writeMarkedPlan(directory)
-    establishAllReceipts(planPath)
+    establishAllReceipts(planPath, directory)
     const sessionID = "atlas-bypass-session"
     writeBoulder(directory, planPath, sessionID)
     const mockInput = createMockPluginInput(directory)

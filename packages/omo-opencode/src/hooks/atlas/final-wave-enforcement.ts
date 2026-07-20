@@ -1,3 +1,4 @@
+import { revalidateFinalWaveReceipts } from "./final-wave-fingerprint"
 import { readFinalWavePlanState } from "./final-wave-plan-state"
 import {
   quarantineCorruptReceiptStore,
@@ -109,12 +110,24 @@ export function resolveFinalWaveEnforcement(
 }
 
 export function countFinalWaveReceiptApprovals(
-  store: FinalWaveReceiptStoreRead | ReceiptStoreReadResult | undefined,
+  input: {
+    readonly planPath: string
+    readonly workspaceRoot?: string
+    readonly store: FinalWaveReceiptStoreRead | ReceiptStoreReadResult | undefined
+  },
 ): { readonly approvedCount: number; readonly requiredCount: number; readonly contractViolation: boolean } {
-  if (store === undefined || "corrupt" in store) {
-    return { approvedCount: 0, requiredCount: 0, contractViolation: store !== undefined && "corrupt" in store }
+  if (input.store === undefined || "corrupt" in input.store) {
+    return {
+      approvedCount: 0,
+      requiredCount: 0,
+      contractViolation: input.store !== undefined && "corrupt" in input.store,
+    }
   }
-  const reconstructed = reconstructFinalWaveState(store)
+  const reconstructed = reconstructFinalWaveState(revalidateReceiptStore({
+    planPath: input.planPath,
+    workspaceRoot: input.workspaceRoot,
+    store: input.store,
+  }))
   return {
     approvedCount: reconstructed.approvedCount,
     requiredCount: reconstructed.requiredCount,
@@ -122,11 +135,12 @@ export function countFinalWaveReceiptApprovals(
   }
 }
 
-export function hasFinalWaveReceiptForRow(planPath: string, fKey: string): boolean {
+export function hasFinalWaveReceiptForRow(planPath: string, fKey: string, workspaceRoot?: string): boolean {
   const store = readReceiptStore(planPath)
   if ("corrupt" in store) return false
-  return store.receipts[fKey.toUpperCase()] !== undefined
-    || store.receipts[fKey] !== undefined
+  const currentStore = revalidateReceiptStore({ planPath, workspaceRoot, store })
+  return currentStore.receipts[fKey.toUpperCase()] !== undefined
+    || currentStore.receipts[fKey] !== undefined
 }
 
 export function hasAllFinalWaveReceipts(planPath: string, workspaceRoot?: string): boolean {
@@ -134,7 +148,7 @@ export function hasAllFinalWaveReceipts(planPath: string, workspaceRoot?: string
   if (enforcement.mode === "blocked") return false
   if (enforcement.mode !== "enforced") return true
 
-  const counts = resolveEnforcedReceiptCounts(planPath, enforcement.store)
+  const counts = resolveEnforcedReceiptCounts(planPath, workspaceRoot, enforcement.store)
   return counts.requiredCount > 0 && counts.approvedCount >= counts.requiredCount
 }
 
@@ -175,7 +189,7 @@ export function reconstructFinalWavePauseState(
     }
   }
 
-  const counts = resolveEnforcedReceiptCounts(planPath, enforcement.store)
+  const counts = resolveEnforcedReceiptCounts(planPath, workspaceRoot, enforcement.store)
   sessionState.pendingFinalWaveTaskCount = counts.requiredCount > 0 ? counts.requiredCount : undefined
   sessionState.approvedFinalWaveTaskCount = counts.requiredCount > 0 ? counts.approvedCount : undefined
 
@@ -194,13 +208,14 @@ export function reconstructFinalWavePauseState(
 
 function resolveEnforcedReceiptCounts(
   planPath: string,
+  workspaceRoot: string | undefined,
   store: FinalWaveReceiptStoreRead,
 ): {
   readonly approvedCount: number
   readonly requiredCount: number
   readonly contractViolation: boolean
 } {
-  const counts = countFinalWaveReceiptApprovals(store)
+  const counts = countFinalWaveReceiptApprovals({ planPath, workspaceRoot, store })
   if (counts.requiredCount > 0) return counts
 
   const planState = readFinalWavePlanState(planPath)
@@ -212,4 +227,22 @@ function resolveEnforcedReceiptCounts(
     }
   }
   return counts
+}
+
+function revalidateReceiptStore(input: {
+  readonly planPath: string
+  readonly workspaceRoot?: string
+  readonly store: FinalWaveReceiptStoreRead
+}): FinalWaveReceiptStoreRead {
+  if (input.store.baseline === null) {
+    return { ...input.store, receipts: {} }
+  }
+
+  const currentReceipts = revalidateFinalWaveReceipts({
+    planPath: input.planPath,
+    workspaceRoot: input.workspaceRoot,
+    baseline: input.store.baseline,
+    receipts: input.store.receipts,
+  })
+  return { ...input.store, receipts: currentReceipts }
 }
