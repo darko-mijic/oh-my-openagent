@@ -1,0 +1,2 @@
+SANDBOX=/tmp/cqa-task14-norQYf
+CODEX_HOME=/tmp/cqa-task14-norQYf/codex

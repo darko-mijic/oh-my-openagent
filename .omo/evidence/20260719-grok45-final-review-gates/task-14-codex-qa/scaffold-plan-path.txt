@@ -1,0 +1,4 @@
+PLAN_CANDIDATES:
+/tmp/cqa-task14-norQYf/workspace/.omo/plans/task14-role-marker-proof.md
+/tmp/cqa-task14-norQYf/workspace/.omo/drafts/task14-role-marker-proof.md
+PLAN_FILE=/tmp/cqa-task14-norQYf/workspace/.omo/plans/task14-role-marker-proof.md

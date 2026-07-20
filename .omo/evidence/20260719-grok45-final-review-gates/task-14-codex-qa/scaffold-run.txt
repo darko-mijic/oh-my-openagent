@@ -1,0 +1,5 @@
+unknown flag: --slug
+created: .omo/drafts/task14-role-marker-proof.md
+created: .omo/plans/task14-role-marker-proof.md
+next: record findings/decisions in the draft, then APPEND task batches into the "## Todos" region of the plan; fill "## TL;DR (For humans)" LAST.
+SCAFFOLD_EXIT=0

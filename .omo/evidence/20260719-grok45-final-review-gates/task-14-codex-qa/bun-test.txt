@@ -1,0 +1,94 @@
+bun test v1.3.14 (0d9b296a)
+
+script/sync-lazycodex-marketplace.test.ts:
+[sync-lazycodex-marketplace] previous-payload reconstruction: skipping missing LSP daemon dist at /tmp/omo-sync-prev-source-5diCW1/packages/lsp-daemon/dist
+[sync-lazycodex-marketplace] previous-payload reconstruction: skipping missing OMO root CLI dist at /tmp/omo-sync-prev-source-5diCW1/dist/cli
+[sync-lazycodex-marketplace] previous-payload reconstruction: skipping missing OMO node fallback CLI dist at /tmp/omo-sync-prev-source-5diCW1/dist/cli-node
+[materialize] wrote 148 frontend reference files from submodules
+[materialize] wrote 148 frontend reference files from submodules
+[materialize] wrote 148 frontend reference files from submodules
+
+packages/omo-opencode/src/shared/prompt-async-route-audit.test.ts:
+(fail) production prompt injection routes > #given production TypeScript sources #when prompt routes are audited #then only the shared gate may call raw OpenCode prompt APIs [5002.19ms]
+  ^ this test timed out after 5000ms.
+
+packages/omo-opencode/src/cli/cli-installer.telemetry.test.ts:
+
+ oMoMoMoMo... Install 
+
+[1/4] Checking OpenCode installation...
+[OK] OpenCode 1.4.0 detected
+[2/4] Adding oh-my-openagent plugin...
+[OK] Plugin added -> /tmp/opencode.jsonc
+[3/4] Writing oh-my-openagent configuration...
+[OK] Config written -> /tmp/oh-my-opencode.jsonc
+
+┌─ Installation Complete ───────────────────────────────────────────────────────────────────┐
+│ Configuration Summary                                                                      │
+│                                                                                            │
+│   [i] Platform: opencode                                                                   │
+│                                                                                            │
+│   ○ Claude                                                                                 │
+│   [OK] OpenAI/ChatGPT (GPT-5.4 for Oracle)                                                 │
+│   ○ Gemini                                                                                 │
+│   [OK] GitHub Copilot (fallback)                                                           │
+│   ○ OpenCode Zen (opencode/ models)                                                        │
+│   ○ Z.ai Coding Plan (GLM fallbacks)                                                       │
+│   ○ Kimi For Coding (Sisyphus/Prometheus fallback)                                         │
+│   ○ Bailian Coding Plan (Qwen/GLM/Kimi fallback)                                           │
+│   ○ MiniMax Coding Plan (minimaxi.com) (MiniMax-M3 fallback)                               │
+│   ○ MiniMax Coding Plan (minimax.io) (MiniMax-M3 fallback)                                 │
+│   ○ Vercel AI Gateway (universal proxy)                                                    │
+│                                                                                            │
+│ ────────────────────────────────────────                                                   │
+│                                                                                            │
+│ Model Assignment                                                                           │
+│                                                                                            │
+│   [i] Models auto-configured based on provider priority                                    │
+│   * Priority: Native > Copilot > OpenCode Zen > Z.ai > Kimi > Bailian > MiniMax > Vercel   │
+└────────────────────────────────────────────────────────────────────────────────────────────┘
+
+[i] Note: Sisyphus agent performs best with Claude Opus 4.5+. Other models work but may have reduced orchestration quality.
+* Installation complete!
+  Run opencode to start!
+
+[i] Anonymous telemetry is enabled by default. Disable it with OMO_SEND_ANONYMOUS_TELEMETRY=0 or OMO_DISABLE_POSTHOG=1.
+[i] Docs: docs/legal/privacy-policy.md and docs/legal/terms-of-service.md
+
+
+┌─ The Magic Word ─────────────────────────────────────────────────┐
+│ Pro Tip: Include ultrawork (or ulw) in your prompt.               │
+│ All features work like magic-parallel agents, background tasks,   │
+│ deep exploration, and relentless execution until completion.      │
+└───────────────────────────────────────────────────────────────────┘
+
+oMoMoMoMo... Enjoy!
+
+
+┌─ Authenticate Your Providers ──────────────────────┐
+│ Run opencode auth login and select your provider:   │
+│   * GitHub → Copilot                                │
+└─────────────────────────────────────────────────────┘
+
+
+packages/omo-senpi/src/extension/compose.test.ts:
+omo-senpi component disabled by flag {
+  component: "beta",
+}
+
+packages/omo-senpi/src/extension/index.test.ts:
+omo-senpi ulw-loop inactive; omo binary not found undefined
+[lsp] ignored shutdown request failure during cleanup: LSP server workspace-edit-fixture at /tmp/lsp-apply-edit-M546Qx exited with code 0
+
+  ⚙ read_file filePath=/src/index.ts  
+
+packages/omo-opencode/src/__tests__/perf/plugin-init.test.ts:
+empty-project: cold=301.1ms warm=[168.2, 179.7] median=179.7ms
+in-tree-fixture: cold=305.0ms warm=[132.4, 211.1] median=211.1ms
+
+ 12001 pass
+ 3 skip
+ 1 fail
+ 2 snapshots, 29714 expect() calls
+Ran 12005 tests across 1526 files. [457.34s]
+BUN_TEST_EXIT=1

@@ -1,0 +1,161 @@
+installing local omo build into /tmp/cqa-home.VFlFiT/codex (this builds the plugin)...
+{
+  "ok": true,
+  "turnStatus": "completed",
+  "assistantText": "Hello from the codex-qa mock model.",
+  "threadId": "019f7d8d-a6a9-71a1-85e3-2d09dec410f2",
+  "turnId": "019f7d8d-ad49-74e0-a1d9-b97f29b579f8",
+  "expectHook": [
+    "sessionStart",
+    "userPromptSubmit"
+  ],
+  "missingHooks": [],
+  "failedHooks": [],
+  "hooks": [
+    {
+      "method": "hook/started",
+      "eventName": "sessionStart",
+      "status": "running",
+      "source": "plugin",
+      "runId": "session-start:0:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/session-start-loading-project-rules.json"
+    },
+    {
+      "method": "hook/started",
+      "eventName": "sessionStart",
+      "status": "running",
+      "source": "plugin",
+      "runId": "session-start:1:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/session-start-recording-session-telemetry.json"
+    },
+    {
+      "method": "hook/started",
+      "eventName": "sessionStart",
+      "status": "running",
+      "source": "plugin",
+      "runId": "session-start:2:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/session-start-checking-auto-update.json"
+    },
+    {
+      "method": "hook/started",
+      "eventName": "sessionStart",
+      "status": "running",
+      "source": "plugin",
+      "runId": "session-start:3:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/session-start-checking-bootstrap-provisioning.json"
+    },
+    {
+      "method": "hook/started",
+      "eventName": "sessionStart",
+      "status": "running",
+      "source": "plugin",
+      "runId": "session-start:4:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/session-start-checking-codegraph-bootstrap.json"
+    },
+    {
+      "method": "hook/completed",
+      "eventName": "sessionStart",
+      "status": "completed",
+      "source": "plugin",
+      "runId": "session-start:0:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/session-start-loading-project-rules.json"
+    },
+    {
+      "method": "hook/completed",
+      "eventName": "sessionStart",
+      "status": "completed",
+      "source": "plugin",
+      "runId": "session-start:1:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/session-start-recording-session-telemetry.json"
+    },
+    {
+      "method": "hook/completed",
+      "eventName": "sessionStart",
+      "status": "completed",
+      "source": "plugin",
+      "runId": "session-start:2:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/session-start-checking-auto-update.json"
+    },
+    {
+      "method": "hook/completed",
+      "eventName": "sessionStart",
+      "status": "completed",
+      "source": "plugin",
+      "runId": "session-start:3:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/session-start-checking-bootstrap-provisioning.json"
+    },
+    {
+      "method": "hook/completed",
+      "eventName": "sessionStart",
+      "status": "completed",
+      "source": "plugin",
+      "runId": "session-start:4:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/session-start-checking-codegraph-bootstrap.json"
+    },
+    {
+      "method": "hook/started",
+      "eventName": "userPromptSubmit",
+      "status": "running",
+      "source": "plugin",
+      "runId": "user-prompt-submit:5:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/user-prompt-submit-loading-project-rules.json"
+    },
+    {
+      "method": "hook/started",
+      "eventName": "userPromptSubmit",
+      "status": "running",
+      "source": "plugin",
+      "runId": "user-prompt-submit:6:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/user-prompt-submit-checking-ultrawork-trigger.json"
+    },
+    {
+      "method": "hook/started",
+      "eventName": "userPromptSubmit",
+      "status": "running",
+      "source": "plugin",
+      "runId": "user-prompt-submit:7:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/user-prompt-submit-checking-ulw-loop-steering.json"
+    },
+    {
+      "method": "hook/completed",
+      "eventName": "userPromptSubmit",
+      "status": "completed",
+      "source": "plugin",
+      "runId": "user-prompt-submit:5:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/user-prompt-submit-loading-project-rules.json"
+    },
+    {
+      "method": "hook/completed",
+      "eventName": "userPromptSubmit",
+      "status": "completed",
+      "source": "plugin",
+      "runId": "user-prompt-submit:6:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/user-prompt-submit-checking-ultrawork-trigger.json"
+    },
+    {
+      "method": "hook/completed",
+      "eventName": "userPromptSubmit",
+      "status": "completed",
+      "source": "plugin",
+      "runId": "user-prompt-submit:7:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/user-prompt-submit-checking-ulw-loop-steering.json"
+    },
+    {
+      "method": "hook/started",
+      "eventName": "stop",
+      "status": "running",
+      "source": "plugin",
+      "runId": "stop:17:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/stop-checking-start-work-continuation.json"
+    },
+    {
+      "method": "hook/started",
+      "eventName": "stop",
+      "status": "running",
+      "source": "plugin",
+      "runId": "stop:18:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/stop-checking-ulw-loop-resume.json"
+    },
+    {
+      "method": "hook/completed",
+      "eventName": "stop",
+      "status": "completed",
+      "source": "plugin",
+      "runId": "stop:17:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/stop-checking-start-work-continuation.json"
+    },
+    {
+      "method": "hook/completed",
+      "eventName": "stop",
+      "status": "completed",
+      "source": "plugin",
+      "runId": "stop:18:/tmp/cqa-home.VFlFiT/codex/plugins/cache/sisyphuslabs/omo/4.19.0/hooks/stop-checking-ulw-loop-resume.json"
+    }
+  ],
+  "stderrTail": "WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir \"/tmp\" (codex_home: AbsolutePathBuf(\"/tmp/cqa-home.VFlFiT/codex\"))\n\u001b[2m2026-07-20T03:24:22.915841Z\u001b[0m \u001b[31mERROR\u001b[0m \u001b[2mcodex_app_server\u001b[0m\u001b[2m:\u001b[0m Project-local config, hooks, and exec policies are disabled in the following folders until the project is trusted, but skills still load.\n    1. /home/darko-mijic/dev-projects/oh-my-opencode-private/.codex\n       To load project-local config, hooks, and exec policies, add /home/darko-mijic/dev-projects/oh-my-opencode-private as a trusted project in /tmp/cqa-home.VFlFiT/codex/config.toml.\n\n"
+}
+PASS: real ~/.codex/config.toml unchanged (88e3df98a929d00a916dd5bbed73ba0d7a288e10)
+PASS: app-server turn completed; assistant text: Hello from the codex-qa mock model.
+PASS: hooks fired: sessionStart, stop, userPromptSubmit
+APP_SERVER_EXIT=0

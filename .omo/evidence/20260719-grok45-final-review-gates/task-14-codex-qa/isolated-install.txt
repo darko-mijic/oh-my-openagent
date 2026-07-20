@@ -1,0 +1,192 @@
+
+removed 1 package, and audited 96 packages in 1s
+
+19 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm warn allow-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn allow-scripts   @code-yeongyu/comment-checker@0.8.0 (install: (install scripts present))
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+
+> @sisyphuslabs/omo-codex-plugin@4.19.0 build
+> node scripts/sync-version.mjs && node scripts/sync-hook-status-messages.mjs && node scripts/build-bundled-mcp-runtimes.mjs && node scripts/materialize-shared-upstreams.mjs --strict && node scripts/sync-skills.mjs && node scripts/build-components.mjs
+
+Synced OMO Codex manifests to version 4.19.0 (0 updated)
+Using bundled lsp-tools-mcp dist
+Using bundled lsp-daemon dist
+Using bundled git-bash-mcp dist
+[materialize] wrote 148 frontend reference files from submodules
+Building components/lsp
+
+> @code-yeongyu/codex-lsp@4.19.0 prebuild
+> node scripts/build-lsp-tools.mjs && node scripts/build-lsp-daemon.mjs
+
+
+> @code-yeongyu/codex-lsp@4.19.0 build
+> node scripts/build-runtime.mjs
+
+Building components/comment-checker
+
+> @code-yeongyu/codex-comment-checker@4.19.0 build
+> node -e "require('node:fs').rmSync('dist',{recursive:true,force:true})" && bun build src/cli.ts --target node --format esm --outfile dist/cli.js
+
+Bundled 10 modules in 12ms
+
+  cli.js  19.23 KB  (entry point)
+
+Building components/teammode
+
+> @sisyphuslabs/codex-teammode@4.19.0 build
+> node -e "require('node:fs').rmSync('dist',{recursive:true,force:true})" && bun build src/cli.ts --target node --format esm --outfile dist/cli.js
+
+Bundled 2 modules in 30ms
+
+  cli.js  4.18 KB  (entry point)
+
+Bundling components/comment-checker/dist/cli.js
+Bundled 10 modules in 24ms
+
+  cli.js  19.40 KB  (entry point)
+
+Building components/rules
+
+> @code-yeongyu/codex-rules@4.19.0 build
+> node -e "require('node:fs').rmSync('dist',{recursive:true,force:true})" && bun build src/cli.ts --target node --format esm --outfile dist/cli.js
+
+Bundled 51 modules in 81ms
+
+  cli.js  154.35 KB  (entry point)
+
+Building components/codegraph
+
+> @sisyphuslabs/codex-codegraph@4.19.0 build
+> node -e "require('node:fs').rmSync('dist',{recursive:true,force:true})" && bun build src/serve.ts --target node --format esm --outfile dist/serve.js && bun build src/cli.ts --target node --format esm --outfile dist/cli.js
+
+Bundled 35 modules in 35ms
+
+  serve.js  89.0 KB  (entry point)
+
+Bundled 46 modules in 62ms
+
+  cli.js  139.16 KB  (entry point)
+
+Building components/telemetry
+
+> @code-yeongyu/codex-telemetry@4.19.0 build
+> node -e "require('node:fs').rmSync('dist',{recursive:true,force:true})" && bun build src/cli.ts --target node --format esm --outfile dist/cli.js && bun build src/posthog.ts --target node --format esm --outfile dist/posthog.js
+
+Bundled 78 modules in 150ms
+
+  cli.js  204.84 KB  (entry point)
+
+Bundled 76 modules in 85ms
+
+  posthog.js  202.42 KB  (entry point)
+
+Bundling components/teammode/dist/cli.js
+Bundled 2 modules in 12ms
+
+  cli.js  4.22 KB  (entry point)
+
+Bundling components/rules/dist/cli.js
+Bundled 51 modules in 28ms
+
+  cli.js  154.56 KB  (entry point)
+
+Bundling components/codegraph/dist/cli.js
+Bundled 46 modules in 26ms
+
+  cli.js  139.26 KB  (entry point)
+
+Bundling components/telemetry/dist/cli.js
+Bundled 78 modules in 63ms
+
+  cli.js  204.57 KB  (entry point)
+
+Building components/start-work-continuation
+
+> @code-yeongyu/codex-start-work-continuation@4.19.0 build
+> node -e "require('node:fs').rmSync('dist',{recursive:true,force:true})" && bun build src/cli.ts --target node --format esm --outfile dist/cli.js
+
+Bundled 5 modules in 36ms
+
+  cli.js  13.75 KB  (entry point)
+
+Bundling components/start-work-continuation/dist/cli.js
+Bundled 5 modules in 11ms
+
+  cli.js  13.99 KB  (entry point)
+
+Building components/ultrawork
+
+> @code-yeongyu/codex-ultrawork@4.19.0 build
+> node scripts/sync-directive.mjs && node -e "require('node:fs').rmSync('dist',{recursive:true,force:true})" && bun build src/cli.ts --target node --format esm --outfile dist/cli.js
+
+Bundled 4 modules in 19ms
+
+  cli.js  7.28 KB  (entry point)
+
+Bundling components/ultrawork/dist/cli.js
+Bundled 4 modules in 3ms
+
+  cli.js  7.42 KB  (entry point)
+
+Building components/bootstrap
+
+> @sisyphuslabs/codex-bootstrap@4.19.0 build
+> node scripts/build.mjs
+
+
+  dist/cli.js  140.0kb
+
+⚡ Done in 62ms
+Bundling components/bootstrap/dist/cli.js
+Bundled 47 modules in 26ms
+
+  cli.js  144.20 KB  (entry point)
+
+Building components/lazycodex-executor-verify
+
+> @code-yeongyu/codex-lazycodex-executor-verify@4.19.0 build
+> tsc -p tsconfig.build.json
+
+Bundling components/lazycodex-executor-verify/dist/cli.js
+Bundled 5 modules in 10ms
+
+  cli.js  8.33 KB  (entry point)
+
+Building components/git-bash
+
+> @sisyphuslabs/codex-git-bash-hook@4.19.0 build
+> tsc -p tsconfig.build.json
+
+Bundling components/git-bash/dist/cli.js
+Bundled 2 modules in 16ms
+
+  cli.js  5.75 KB  (entry point)
+
+Building components/ulw-loop
+
+> @code-yeongyu/codex-ulw-loop@4.19.0 build
+> tsc -p tsconfig.build.json
+
+Bundling components/ulw-loop/dist/cli.js
+Bundled 34 modules in 53ms
+
+  cli.js  133.27 KB  (entry point)
+
+
+added 18 packages, and audited 38 packages in 15s
+
+1 package is looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm warn allow-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn allow-scripts   @code-yeongyu/comment-checker@0.8.0 (postinstall: node postinstall.js)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+Installed 1 plugin(s) from sisyphuslabs.
+INSTALL_EXIT=0

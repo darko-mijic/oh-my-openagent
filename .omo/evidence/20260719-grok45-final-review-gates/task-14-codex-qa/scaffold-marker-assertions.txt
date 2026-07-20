@@ -1,0 +1,15 @@
+=== marker assertions on /tmp/cqa-task14-norQYf/workspace/.omo/plans/task14-role-marker-proof.md ===
+PASS: found <!-- role:plan-auditor -->
+PASS: found <!-- role:code-reviewer -->
+PASS: found <!-- role:qa-executor -->
+PASS: found <!-- role:scope-auditor -->
+PASS: found row F1.
+PASS: found row F2.
+PASS: found row F3.
+PASS: found row F4.
+--- final verification excerpt ---
+51:## Final verification wave
+53:- [ ] F1. Plan compliance audit <!-- role:plan-auditor -->
+54:- [ ] F2. Code quality review <!-- role:code-reviewer -->
+55:- [ ] F3. Real manual QA <!-- role:qa-executor -->
+56:- [ ] F4. Scope fidelity <!-- role:scope-auditor -->

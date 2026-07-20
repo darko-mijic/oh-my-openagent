@@ -1,0 +1,6 @@
+INSTALLED_SCAFFOLD=/tmp/cqa-task14-norQYf/codex/.tmp/marketplaces/sisyphuslabs/plugins/omo/components/ultrawork/skills/ulw-plan/scripts/scaffold-plan.mjs
+SRC_PLUGIN=/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-codex/plugin/skills/ulw-plan/scripts/scaffold-plan.mjs
+SRC_SHARED=/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/shared-skills/skills/ulw-plan/scripts/scaffold-plan.mjs
+PASS: plugin skills scaffold byte-identical to shared-skills source
+PASS: installed scaffold byte-identical to plugin skills copy
+SCAFFOLD_TO_RUN=/tmp/cqa-task14-norQYf/codex/.tmp/marketplaces/sisyphuslabs/plugins/omo/components/ultrawork/skills/ulw-plan/scripts/scaffold-plan.mjs

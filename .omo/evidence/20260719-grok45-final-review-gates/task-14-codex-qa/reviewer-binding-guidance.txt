@@ -1,0 +1,16 @@
+WF=/tmp/cqa-task14-norQYf/codex/.tmp/marketplaces/sisyphuslabs/plugins/omo/components/ultrawork/skills/ulw-plan/references/full-workflow.md
+PASS: full-workflow contains: lazycodex-gate-reviewer
+PASS: full-workflow contains: lazycodex-code-reviewer
+PASS: full-workflow contains: lazycodex-qa-executor
+PASS: full-workflow contains: role:plan-auditor
+PASS: full-workflow contains: role:code-reviewer
+PASS: full-workflow contains: role:qa-executor
+PASS: full-workflow contains: role:scope-auditor
+PASS: full-workflow contains: prompt-level equivalents
+--- binding table excerpt ---
+166:The scaffold emits a parser-readable reviewer marker on every final-verifier row: `<!-- role:plan-auditor -->`, `<!-- role:code-reviewer -->`, `<!-- role:qa-executor -->`, or `<!-- role:scope-auditor -->`. Codex treats these as prompt-level equivalents, not runtime role enforcement:
+168:| Final row | Role marker | Codex prompt-level equivalent |
+170:| F1. Plan compliance audit | `plan-auditor` | `lazycodex-gate-reviewer` |
+171:| F2. Code quality review | `code-reviewer` | `lazycodex-code-reviewer` |
+172:| F3. Real manual QA | `qa-executor` | `lazycodex-qa-executor` |
+173:| F4. Scope fidelity | `scope-auditor` | `lazycodex-gate-reviewer` |

@@ -1,0 +1,32 @@
+✔ #given the scaffold script and the workflow reference #when compared #then every plan header the script emits is documented in full-workflow.md (no drift) (19.115245ms)
+✔ #given buildPlanSkeleton #when intent is unclear #then the human TL;DR leads the plan and surfaces the decisions veto block (1.26626ms)
+✔ #given buildPlanSkeleton #when intent is clear #then it surfaces a decisions-to-sanity-check block instead (0.234461ms)
+✔ #given buildPlanSkeleton #when it emits the final verification wave #then every row carries its fixed parser role marker (1.366011ms)
+✔ #given the shared and Codex scaffold sources #when their bytes are compared #then the dual-maintained copies remain identical (3.739114ms)
+✔ #given resolveSafeOmoPath #when the target escapes .omo or the workspace #then it is refused (the script never escapes .omo) (1.150468ms)
+✔ #given scaffold #when .omo/plans is a symlink outside the workspace #then it refuses before the plan write escapes (12.552689ms)
+✔ #given scaffold #when .omo/drafts is a symlink outside the workspace #then it refuses before the draft write escapes (2.236686ms)
+✔ #given parseArgs #when the slug is missing or unsafe #then it throws, and valid flags parse (2.118851ms)
+✔ #given an explicit review modifier at startup #when draft-only scaffold runs #then the first durable write contains the complete pending review request (5.837758ms)
+✔ #given automatic review for non-Trivial UNCLEAR intent #when draft-only scaffold runs #then the first durable write contains the complete pending review request (4.858166ms)
+✔ #given Trivial UNCLEAR pre-approval planning #when draft-only scaffold runs #then it creates a review-optional draft without creating a plan (9.829458ms)
+✔ #given an already-scaffolded plan #when the script is re-run plain #then it is a no-op that preserves appended todos (resume-safe, no crash, no clobber) (12.28652ms)
+✔ #given a hand-edited plan #when --reset is used #then it refuses without --force and overwrites with --force (7.669232ms)
+✔ #given shared OpenCode #when deeper review becomes required before plan completion #then durable request state covers explicit and automatic review without inventing a digest (17.083853ms)
+✔ #given a complete shared OpenCode plan #when a fresh review round starts #then both lanes persist literal workspace and artifact bindings (5.471546ms)
+✔ #given a shared OpenCode review round #when launch, interruption, completion, or compaction occurs #then the durable transition table fails closed (7.940234ms)
+✔ #given shared OpenCode round R2 replaced R1 #when a delayed R1 launch or receipt arrives #then identity-bound CAS leaves R2 unchanged (2.863149ms)
+✔ #given shared OpenCode independent reviewers #when exact-path retrieval drifts #then intake fails closed without alternate artifact recovery (1.958516ms)
+✔ #given Codex #when deeper review becomes required before plan completion #then durable request state covers explicit and automatic review without inventing a digest (1.897933ms)
+✔ #given a complete Codex plan #when a fresh review round starts #then both lanes persist literal workspace and artifact bindings (1.206427ms)
+✔ #given a Codex review round #when launch, interruption, completion, or compaction occurs #then the durable transition table fails closed (1.422803ms)
+✔ #given Codex round R2 replaced R1 #when a delayed R1 launch or receipt arrives #then identity-bound CAS leaves R2 unchanged (1.780057ms)
+✔ #given Codex independent reviewers #when exact-path retrieval drifts #then intake fails closed without alternate artifact recovery (4.327412ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 201.742993

@@ -1,0 +1,7 @@
+bun test v1.3.14 (0d9b296a)
+
+ 10 pass
+ 0 fail
+ 10 expect() calls
+Ran 10 tests across 1 file. [5.86s]
+ALONE_30S_EXIT=0

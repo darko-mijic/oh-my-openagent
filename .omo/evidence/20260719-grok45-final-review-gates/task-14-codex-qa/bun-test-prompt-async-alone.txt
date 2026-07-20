@@ -1,0 +1,11 @@
+bun test v1.3.14 (0d9b296a)
+
+packages/omo-opencode/src/shared/prompt-async-route-audit.test.ts:
+(fail) production prompt injection routes > #given production TypeScript sources #when prompt routes are audited #then only the shared gate may call raw OpenCode prompt APIs [5006.08ms]
+  ^ this test timed out after 5000ms.
+
+ 9 pass
+ 1 fail
+ 10 expect() calls
+Ran 10 tests across 1 file. [7.55s]
+ALONE_EXIT=1

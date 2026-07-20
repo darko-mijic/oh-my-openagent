@@ -1,0 +1,4 @@
+installing local omo into /tmp/cqa-home.JNR7F8/codex ...
+PASS: real ~/.codex/config.toml unchanged (88e3df98a929d00a916dd5bbed73ba0d7a288e10)
+PASS: ultrawork UserPromptSubmit injected <ultrawork-mode> on an ulw prompt
+HOOK_PROBE_EXIT=0

@@ -1,0 +1,28 @@
+installing local omo into /tmp/cqa-home.us41bp/codex ...
+install failed; tail:
+Synced OMO Codex manifests to version 4.19.0 (0 updated)
+Using bundled lsp-tools-mcp dist
+Using bundled lsp-daemon dist
+Using bundled git-bash-mcp dist
+[materialize] wrote 148 frontend reference files from submodules
+node:internal/fs/promises:622
+  return await PromisePrototypeThen(
+         ^
+
+Error: ENOENT: no such file or directory, copyfile '/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-codex/plugin/components/lcx/skills/lcx-doctor/SKILL.md' -> '/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-codex/plugin/skills/lcx-doctor/SKILL.md'
+    at async copyFile (node:internal/fs/promises:622:10)
+    at async _copyFile (node:internal/fs/cp/cp:261:3)
+    at async copyDir (node:internal/fs/cp/cp:330:19)
+    at async mkDirAndCopy (node:internal/fs/cp/cp:319:3)
+    at async syncSkills (file:///home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-codex/plugin/scripts/sync-skills.mjs:247:3)
+    at async file:///home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-codex/plugin/scripts/sync-skills.mjs:268:2 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'copyfile',
+  path: '/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-codex/plugin/components/lcx/skills/lcx-doctor/SKILL.md',
+  dest: '/home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-codex/plugin/skills/lcx-doctor/SKILL.md'
+}
+
+Node.js v24.18.0
+npm run build failed in /home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-codex/plugin with exit code 1
+INSTALL_VERIFY_EXIT=1
