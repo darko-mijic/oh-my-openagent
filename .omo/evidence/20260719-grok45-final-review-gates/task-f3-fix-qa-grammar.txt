@@ -1,0 +1,76 @@
+Task F3 fix: qa-executor workflow grammar and canonical evidence root
+Date: 2026-07-20
+Branch: feat/grok-4.5-basic-support
+
+WHAT WAS TESTED
+
+1. Red-first dispatcher coverage through createToolExecuteBeforeHandler:
+   - Allowed: explicit environment prefixes, independently validated && segments,
+     git inspection and worktree lifecycle commands, scoped mkdir, Bun gates,
+     realpath-trusted Node and shell scripts, read-only utilities, safe curl,
+     read-only sqlite3, tmux smoke commands, and allowed opencode subcommands.
+   - Denied: tee/cp/mv/rsync/awk, sed -i, git apply/push/reset/clean/checkout,
+     node/bun eval forms, bunx, bash/sh -c, shell metacharacters and substitution,
+     unsafe find/sg/curl/sqlite forms, untrusted environment keys, output paths
+     outside allowed roots, and symlink escapes.
+   - Canonical project .omo/evidence was tested with ctx.directory separate from
+     the disposable session worktree.
+
+2. Automated gates:
+   bun test packages/omo-opencode/src/hooks/reviewer-scope-guard/ packages/omo-opencode/src/plugin/
+   bun run typecheck
+   TMPDIR=/tmp bun test
+   bun run packages/shared-skills/skills/programming/scripts/typescript/check-no-excuse-rules.ts <six changed TypeScript files>
+   git diff --check
+
+3. Real OpenCode 1.18.3 source-plugin QA:
+   - Loaded file:///home/darko-mijic/dev-projects/oh-my-opencode-private/packages/omo-opencode/src/index.ts.
+   - Used isolated HOME and XDG_DATA_HOME/XDG_CONFIG_HOME/XDG_STATE_HOME/XDG_CACHE_HOME.
+   - Used a local fake OpenAI Responses server; no provider network call.
+   - A primary session invoked task(subagent_type="qa-executor").
+   - The child qa-executor invoked:
+     TMPDIR=/tmp OMO_DISABLE_POSTHOG=1 git status && mkdir -p <session-worktree>/qa-output && ls <session-worktree>
+   - Captured message.part.updated SSE events for the child Bash tool.
+
+WHAT WAS OBSERVED
+
+- Initial red phase: canonical project evidence writes and all new QA command
+  families were rejected by the old policy, as expected.
+- Focused hook/plugin gate: 416 pass, 0 fail, 1020 assertions across 51 files.
+- Typecheck: exit 0 across root, script, and package tsconfigs.
+- Root Bun gate: 12083 pass, 3 skip, 0 fail across 1527 files.
+- TypeScript no-excuse audit: no violations in 6 changed files.
+- Production-file LSP diagnostics: no diagnostics.
+- Real OpenCode parent task result identified Agent: qa-executor and returned
+  F3_QA_CHILD_DONE; parent completed with F3_QA_PARENT_DONE.
+- SSE child session identity: agent="qa-executor", mode="qa-executor".
+- SSE Bash state: status="completed", exit=0. Output showed a clean Git worktree,
+  then README.md and qa-output after the allowed mkdir segment.
+- Host OpenCode DB session count: 115 before, 115 after. The sandbox did not
+  mutate ~/.local/share/opencode/opencode.db.
+
+WHY IT IS ENOUGH
+
+- The dispatcher tests exercise the same tool.execute.before composition used by
+  OpenCode and cover both positive workflow classes and R2/R3 bypass polarities.
+- Realpath tests prove script and output symlinks cannot escape trusted roots.
+- The real harness run proves the source plugin registered a genuine qa-executor
+  child and allowed an env-prefixed, &&-chained Git/mkdir/utility workflow through
+  the live Bash tool while emitting the expected SSE lifecycle.
+- Full typecheck and root tests cover non-local regression risk. No build was run,
+  per the task constraint.
+
+WHAT WAS OMITTED
+
+- The first live attempt passed --agent qa-executor directly; OpenCode rejected
+  that because qa-executor is subagent-only and fell back to Sisyphus. That run
+  was not counted. The recorded run used task(subagent_type="qa-executor").
+- Native write was unavailable in that isolated OpenCode tool set, so canonical
+  evidence writes are proven through the real dispatcher integration test rather
+  than claimed from the fallback live session.
+- Raw request bodies, auth headers, environment dumps, and synthetic credentials
+  were not copied into evidence.
+- sqlite3 and tmux binaries were unavailable on the host; their policy surfaces
+  are covered by dispatcher tests, while live QA used OpenCode run plus SSE.
+
+VERDICT: PASS

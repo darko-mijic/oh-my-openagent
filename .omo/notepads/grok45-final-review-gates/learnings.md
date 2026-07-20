@@ -103,3 +103,9 @@ Session artifacts live here.
 ## 2026-07-20 F2 whitespace fix (evidence)
 
 - Cleared `git diff --check dev...HEAD` failures that caused F2 code-quality REJECT: trimmed trailing whitespace and removed blank lines at EOF in 12 committed evidence files under `.omo/evidence/20260718-grok45-baseline/`, `20260718-prometheus-grok-gaps/`, `20260718-prometheus-grok-reasoning-effort/`, and `20260719-grok45-final-review-gates/task-{13,15}-*/` (JSONL kept single trailing newline after last record). Content bytes otherwise unchanged.
+
+## 2026-07-20 F3 qa-executor grammar fix
+
+- Split the qa-executor policy from the unchanged Momus/Oracle grammar: exact `&&` tokenization validates every segment, explicit environment assignments and QA command families are allowlisted, and eval/redirection/substitution or unscoped writes remain denied.
+- Path targets now canonicalize through their nearest existing ancestor before containment checks, closing symlink escapes while allowing the canonical `ctx.directory/.omo/evidence/**` root even when the qa-executor session runs in a disposable temp worktree.
+- Real OpenCode source-plugin QA must spawn `qa-executor` through `task(subagent_type="qa-executor")`; `opencode run --agent qa-executor` falls back because the reviewer is intentionally subagent-only.

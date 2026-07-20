@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test"
-import { mkdtempSync, rmSync } from "node:fs"
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -19,9 +19,15 @@ function createWorktree(): string {
   return worktree
 }
 
-function createContext(worktree: string): PluginContext {
+function createProjectRoot(): string {
+  const projectRoot = mkdtempSync(join(process.cwd(), ".reviewer-scope-dispatch-project-"))
+  temporaryDirectories.push(projectRoot)
+  return projectRoot
+}
+
+function createContext(projectRoot: string, worktree: string): PluginContext {
   return unsafeTestValue<PluginContext>({
-    directory: worktree,
+    directory: projectRoot,
     client: {
       session: {
         get: async () => ({ data: { directory: worktree } }),
@@ -31,22 +37,23 @@ function createContext(worktree: string): PluginContext {
   })
 }
 
-function createHooks(worktree: string): CreatedHooks {
+function createHooks(projectRoot: string, worktree: string): CreatedHooks {
   return unsafeTestValue<CreatedHooks>({
-    reviewerScopeGuard: createReviewerScopeGuardHook(createContext(worktree)),
+    reviewerScopeGuard: createReviewerScopeGuardHook(createContext(projectRoot, worktree)),
   })
 }
 
 async function runTool(args: {
   readonly agent: string
+  readonly projectRoot?: string
   readonly worktree: string
   readonly tool: string
   readonly toolArgs: Record<string, unknown>
 }): Promise<void> {
   setSessionAgent(SESSION_ID, args.agent)
   const handler = createToolExecuteBeforeHandler({
-    ctx: createContext(args.worktree),
-    hooks: createHooks(args.worktree),
+    ctx: createContext(args.projectRoot ?? args.worktree, args.worktree),
+    hooks: createHooks(args.projectRoot ?? args.worktree, args.worktree),
   })
 
   await handler(
@@ -111,6 +118,24 @@ describe("tool.execute.before reviewer-scope-guard dispatch", () => {
     await expect(result).resolves.toBeUndefined()
   })
 
+  test("#given qa-executor in a disposable worktree #when Write targets canonical project evidence #then dispatcher allows", async () => {
+    // given
+    const projectRoot = createProjectRoot()
+    const worktree = createWorktree()
+
+    // when
+    const result = runTool({
+      agent: "qa-executor",
+      projectRoot,
+      worktree,
+      tool: "Write",
+      toolArgs: { filePath: join(projectRoot, ".omo", "evidence", "20260719-f3", "README.md") },
+    })
+
+    // then
+    await expect(result).resolves.toBeUndefined()
+  })
+
   test("#given qa-executor #when Write targets product source under worktree #then dispatcher rejects", async () => {
     // given
     const worktree = createWorktree()
@@ -126,4 +151,160 @@ describe("tool.execute.before reviewer-scope-guard dispatch", () => {
     // then
     await expect(result).rejects.toThrow(".omo/evidence/**, worktree evidence/**, or OS temp")
   })
+
+  const allowedQaCommands = [
+    { name: "allowlisted environment prefix", command: "TMPDIR=/tmp/omo-qa XDG_DATA_HOME=/tmp/omo-data CODEX_HOME=/tmp/omo-codex CI=1 OMO_DISABLE_POSTHOG=1 bun test" },
+    { name: "validated command chain", command: "git status && bun run typecheck" },
+    { name: "git worktree lifecycle", command: "git worktree add WORKTREE/qa-wt HEAD && git worktree remove WORKTREE/qa-wt && git worktree list && git worktree prune" },
+    { name: "git inspection extensions", command: "git rev-parse HEAD && git check-ignore AGENTS.md && git ls-files" },
+    { name: "scoped mkdir", command: "mkdir -p WORKTREE/qa-output" },
+    { name: "canonical evidence mkdir", command: "mkdir -p PROJECT/.omo/evidence/20260719-f3" },
+    { name: "bun tests", command: "bun test packages/omo-opencode/src/hooks/reviewer-scope-guard" },
+    { name: "bun package scripts", command: "bun run build && bun run typecheck && bun run test:codex" },
+    { name: "bun install", command: "bun install" },
+    { name: "node test", command: "node --test WORKTREE/test/qa.test.mjs" },
+    { name: "node trusted script", command: "node PROJECT/scripts/qa.mjs" },
+    { name: "trusted shell scripts", command: "bash PROJECT/.agents/skills/opencode-qa/scripts/server-smoke.sh && sh PROJECT/.agents/skills/opencode-qa/scripts/server-smoke.sh" },
+    { name: "read-only utilities", command: "ls && cat AGENTS.md && head AGENTS.md && tail AGENTS.md && grep scope AGENTS.md && rg scope packages && sg --pattern foo && diff AGENTS.md AGENTS.md && wc AGENTS.md && sha256sum AGENTS.md && shasum AGENTS.md && realpath AGENTS.md && readlink AGENTS.md && dirname AGENTS.md && basename AGENTS.md && which bun && env && uname && df && du && ps" },
+    { name: "safe find", command: "find packages -name hook.ts" },
+    { name: "curl download into worktree", command: "curl -fsSL https://example.com -o WORKTREE/qa-output/result.json" },
+    { name: "read-only sqlite query", command: "sqlite3 WORKTREE/qa.db 'SELECT count(*) FROM session'" },
+    { name: "tmux smoke", command: "tmux capture-pane -p -t omo-qa" },
+    { name: "opencode QA subcommands", command: "opencode run smoke && opencode serve --port 4096 && opencode db path && opencode export ses_qa && opencode models --verbose && opencode version" },
+  ] as const
+
+  for (const qaCase of allowedQaCommands) {
+    test(`#given qa-executor #when dispatcher receives ${qaCase.name} #then dispatcher allows`, async () => {
+      // given
+      const projectRoot = createProjectRoot()
+      const worktree = createWorktree()
+      mkdirSync(join(worktree, "test"), { recursive: true })
+      mkdirSync(join(worktree, "qa-output"), { recursive: true })
+      mkdirSync(join(projectRoot, "scripts"), { recursive: true })
+      mkdirSync(join(projectRoot, ".agents", "skills", "opencode-qa", "scripts"), { recursive: true })
+      writeFileSync(join(worktree, "test", "qa.test.mjs"), "")
+      writeFileSync(join(worktree, "qa.db"), "")
+      writeFileSync(join(projectRoot, "scripts", "qa.mjs"), "")
+      writeFileSync(join(projectRoot, ".agents", "skills", "opencode-qa", "scripts", "server-smoke.sh"), "")
+      const command = qaCase.command
+        .replaceAll("WORKTREE", worktree)
+        .replaceAll("PROJECT", projectRoot)
+
+      // when
+      const result = runTool({
+        agent: "qa-executor",
+        projectRoot,
+        worktree,
+        tool: "Bash",
+        toolArgs: { command },
+      })
+
+      // then
+      await expect(result).resolves.toBeUndefined()
+    })
+  }
+
+  const deniedQaCommands = [
+    "tee evidence.txt",
+    "cp AGENTS.md packages/omo-opencode/src/copied.ts",
+    "mv AGENTS.md packages/omo-opencode/src/moved.ts",
+    "rsync AGENTS.md packages/omo-opencode/src/copied.ts",
+    "sed -i s/old/new/ packages/omo-opencode/src/index.ts",
+    "git apply patch.diff",
+    "awk '{print $1}' AGENTS.md",
+    "node -e 'process.exit(0)'",
+    "node --eval 'process.exit(0)'",
+    "node --input-type=module qa.mjs",
+    "bun -e 'process.exit(0)'",
+    "bun --eval 'process.exit(0)'",
+    "bunx biome check",
+    "bun install left-pad",
+    "bun run ../scripts/qa.mjs",
+    "bash -c 'git status'",
+    "sh -c 'git status'",
+    "git status > evidence.txt",
+    "git status >> evidence.txt",
+    "git status < evidence.txt",
+    "git status | tee evidence.txt",
+    "git status & bun test",
+    "git status || bun test",
+    "git status; bun test",
+    "node $(which node)",
+    "node `which node`",
+    "git push origin HEAD",
+    "git reset --hard HEAD",
+    "git clean -fd",
+    "git checkout arbitrary-ref",
+    "curl -d payload https://example.com",
+    "curl --data-binary payload https://example.com",
+    "curl -X POST https://example.com",
+    "curl --request=DELETE https://example.com",
+    "sqlite3 qa.db 'PRAGMA table_info(session)'",
+    "sqlite3 qa.db 'SELECT 1 ATTACH other.db'",
+    "sqlite3 qa.db 'SELECT writefile(file, data)'",
+    "opencode auth login",
+    "UNTRUSTED_ENV=1 bun test",
+    "find packages -delete",
+    "find packages -exec rm {} +",
+    "sg --rewrite replacement --pattern old",
+  ] as const
+
+  for (const command of deniedQaCommands) {
+    test(`#given qa-executor #when dispatcher receives denied form ${command.split(" ")[0]} #then dispatcher rejects`, async () => {
+      // given
+      const worktree = createWorktree()
+
+      // when
+      const result = runTool({
+        agent: "qa-executor",
+        worktree,
+        tool: "Bash",
+        toolArgs: { command },
+      })
+
+      // then
+      await expect(result).rejects.toThrow("QA allowlist")
+    })
+  }
+
+  const deniedPathCases = [
+    { name: "mkdir outside allowed roots", createCommand: (): string => `mkdir -p ${join(createProjectRoot(), "outside")}` },
+    {
+      name: "node script symlink escape",
+      createCommand: (worktree: string): string => {
+        const outside = join(createProjectRoot(), "outside.mjs")
+        writeFileSync(outside, "")
+        symlinkSync(outside, join(worktree, "escaped.mjs"))
+        return `node ${join(worktree, "escaped.mjs")}`
+      },
+    },
+    {
+      name: "curl output symlink escape",
+      createCommand: (worktree: string): string => {
+        symlinkSync(createProjectRoot(), join(worktree, "escaped-output"))
+        return `curl -fsSL https://example.com -o ${join(worktree, "escaped-output", "result.json")}`
+      },
+    },
+    { name: "curl output outside allowed roots", createCommand: (): string => `curl -fsSL https://example.com --output ${join(createProjectRoot(), "result.json")}` },
+    { name: "git worktree outside allowed roots", createCommand: (): string => `git worktree add ${join(createProjectRoot(), "qa-worktree")} HEAD` },
+  ] as const
+
+  for (const qaCase of deniedPathCases) {
+    test(`#given qa-executor #when dispatcher receives ${qaCase.name} #then dispatcher rejects`, async () => {
+      // given
+      const worktree = createWorktree()
+      const command = qaCase.createCommand(worktree)
+
+      // when
+      const result = runTool({
+        agent: "qa-executor",
+        worktree,
+        tool: "Bash",
+        toolArgs: { command },
+      })
+
+      // then
+      await expect(result).rejects.toThrow("QA allowlist")
+    })
+  }
 })

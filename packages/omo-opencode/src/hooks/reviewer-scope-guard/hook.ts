@@ -1,10 +1,9 @@
-import { tmpdir } from "node:os"
-import { isAbsolute, relative, resolve } from "node:path"
-
 import type { PluginInput } from "@opencode-ai/plugin"
 
 import { getAgentFromSession } from "../prometheus-md-only/agent-resolution"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
+import { isQaExecutorCommand } from "./qa-command-policy"
+import { createQaPathPolicy } from "./qa-path-policy"
 
 const FILE_WRITE_TOOLS = new Set(["write", "edit", "hashline_edit", "apply_patch"])
 const BASH_TOOLS = new Set(["bash", "interactive_bash"])
@@ -55,11 +54,6 @@ function tokenizeCommand(command: string): readonly string[] | undefined {
   return tokens
 }
 
-function isPathWithin(path: string, root: string): boolean {
-  const relativePath = relative(root, path)
-  return relativePath === "" || (!relativePath.startsWith("..") && !isAbsolute(relativePath))
-}
-
 function readToolPath(args: Record<string, unknown>): string | undefined {
   const path = args.filePath ?? args.path ?? args.file ?? args.file_path
   return typeof path === "string" && path.length > 0 ? path : undefined
@@ -92,37 +86,8 @@ function isReadOnlyReviewerCommand(tokens: readonly string[]): boolean {
   return command !== undefined && READ_ONLY_COMMANDS.has(command)
 }
 
-function isQaTestPath(path: string, worktree: string): boolean {
-  return !path.startsWith("-") && isPathWithin(resolve(worktree, path), worktree)
-}
-
-function isQaExecutorCommand(tokens: readonly string[], worktree: string): boolean {
-  const command = tokens[0]
-  if (command === "git") {
-    return tokens.length >= 2 && READ_ONLY_GIT_SUBCOMMANDS.has(tokens[1] ?? "")
-  }
-  if (command === "bun") {
-    return tokens[1] === "test" && tokens.slice(2).every((path) => isQaTestPath(path, worktree))
-  }
-  if (command === "node") {
-    return tokens.length >= 3 && tokens[1] === "--test" && tokens.slice(2).every((path) => isQaTestPath(path, worktree))
-  }
-  return false
-}
-
-function isQaWritablePath(filePath: string, worktree: string): boolean {
-  const resolvedPath = resolve(worktree, filePath)
-  const resolvedWorktree = resolve(worktree)
-  const omoEvidenceRoot = resolve(resolvedWorktree, ".omo", "evidence")
-  const worktreeEvidenceRoot = resolve(resolvedWorktree, "evidence")
-  const tempRoot = resolve(tmpdir())
-  // Worktrees often live under OS temp (tests, disposable checkouts). Temp
-  // allowance must not reopen the whole worktree for product writes.
-  const isOutsideWorktreeTemp = isPathWithin(resolvedPath, tempRoot)
-    && !isPathWithin(resolvedPath, resolvedWorktree)
-  return isPathWithin(resolvedPath, omoEvidenceRoot)
-    || isPathWithin(resolvedPath, worktreeEvidenceRoot)
-    || isOutsideWorktreeTemp
+function isQaWritablePath(filePath: string, projectRoot: string, worktree: string): boolean {
+  return createQaPathPolicy(projectRoot, worktree).isWritablePath(filePath)
 }
 
 async function getSessionWorktree(ctx: PluginInput, sessionID: string): Promise<string> {
@@ -150,7 +115,7 @@ export function createReviewerScopeGuardHook(ctx: PluginInput) {
 
         const filePath = readToolPath(output.args)
         const worktree = await getSessionWorktree(ctx, input.sessionID)
-        if (filePath === undefined || !isQaWritablePath(filePath, worktree)) {
+        if (filePath === undefined || !isQaWritablePath(filePath, ctx.directory, worktree)) {
           throw new Error("[reviewer-scope-guard] qa-executor writes are limited to .omo/evidence/**, worktree evidence/**, or OS temp.")
         }
         return
@@ -161,17 +126,17 @@ export function createReviewerScopeGuardHook(ctx: PluginInput) {
       }
 
       const command = readBashCommand(output.args)
-      if (command.length === 0 || command.includes("$") || SHELL_METACHARACTERS.test(command)) {
+      if (command.length === 0 || (role === "read-only" && (command.includes("$") || SHELL_METACHARACTERS.test(command)))) {
         throw new Error(role === "read-only"
           ? "[reviewer-scope-guard] read-only grammar denied this Bash command."
           : "[reviewer-scope-guard] qa-executor Bash is limited to the QA allowlist.")
       }
 
-      const tokens = tokenizeCommand(command.trim())
       const worktree = await getSessionWorktree(ctx, input.sessionID)
-      const allowed = tokens !== undefined && (role === "read-only"
-        ? isReadOnlyReviewerCommand(tokens)
-        : isQaExecutorCommand(tokens, worktree))
+      const tokens = role === "read-only" ? tokenizeCommand(command.trim()) : undefined
+      const allowed = role === "read-only"
+        ? tokens !== undefined && isReadOnlyReviewerCommand(tokens)
+        : isQaExecutorCommand(command, ctx.directory, worktree)
       if (!allowed) {
         throw new Error(role === "read-only"
           ? "[reviewer-scope-guard] read-only grammar denied this Bash command."

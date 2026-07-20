@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test"
-import { mkdtempSync, rmSync } from "node:fs"
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 
@@ -9,9 +9,9 @@ import { createReviewerScopeGuardHook } from "./hook"
 const SESSION_ID = "reviewer-scope-guard-session"
 const temporaryDirectories: string[] = []
 
-function createHook(worktree: string) {
+function createHook(projectRoot: string, worktree: string) {
   return createReviewerScopeGuardHook({
-    directory: worktree,
+    directory: projectRoot,
     client: {
       session: {
         get: async () => ({ data: { directory: worktree } }),
@@ -22,12 +22,13 @@ function createHook(worktree: string) {
 
 async function invoke(args: {
   readonly agent: string
+  readonly projectRoot?: string
   readonly worktree: string
   readonly tool: string
   readonly toolArgs: Record<string, unknown>
 }): Promise<void> {
   setSessionAgent(SESSION_ID, args.agent)
-  const hook = createHook(args.worktree)
+  const hook = createHook(args.projectRoot ?? args.worktree, args.worktree)
   await hook["tool.execute.before"]?.(
     { tool: args.tool, sessionID: SESSION_ID, callID: "call-1" },
     { args: args.toolArgs },
@@ -38,6 +39,12 @@ function createWorktree(): string {
   const worktree = mkdtempSync(join(tmpdir(), "reviewer-scope-guard-"))
   temporaryDirectories.push(worktree)
   return worktree
+}
+
+function createProjectRoot(): string {
+  const projectRoot = mkdtempSync(join(process.cwd(), ".reviewer-scope-project-"))
+  temporaryDirectories.push(projectRoot)
+  return projectRoot
 }
 
 afterEach(() => {
@@ -112,6 +119,47 @@ describe("createReviewerScopeGuardHook", () => {
     await expect(result).resolves.toBeUndefined()
   })
 
+  test("#given a canonical project separate from the disposable worktree #when qa-executor writes project evidence #then allows the write", async () => {
+    // given
+    const projectRoot = createProjectRoot()
+    const worktree = createWorktree()
+
+    // when
+    const result = invoke({
+      agent: "qa-executor",
+      projectRoot,
+      worktree,
+      tool: "Write",
+      toolArgs: { filePath: join(projectRoot, ".omo", "evidence", "20260719-f3", "README.md") },
+    })
+
+    // then
+    await expect(result).resolves.toBeUndefined()
+  })
+
+  test("#given canonical evidence contains a symlink to product source #when qa-executor writes through it #then denies the escape", async () => {
+    // given
+    const projectRoot = createProjectRoot()
+    const worktree = createWorktree()
+    const productRoot = join(projectRoot, "packages")
+    const evidenceRoot = join(projectRoot, ".omo", "evidence")
+    mkdirSync(productRoot, { recursive: true })
+    mkdirSync(evidenceRoot, { recursive: true })
+    symlinkSync(productRoot, join(evidenceRoot, "escaped"))
+
+    // when
+    const result = invoke({
+      agent: "qa-executor",
+      projectRoot,
+      worktree,
+      tool: "Write",
+      toolArgs: { filePath: join(evidenceRoot, "escaped", "index.ts") },
+    })
+
+    // then
+    await expect(result).rejects.toThrow(".omo/evidence/**, worktree evidence/**, or OS temp")
+  })
+
   test("#given qa-executor #when writing under worktree evidence/ #then allows the write", async () => {
     // given
     const worktree = createWorktree()
@@ -179,6 +227,8 @@ describe("createReviewerScopeGuardHook", () => {
   test("#given qa-executor #when node test targets its worktree #then allows the QA command", async () => {
     // given
     const worktree = createWorktree()
+    mkdirSync(join(worktree, "test"), { recursive: true })
+    writeFileSync(join(worktree, "test", "qa.test.mjs"), "")
 
     // when
     const result = invoke({
