@@ -1,0 +1,5 @@
+{"branch":"marked-reject","call":1,"args":{"description":"F2 category misroute","prompt":"## 1. TASK\nF2. Code quality review\n\nAudit the implementation fidelity against the plan.\nEnd with a line-anchored VERDICT: APPROVE|REJECT.","category":"unspecified-high","load_skills":[],"run_in_background":false}}
+{"branch":"marked-receipt","call":4,"args":{"description":"F2 oracle review","prompt":"## 1. TASK\nF2. Code quality review\n\nAudit the implementation fidelity against the plan.\nEnd with a line-anchored VERDICT: APPROVE|REJECT.","subagent_type":"oracle","load_skills":[],"run_in_background":false}}
+{"branch":"child-reviewer","call":5}
+{"branch":"legacy","call":8,"args":{"description":"F2 legacy category route","prompt":"## 1. TASK\nF2. Code quality review\n\nAudit the implementation fidelity against the plan.\nEnd with a line-anchored VERDICT: APPROVE|REJECT.","category":"unspecified-high","load_skills":[],"run_in_background":false}}
+{"branch":"child-reviewer","call":9}
