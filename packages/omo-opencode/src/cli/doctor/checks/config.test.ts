@@ -139,14 +139,19 @@ describe("config check", () => {
       const originalXdgConfig = process.env.XDG_CONFIG_HOME
       const originalXdgCache = process.env.XDG_CACHE_HOME
       const originalHome = process.env.HOME
+      const originalCwd = process.cwd()
       const testRootDir = join(
         tmpdir(),
         `omo-doctor-custom-provider-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       )
+      const projectDir = join(testRootDir, "project")
       const xdgConfigDir = join(testRootDir, "xdg-config")
       const xdgCacheDir = join(testRootDir, "xdg-cache")
 
       try {
+        // given — project cwd under temp HOME so the config walk cannot escape into
+        // the host ~/.omo Grok dogfood profile
+        mkdirSync(projectDir, { recursive: true })
         mkdirSync(join(testRootDir, ".omo"), { recursive: true })
         mkdirSync(join(xdgConfigDir, "opencode"), { recursive: true })
         mkdirSync(join(xdgCacheDir, "opencode"), { recursive: true })
@@ -154,6 +159,7 @@ describe("config check", () => {
         process.env.HOME = testRootDir
         process.env.XDG_CONFIG_HOME = xdgConfigDir
         process.env.XDG_CACHE_HOME = xdgCacheDir
+        process.chdir(projectDir)
 
         writeFileSync(
           join(testRootDir, ".omo", "omo.jsonc"),
@@ -189,6 +195,7 @@ describe("config check", () => {
 
         expect(providerIssue).toBeUndefined()
       } finally {
+        process.chdir(originalCwd)
         rmSync(testRootDir, { recursive: true, force: true })
         if (originalConfigDir === undefined) {
           delete process.env.OPENCODE_CONFIG_DIR

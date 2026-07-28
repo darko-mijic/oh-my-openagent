@@ -7,27 +7,37 @@ import { loadOmoConfig } from "./model-resolution-config"
 
 describe("model-resolution-config", () => {
   let originalHome: string | undefined
+  let originalCwd: string
   let temporaryDirectory = ""
+  let projectDirectory = ""
 
   beforeEach(() => {
     originalHome = process.env.HOME
+    originalCwd = process.cwd()
     temporaryDirectory = mkdtempSync(join(tmpdir(), "omo-model-resolution-config-"))
+    projectDirectory = join(temporaryDirectory, "project")
+    mkdirSync(projectDirectory, { recursive: true })
     process.env.HOME = temporaryDirectory
+    process.chdir(projectDirectory)
   })
 
   afterEach(() => {
+    process.chdir(originalCwd)
     rmSync(temporaryDirectory, { recursive: true, force: true })
     if (originalHome === undefined) delete process.env.HOME
     else process.env.HOME = originalHome
   })
 
   it("#given a user omo config #when loading model settings #then reads its opencode view", () => {
+    // given — user layer under HOME/.omo; cwd is a project under that HOME so the
+    // ancestor walk cannot escape into the host ~/.omo dogfood config
     const path = join(temporaryDirectory, ".omo", "omo.jsonc")
     mkdirSync(join(path, ".."), { recursive: true })
     writeFileSync(path, JSON.stringify({
       "[opencode]": { agents: { atlas: { model: "opencode-go/kimi-k2.6" } } },
     }) + "\n")
 
+    // when / then
     expect(loadOmoConfig().agents?.atlas?.model).toBe("opencode-go/kimi-k2.6")
   })
 })
