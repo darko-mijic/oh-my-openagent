@@ -85,8 +85,14 @@ export async function buildPrometheusAgentConfig(params: {
 
   const resolvedModel = modelResolution?.model;
   const resolvedVariant = modelResolution?.variant;
+  const currentModelVariant = shouldUseCurrentModel
+    ? requirement?.fallbackChain.find((entry) =>
+        isModelInFallbackChain(params.currentModel, [entry]),
+      )?.variant
+    : undefined;
 
-  const variantToUse = params.pluginPrometheusOverride?.variant ?? resolvedVariant;
+  const variantToUse =
+    params.pluginPrometheusOverride?.variant ?? resolvedVariant ?? currentModelVariant;
   const grokDefaultEffort =
     resolvedModel && isGrok45Model(resolvedModel) ? "high" : undefined;
   const reasoningEffortToUse =

@@ -4,18 +4,27 @@ export const CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
   "visual-engineering": {
     fallbackChain: [
       {
+        providers: ["anthropic", "github-copilot", "opencode", "vercel"],
+        model: "claude-opus-5",
+        variant: "max",
+      },
+      {
+        providers: ["apitopia", "opencode-go", "kimi-for-coding", "moonshotai", "opencode", "vercel"],
+        model: "kimi-k3",
+        variant: "max",
+      },
+      {
+        providers: ["anthropic", "github-copilot", "opencode", "vercel"],
+        model: "claude-fable-5",
+        variant: "low",
+      },
+      {
         providers: ["google", "github-copilot", "opencode", "vercel"],
         model: "gemini-3.1-pro",
         variant: "high",
       },
       { providers: ["zai-coding-plan", "opencode", "bailian-coding-plan", "vercel"], model: "glm-5" },
-      {
-        providers: ["anthropic", "github-copilot", "opencode", "vercel"],
-        model: "claude-opus-4-7",
-        variant: "max",
-      },
       { providers: ["opencode-go", "vercel"], model: "glm-5.2" },
-      { providers: ["kimi-for-coding"], model: "k2p5" },
     ],
   },
   ultrabrain: {
@@ -32,7 +41,7 @@ export const CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
       },
       {
         providers: ["openai", "opencode", "vercel"],
-        model: "gpt-5.5",
+        model: "gpt-5.6-sol",
         variant: "xhigh",
       },
       // Experimental: Grok 4.5 deep autonomous work.
@@ -44,7 +53,7 @@ export const CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
       },
       {
         providers: ["anthropic", "github-copilot", "opencode", "vercel"],
-        model: "claude-opus-4-7",
+        model: "claude-opus-5",
         variant: "max",
       },
       { providers: ["opencode-go", "vercel"], model: "glm-5.2" },
@@ -69,14 +78,14 @@ export const CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
       },
       {
         providers: ["openai", "github-copilot", "opencode", "vercel"],
-        model: "gpt-5.5",
+        model: "gpt-5.6-sol",
         variant: "medium",
       },
       // Experimental: Grok 4.5 multi-file reasoning.
       { providers: ["xai", "opencode"], model: "grok-4.5", variant: "high" },
       {
         providers: ["anthropic", "github-copilot", "opencode", "vercel"],
-        model: "claude-opus-4-7",
+        model: "claude-opus-5",
         variant: "max",
       },
       {
@@ -84,35 +93,35 @@ export const CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
         model: "gemini-3.1-pro",
         variant: "high",
       },
-      { providers: ["opencode-go", "vercel"], model: "kimi-k2.6" },
+      { providers: ["opencode-go", "vercel"], model: "kimi-k3" },
       { providers: ["opencode-go", "vercel"], model: "glm-5.2" },
     ],
   },
   artistry: {
     fallbackChain: [
       {
-        providers: ["google", "github-copilot", "opencode", "vercel"],
-        model: "gemini-3.1-pro",
-        variant: "high",
+        providers: ["anthropic", "github-copilot", "opencode", "vercel"],
+        model: "claude-fable-5",
+        variant: "xhigh",
+      },
+      {
+        providers: ["apitopia", "opencode-go", "kimi-for-coding", "moonshotai", "opencode", "vercel"],
+        model: "kimi-k3",
+        variant: "max",
       },
       {
         providers: ["anthropic", "github-copilot", "opencode", "vercel"],
-        model: "claude-opus-4-7",
-        variant: "max",
+        model: "claude-opus-5",
+        variant: "xhigh",
       },
-      { providers: ["openai", "github-copilot", "opencode", "vercel"], model: "gpt-5.5" },
-      { providers: ["opencode-go", "vercel"], model: "kimi-k2.6" },
-      { providers: ["opencode-go", "vercel"], model: "glm-5.2" },
     ],
   },
   quick: {
     fallbackChain: [
+      { providers: ["apitopia"], model: "kimi-for-coding-highspeed" },
+      { providers: ["quotio-openai"], model: "gpt-5.4-mini-fast" },
       {
-        providers: ["openai", "github-copilot", "opencode", "vercel"],
-        model: "gpt-5.4-mini",
-      },
-      {
-        providers: ["anthropic", "github-copilot", "vercel"],
+        providers: ["anthropic-api", "anthropic", "github-copilot", "vercel"],
         model: "claude-haiku-4-5",
       },
       {
@@ -143,10 +152,10 @@ export const CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
       },
       {
         providers: ["openai", "opencode", "vercel"],
-        model: "gpt-5.5",
+        model: "gpt-5.6-sol",
         variant: "medium",
       },
-      { providers: ["opencode-go", "vercel"], model: "kimi-k2.6" },
+      { providers: ["opencode-go", "vercel"], model: "kimi-k3" },
       {
         providers: ["google", "github-copilot", "opencode", "vercel"],
         model: "gemini-3-flash",
@@ -159,34 +168,24 @@ export const CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
   "unspecified-high": {
     fallbackChain: [
       {
-        providers: ["anthropic", "github-copilot", "opencode", "vercel"],
-        model: "claude-opus-4-7",
+        providers: ["apitopia", "opencode-go", "kimi-for-coding", "moonshotai", "opencode", "vercel"],
+        model: "kimi-k3",
         variant: "max",
       },
       {
+        providers: ["anthropic", "github-copilot", "opencode", "vercel"],
+        model: "claude-opus-5",
+        variant: "high",
+      },
+      {
         providers: ["openai", "github-copilot", "opencode", "vercel"],
-        model: "gpt-5.5",
+        model: "gpt-5.6-sol",
         variant: "high",
       },
       // Experimental: Grok 4.5 general high-effort implementation.
       { providers: ["xai", "opencode"], model: "grok-4.5", variant: "high" },
       { providers: ["zai-coding-plan", "opencode", "bailian-coding-plan", "vercel"], model: "glm-5" },
-      { providers: ["kimi-for-coding"], model: "k2p5" },
       { providers: ["opencode-go", "vercel"], model: "glm-5.2" },
-      { providers: ["opencode", "bailian-coding-plan", "vercel"], model: "kimi-k2.5" },
-      {
-        providers: [
-          "opencode",
-          "bailian-coding-plan",
-          "moonshotai",
-          "moonshotai-cn",
-          "firmware",
-          "ollama-cloud",
-          "aihubmix",
-          "vercel",
-        ],
-        model: "kimi-k2.5",
-      },
     ],
   },
   writing: {
@@ -197,7 +196,7 @@ export const CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {
       },
       // Experimental: Grok 4.5 prose / docs.
       { providers: ["xai", "opencode"], model: "grok-4.5", variant: "medium" },
-      { providers: ["opencode-go", "vercel"], model: "kimi-k2.6" },
+      { providers: ["opencode-go", "vercel"], model: "kimi-k3" },
       {
         providers: ["anthropic", "github-copilot", "opencode", "vercel"],
         model: "claude-sonnet-4-6",

@@ -8,6 +8,7 @@ import {
   writeBoulderState,
 } from "../../features/boulder-state"
 import { buildAutoSelectedPlanContextInfoOnly } from "./context-info-formatters"
+import { ensureNotepadScaffold } from "./notepad-scaffold"
 
 export function createNewWorkOrInitialize(params: {
   readonly directory: string
@@ -20,12 +21,14 @@ export function createNewWorkOrInitialize(params: {
   const existingWork = getWorkByPlanName(directory, getPlanName(planPath), { worktreePath })
   if (existingWork && existingWork.status !== "completed" && existingWork.status !== "abandoned") {
     selectActiveWork(directory, existingWork.work_id)
+    ensureNotepadScaffold({ directory, planName: getPlanName(planPath) })
     return
   }
 
   if (!readBoulderState(directory)) {
     const initializedState = createBoulderState(planPath, sessionId, activeAgent, worktreePath)
     writeBoulderState(directory, initializedState)
+    ensureNotepadScaffold({ directory, planName: getPlanName(planPath) })
     return
   }
 
@@ -35,6 +38,7 @@ export function createNewWorkOrInitialize(params: {
     agent: activeAgent,
     worktreePath,
   })
+  ensureNotepadScaffold({ directory, planName: getPlanName(planPath) })
 }
 
 export function buildAutoSelectedPlanContextWithStateInit(params: {
@@ -52,6 +56,8 @@ export function buildAutoSelectedPlanContextWithStateInit(params: {
 
   const newState = createBoulderState(planPath, sessionId, activeAgent, worktreePath)
   writeBoulderState(directory, newState)
+
+  ensureNotepadScaffold({ directory, planName: getPlanName(planPath), timestamp })
 
   return buildAutoSelectedPlanContextInfoOnly({
     planPath,
