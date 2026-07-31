@@ -15,6 +15,7 @@ import { resolveCategoryConfig } from "./category-config-resolver";
 type PrometheusOverride = Record<string, unknown> & {
   category?: string;
   model?: string;
+  reasoning?: string;
   variant?: string;
   reasoningEffort?: string;
   textVerbosity?: string;
@@ -95,6 +96,8 @@ export async function buildPrometheusAgentConfig(params: {
     params.pluginPrometheusOverride?.variant ?? resolvedVariant ?? currentModelVariant;
   const grokDefaultEffort =
     resolvedModel && isGrok45Model(resolvedModel) ? "high" : undefined;
+  const reasoningToUse =
+    params.pluginPrometheusOverride?.reasoning ?? categoryConfig?.reasoning;
   const reasoningEffortToUse =
     params.pluginPrometheusOverride?.reasoningEffort
     ?? categoryConfig?.reasoningEffort
@@ -113,6 +116,7 @@ export async function buildPrometheusAgentConfig(params: {
   const base: Record<string, unknown> = {
     ...(resolvedModel ? { model: resolvedModel } : {}),
     ...(variantToUse ? { variant: variantToUse } : {}),
+    ...(reasoningToUse ? { reasoning: reasoningToUse } : {}),
     mode: "primary",
     prompt: getPrometheusPrompt(resolvedModel, params.disabledTools),
     permission: PROMETHEUS_PERMISSION,

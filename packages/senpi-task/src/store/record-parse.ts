@@ -12,6 +12,7 @@ export function parseTaskRecord(value: unknown, path: string): TaskRecord {
   if (!isRecord(value)) throw new Error(`JSON record at ${path} is not an object`)
 
   const name = readOptionalString(value, "name")
+  const taskSummary = readOptionalString(value, "task_summary")
   const description = readOptionalString(value, "description")
   const agentType = readOptionalString(value, "agent_type")
   const category = readOptionalString(value, "category")
@@ -43,6 +44,7 @@ export function parseTaskRecord(value: unknown, path: string): TaskRecord {
     updated_at: readString(value, "updated_at"),
     notification: readNotification(value),
     ...(name === undefined ? {} : { name }),
+    ...(taskSummary === undefined ? {} : { task_summary: taskSummary }),
     ...(description === undefined ? {} : { description }),
     ...(agentType === undefined ? {} : { agent_type: agentType }),
     ...(category === undefined ? {} : { category }),
@@ -114,14 +116,16 @@ function readOptionalResolvedModelArray(
 
 function readResolvedModel(value: Record<string, unknown>): ResolvedModelRecord {
   const variant = readOptionalString(value, "variant")
-  const reasoningEffort = readOptionalString(value, "reasoning_effort")
+  const legacyReasoningEffort = readOptionalString(value, "reasoning_effort")
+  const reasoning = readOptionalString(value, "reasoning")
   return {
     provider: readString(value, "provider"),
     model_id: readString(value, "model_id"),
     display: readString(value, "display"),
     source: readResolvedModelSource(value),
     ...(variant === undefined ? {} : { variant }),
-    ...(reasoningEffort === undefined ? {} : { reasoning_effort: reasoningEffort }),
+    ...(legacyReasoningEffort === undefined ? {} : { reasoning_effort: legacyReasoningEffort }),
+    ...(reasoning === undefined ? {} : { reasoning }),
   }
 }
 
@@ -129,10 +133,12 @@ function readNotification(record: Record<string, unknown>): TaskRecord["notifica
   const notification = record["notification"]
   if (!isRecord(notification)) throw new Error("notification is not an object")
   const failedEpoch = readOptionalNumber(notification, "notification_failed_epoch")
+  const livenessNotifiedEpoch = readOptionalNumber(notification, "liveness_notified_epoch")
   return {
     run_epoch: readNumber(notification, "run_epoch"),
     notified_epoch: readNumber(notification, "notified_epoch"),
     ...(failedEpoch === undefined ? {} : { notification_failed_epoch: failedEpoch }),
+    ...(livenessNotifiedEpoch === undefined ? {} : { liveness_notified_epoch: livenessNotifiedEpoch }),
   }
 }
 

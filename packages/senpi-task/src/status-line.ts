@@ -9,6 +9,7 @@ export type TaskIdentityInput = {
   readonly taskId: string
   readonly name?: string
   readonly description?: string
+  readonly taskSummary?: string
 }
 
 export type StatusTargetInput = {
@@ -17,6 +18,7 @@ export type StatusTargetInput = {
   readonly resolvedModel?: ResolvedModelRecord
   // Raw model string used when no resolved model metadata exists (live/legacy tasks).
   readonly model?: string
+  readonly fallbackCount?: number
 }
 
 export type StatusLineStats = Pick<TaskRunStats, "turns" | "tool_calls"> & {
@@ -31,19 +33,43 @@ export type StatusLineInput = {
   readonly verb?: string
 }
 
-// WHAT the task is, not which opaque handle it got: description (human label) beats the generated
-// name, and the task id is only the last-resort handle when neither was supplied.
+// WHAT the task is, not which opaque handle it got: the delegated-work summary beats the
+// description (human label), which beats the generated name; the task id is only the last-resort
+// handle when none was supplied.
 export function taskIdentityLabel(input: TaskIdentityInput): string {
-  const label = optionalRendererText(input.description) ?? optionalRendererText(input.name)
+  const label =
+    optionalRendererText(input.taskSummary) ?? optionalRendererText(input.description) ?? optionalRendererText(input.name)
   return label === undefined ? excerptRendererText(input.taskId, IDENTITY_MAX_WIDTH) : excerptRendererText(label, IDENTITY_MAX_WIDTH)
+}
+
+// WHO it runs as: one routing identity, shared by category- and agent-routed tasks. Category wins
+// when both are present (a record never carries both, but a defensive caller might).
+export function formatTargetIdentity(input: Pick<StatusTargetInput, "category" | "agentType">): string | undefined {
+  const category = optionalRendererText(input.category)
+  if (category !== undefined) return `category:${category}`
+  const agentType = optionalRendererText(input.agentType)
+  if (agentType !== undefined) return `agent:${agentType}`
+  return undefined
+}
+
+// WHO it runs as plus WHICH model it resolved to, in the single canonical grammar:
+//   category:<name>(<provider>/<model>:<effort>) | agent:<name>(<provider>/<model>:<effort>)
+// Agent and category targets share the exact same shape; without an identity the bare model token
+// is the only useful signal left.
+export function formatTargetWithModel(input: StatusTargetInput): string | undefined {
+  const identity = formatTargetIdentity(input)
+  const model = formatStatusModel(input.resolvedModel) ?? optionalRendererText(input.model)
+  if (identity !== undefined) return model === undefined ? identity : `${identity}(${model})`
+  if (model !== undefined) return `model:${model}`
+  return undefined
 }
 
 // WHERE it runs: the routing target plus the model actually resolved for it.
 export function formatStatusTarget(input: StatusTargetInput): string | undefined {
-  const label = optionalRendererText(input.category) ?? optionalRendererText(input.agentType)
-  const model = formatStatusModel(input.resolvedModel) ?? optionalRendererText(input.model)
-  if (label === undefined) return model
-  return model === undefined ? label : `${label} (${model})`
+  const target = formatTargetWithModel(input)
+  if (target === undefined) return undefined
+  const fallback = input.fallbackCount === undefined || input.fallbackCount <= 0 ? undefined : `fallback:${input.fallbackCount}`
+  return fallback === undefined ? target : `${target} · ${fallback}`
 }
 
 // The canonical grammar every live/status row shares:
@@ -69,6 +95,6 @@ function formatStatusModel(resolved: ResolvedModelRecord | undefined): string | 
   const provider = optionalRendererText(resolved.provider)
   const modelId = optionalRendererText(resolved.model_id)
   if (provider === undefined || modelId === undefined) return undefined
-  const effort = optionalRendererText(resolved.reasoning_effort) ?? optionalRendererText(resolved.variant)
+  const effort = optionalRendererText(resolved.reasoning) ?? optionalRendererText(resolved.reasoning_effort) ?? optionalRendererText(resolved.variant)
   return `${provider}/${modelId}${effort === undefined ? "" : `:${effort}`}`
 }

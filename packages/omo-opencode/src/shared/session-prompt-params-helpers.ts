@@ -1,13 +1,19 @@
+import { lowerReasoningForModel } from "./agent-variant"
+import type { LoweredReasoning } from "./agent-variant"
 import {
-  clearBaseSessionPromptParams,
   clearRuntimeFallbackPromptParams,
+  clearSessionPromptParams,
   setRuntimeFallbackPromptParams,
   setSessionPromptParams,
 } from "./session-prompt-params-state"
 
 type PromptParamModel = {
+  providerID?: string
+  modelID?: string
+  runtimeModel?: Record<string, unknown>
   temperature?: number
   top_p?: number
+  reasoning?: string
   reasoningEffort?: string
   maxTokens?: number
   thinking?: { type: "enabled" | "disabled"; budgetTokens?: number }
@@ -16,14 +22,24 @@ type PromptParamModel = {
 export function applySessionPromptParams(
   sessionID: string,
   model: PromptParamModel | undefined,
-): void {
+): LoweredReasoning {
   if (!model) {
-    clearBaseSessionPromptParams(sessionID)
-    return
+    clearSessionPromptParams(sessionID)
+    return {}
   }
 
+  const loweredReasoning = model.reasoning !== undefined
+    ? lowerReasoningForModel(model.reasoning, {
+        providerID: model.providerID ?? "",
+        modelID: model.modelID ?? "",
+        runtimeModel: model.runtimeModel,
+      })
+    : undefined
+  const reasoningEffort = model.reasoning !== undefined
+    ? loweredReasoning?.reasoningEffort
+    : model.reasoningEffort
   const promptOptions: Record<string, unknown> = {
-    ...(model.reasoningEffort ? { reasoningEffort: model.reasoningEffort } : {}),
+    ...(reasoningEffort ? { reasoningEffort } : {}),
     ...(model.thinking ? { thinking: model.thinking } : {}),
   }
 
@@ -33,6 +49,8 @@ export function applySessionPromptParams(
     ...(model.maxTokens !== undefined ? { maxOutputTokens: model.maxTokens } : {}),
     ...(Object.keys(promptOptions).length > 0 ? { options: promptOptions } : {}),
   })
+
+  return loweredReasoning ?? {}
 }
 
 export function applyRuntimeFallbackPromptParams(
