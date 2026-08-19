@@ -7,23 +7,14 @@ import test from "node:test";
 
 import { migrateConfigFile } from "../scripts/migrate-codex-config.mjs";
 
-function parseTomlWithPython(config) {
-	const python = resolvePython();
+function parseTomlWithBun(config) {
 	const result = spawnSync(
-		python,
-		["-c", "import json, sys, tomllib; print(json.dumps(tomllib.loads(sys.stdin.read())))"],
+		"bun",
+		["-e", "console.log(JSON.stringify(Bun.TOML.parse(await Bun.stdin.text())))"],
 		{ encoding: "utf8", input: config },
 	);
 	assert.equal(result.status, 0, result.stderr);
 	return JSON.parse(result.stdout);
-}
-
-function resolvePython() {
-	for (const command of ["python3", "python"]) {
-		const result = spawnSync(command, ["-c", "import tomllib"], { encoding: "utf8" });
-		if (result.status === 0) return command;
-	}
-	assert.fail("Python with tomllib is required for TOML parse assertions");
 }
 
 test("#given SessionStart migration sees an inline-commented V2 cap #when migrating twice #then preserves the line and ordering byte-for-byte", async () => {
@@ -95,7 +86,7 @@ for (const header of [
 
 		await migrateConfigFile(configPath);
 		const firstPass = await readFile(configPath, "utf8");
-		const parsed = parseTomlWithPython(firstPass);
+		const parsed = parseTomlWithBun(firstPass);
 		const secondResult = await migrateConfigFile(configPath);
 		const secondPass = await readFile(configPath, "utf8");
 
@@ -149,7 +140,7 @@ for (const fixture of [
 
 		await migrateConfigFile(configPath);
 		const firstPass = await readFile(configPath, "utf8");
-		const parsed = parseTomlWithPython(firstPass);
+		const parsed = parseTomlWithBun(firstPass);
 		const secondResult = await migrateConfigFile(configPath);
 		const secondPass = await readFile(configPath, "utf8");
 
@@ -181,7 +172,7 @@ test("#given multiline string contains V2 cap lookalikes #when SessionStart migr
 
 	await migrateConfigFile(configPath);
 	const content = await readFile(configPath, "utf8");
-	const parsed = parseTomlWithPython(content);
+	const parsed = parseTomlWithBun(content);
 
 	assert.match(parsed.notes, /max_concurrent_threads_per_session = 7/);
 	assert.equal(parsed.features.multi_agent_v2.max_concurrent_threads_per_session, 16);
@@ -203,7 +194,7 @@ test("#given V2 section multiline value contains a cap lookalike #when SessionSt
 	);
 
 	await migrateConfigFile(configPath);
-	const parsed = parseTomlWithPython(await readFile(configPath, "utf8"));
+	const parsed = parseTomlWithBun(await readFile(configPath, "utf8"));
 
 	assert.equal(parsed.features.multi_agent_v2.max_concurrent_threads_per_session, 16);
 });
@@ -226,7 +217,7 @@ test("#given V2 root-dotted disable and cap #when gpt-5.6 SessionStart migrates 
 
 	await migrateConfigFile(configPath, { sessionModel: "gpt-5.6-terra" });
 	const content = await readFile(configPath, "utf8");
-	const parsed = parseTomlWithPython(content);
+	const parsed = parseTomlWithBun(content);
 
 	assert.equal(parsed.features.multi_agent_v2.max_concurrent_threads_per_session, 7);
 	assert.equal(parsed.features.multi_agent_v2.enabled, undefined);
@@ -250,7 +241,7 @@ test("#given quoted dotted V1 keys under features #when SessionStart migrates #t
 
 	await migrateConfigFile(configPath);
 	const content = await readFile(configPath, "utf8");
-	const parsed = parseTomlWithPython(content);
+	const parsed = parseTomlWithBun(content);
 
 	assert.equal(parsed.features.multi_agent_v2.enabled, false);
 	assert.equal(parsed.features.multi_agent_v2.max_concurrent_threads_per_session, 7);
@@ -273,7 +264,7 @@ test("#given multiline string closes after an escaped quote #when SessionStart m
 
 	await migrateConfigFile(configPath);
 	const content = await readFile(configPath, "utf8");
-	const parsed = parseTomlWithPython(content);
+	const parsed = parseTomlWithBun(content);
 
 	assert.equal(parsed.features.multi_agent_v2.max_concurrent_threads_per_session, 7);
 	assert.equal((content.match(/^\[features\.multi_agent_v2\]$/gm) ?? []).length, 1);

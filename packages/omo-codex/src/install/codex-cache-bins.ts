@@ -8,6 +8,8 @@ import { RUNTIME_WRAPPER_MARKER, posixRuntimeWrapper, windowsRuntimeWrapper } fr
 
 type LinkPlatform = NodeJS.Platform
 
+const DEFAULT_POSIX_BUN_CANDIDATES = ["/opt/homebrew/bin/bun", "/usr/local/bin/bun"] as const
+
 const RESERVED_NESTED_BIN_NAMES = new Set([
   "omo",
   "omo-agent-toolkit",
@@ -58,6 +60,7 @@ export async function linkRootRuntimeBin(input: {
   readonly codexHome: string
   readonly repoRoot: string
   readonly platform?: LinkPlatform
+  readonly absoluteBunCandidates?: readonly string[]
 }): Promise<{ readonly name: string; readonly path: string; readonly target: string } | null> {
   const cliPath = join(input.repoRoot, "dist", "cli", "index.js")
   const platform = input.platform ?? process.platform
@@ -78,7 +81,17 @@ export async function linkRootRuntimeBin(input: {
   }
 
   const linkPath = join(input.binDir, binName)
-  await replaceRuntimeWrapper(linkPath, posixRuntimeWrapper(binName, cliPath, input.codexHome, input.binDir, nodeCliPath))
+  await replaceRuntimeWrapper(
+    linkPath,
+    posixRuntimeWrapper(
+      binName,
+      cliPath,
+      input.codexHome,
+      input.binDir,
+      nodeCliPath,
+      input.absoluteBunCandidates ?? DEFAULT_POSIX_BUN_CANDIDATES,
+    ),
+  )
   await chmod(linkPath, 0o755)
   await removeGeneratedRuntimeWrapper(legacyPath)
   return { name: binName, path: linkPath, target: cliPath }

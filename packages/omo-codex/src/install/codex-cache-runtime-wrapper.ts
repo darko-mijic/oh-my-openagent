@@ -9,12 +9,17 @@ export function posixRuntimeWrapper(
   codexHome: string,
   binDir: string,
   nodeCliPath: string,
+  absoluteBunCandidates: readonly string[],
 ): string {
   const ulwLoopBin = toPosixPath(join(binDir, "omo-ulw-loop"))
   const nodeCli = escapePosixDoubleQuoted(toPosixPath(nodeCliPath))
   const escapedCliPath = escapePosixDoubleQuoted(toPosixPath(cliPath))
   const escapedCodexHome = escapePosixDoubleQuoted(toPosixPath(codexHome))
   const escapedUlwLoopBin = escapePosixDoubleQuoted(ulwLoopBin)
+  const fallbackBunCandidates = [
+    '"$HOME/.bun/bin/bun"',
+    ...absoluteBunCandidates.map((candidate) => `"${escapePosixDoubleQuoted(toPosixPath(candidate))}"`),
+  ].join(" ")
   return [
     "#!/bin/sh",
     `# ${RUNTIME_WRAPPER_MARKER}`,
@@ -33,7 +38,7 @@ export function posixRuntimeWrapper(
     "  BUN_BINARY=bun",
     "fi",
     'if [ -z "$BUN_BINARY" ]; then',
-    '  for omo_bun_candidate in "$HOME/.bun/bin/bun" /opt/homebrew/bin/bun /usr/local/bin/bun; do',
+    `  for omo_bun_candidate in ${fallbackBunCandidates}; do`,
     '    if [ -x "$omo_bun_candidate" ]; then',
     '      BUN_BINARY="$omo_bun_candidate"',
     "      break",

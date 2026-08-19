@@ -9,7 +9,7 @@ import test from "node:test";
 import { linkCachedPluginBins, linkRootRuntimeBin } from "./install-dist/install-local.mjs";
 import { makeTempDir, writeJson } from "./install-test-fixtures.mjs";
 
-async function writeRuntimeWrapperFixture({ withNodeCli = false } = {}) {
+async function writeRuntimeWrapperFixture({ withNodeCli = false, absoluteBunCandidates } = {}) {
 	const root = await makeTempDir();
 	const repoRoot = join(root, "repo");
 	const binDir = join(root, "bin");
@@ -25,7 +25,7 @@ async function writeRuntimeWrapperFixture({ withNodeCli = false } = {}) {
 		);
 	}
 	await mkdir(homeDir, { recursive: true });
-	const link = await linkRootRuntimeBin({ binDir, codexHome, repoRoot, platform: "linux" });
+	const link = await linkRootRuntimeBin({ absoluteBunCandidates, binDir, codexHome, repoRoot, platform: "linux" });
 	return { binDir, codexHome, homeDir, link, repoRoot };
 }
 
@@ -82,7 +82,7 @@ test("#given an unmarked user-owned omo #when linking twice #then preserves it b
 
 test("#given bun absent from PATH but present in ~/.bun/bin #when running the omo-agent-toolkit runtime wrapper #then resolves the bun fallback", async (t) => {
 	if (process.platform === "win32") return t.skip("posix wrapper execution");
-	const { homeDir, link } = await writeRuntimeWrapperFixture();
+	const { homeDir, link } = await writeRuntimeWrapperFixture({ absoluteBunCandidates: [] });
 	await mkdir(join(homeDir, ".bun", "bin"), { recursive: true });
 	await writeFile(join(homeDir, ".bun", "bin", "bun"), '#!/bin/sh\necho "fake-bun-ran $2"\n');
 	await chmod(join(homeDir, ".bun", "bin", "bun"), 0o755);
@@ -98,7 +98,7 @@ test("#given bun absent from PATH but present in ~/.bun/bin #when running the om
 
 test("#given bun absent everywhere #when running the omo runtime wrapper #then fails with an actionable install hint", async (t) => {
 	if (process.platform === "win32") return t.skip("posix wrapper execution");
-	const { homeDir, link } = await writeRuntimeWrapperFixture();
+	const { homeDir, link } = await writeRuntimeWrapperFixture({ absoluteBunCandidates: [] });
 
 	const result = spawnSync(link.path, ["--version"], {
 		encoding: "utf8",
@@ -112,7 +112,7 @@ test("#given bun absent everywhere #when running the omo runtime wrapper #then f
 
 test("#given OMO_RUNTIME=node and a node CLI bundle #when running the omo runtime wrapper #then executes the node CLI", async (t) => {
 	if (process.platform === "win32") return t.skip("posix wrapper execution");
-	const { homeDir, link } = await writeRuntimeWrapperFixture({ withNodeCli: true });
+	const { homeDir, link } = await writeRuntimeWrapperFixture({ absoluteBunCandidates: [], withNodeCli: true });
 
 	const result = spawnSync(link.path, ["--help"], {
 		encoding: "utf8",
@@ -125,7 +125,7 @@ test("#given OMO_RUNTIME=node and a node CLI bundle #when running the omo runtim
 
 test("#given bun absent everywhere and a node CLI bundle #when running the omo runtime wrapper #then falls back to node", async (t) => {
 	if (process.platform === "win32") return t.skip("posix wrapper execution");
-	const { homeDir, link } = await writeRuntimeWrapperFixture({ withNodeCli: true });
+	const { homeDir, link } = await writeRuntimeWrapperFixture({ absoluteBunCandidates: [], withNodeCli: true });
 
 	const result = spawnSync(link.path, ["--version"], {
 		encoding: "utf8",
@@ -138,7 +138,7 @@ test("#given bun absent everywhere and a node CLI bundle #when running the omo r
 
 test("#given bun absent and no node CLI bundle #when running the omo runtime wrapper #then the error names both runtimes", async (t) => {
 	if (process.platform === "win32") return t.skip("posix wrapper execution");
-	const { homeDir, link } = await writeRuntimeWrapperFixture();
+	const { homeDir, link } = await writeRuntimeWrapperFixture({ absoluteBunCandidates: [] });
 
 	const result = spawnSync(link.path, ["--version"], {
 		encoding: "utf8",

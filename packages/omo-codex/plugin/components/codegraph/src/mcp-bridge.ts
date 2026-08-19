@@ -70,7 +70,7 @@ export async function runBridgedCodegraphProcess(
 		childInput.destroy();
 		childOutput.destroy();
 	};
-	void childExit.then(destroyChildPipes, destroyChildPipes);
+	void childExit.then(() => childInput.destroy(), destroyChildPipes);
 	// Parent-liveness watchdog: when the parent dies while holding our stdio
 	// open, the client stream never sees EOF, so the only settle path is to
 	// drop the client input, close the child pipes, and terminate the child.

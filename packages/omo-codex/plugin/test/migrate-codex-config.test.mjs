@@ -11,29 +11,14 @@ import { removeUnsupportedRootMultiAgentMode } from "../scripts/migrate-codex-co
 import { forceDisableMultiAgentV2 } from "../scripts/migrate-codex-config/multi-agent-v2-guard.mjs";
 import { ensureCodexReasoningConfig, migrateCodexConfig } from "../scripts/migrate-codex-config.mjs";
 
-function parseTomlWithPython(config) {
-	const python = resolvePython();
+function parseTomlWithBun(config) {
 	const result = spawnSync(
-		python,
-		[
-			"-c",
-			[
-				"import json, sys, tomllib",
-				"print(json.dumps(tomllib.loads(sys.stdin.read())))",
-			].join("; "),
-		],
+		"bun",
+		["-e", "console.log(JSON.stringify(Bun.TOML.parse(await Bun.stdin.text())))"],
 		{ encoding: "utf8", input: config },
 	);
 	assert.equal(result.status, 0, result.stderr);
 	return JSON.parse(result.stdout);
-}
-
-function resolvePython() {
-	for (const command of ["python3", "python"]) {
-		const result = spawnSync(command, ["-c", "import tomllib"], { encoding: "utf8" });
-		if (result.status === 0) return command;
-	}
-	assert.fail("Python with tomllib is required for TOML parse assertions");
 }
 
 test("#given stale root reasoning config #when ensuring config #then replaces stale values without duplicate keys", () => {
@@ -595,7 +580,7 @@ test("#given [features] boolean shorthand multi_agent_v2 = false #when forcing d
 	].join("\n");
 
 	const result = forceDisableMultiAgentV2(config, { multiAgentVersion: null });
-	const parsed = parseTomlWithPython(result);
+	const parsed = parseTomlWithBun(result);
 
 	assert.doesNotMatch(result, /^\s*multi_agent_v2\s*=/m);
 	assert.equal((result.match(/\[features\.multi_agent_v2\]/g) ?? []).length, 1);
@@ -668,7 +653,7 @@ test("#given global config starts with inline-comment features table #when full 
 
 	assert.deepEqual(result.changed, [configPath]);
 	const content = await readFile(configPath, "utf8");
-	const parsed = parseTomlWithPython(content);
+	const parsed = parseTomlWithBun(content);
 	assert.equal("multi_agent_mode" in parsed, false);
 	assert.equal(parsed.model, "gpt-5.6-sol");
 	assert.equal(parsed.model_context_window, 372000);
@@ -706,7 +691,7 @@ test("#given inline-comment features table #when removing unsupported root key #
 	const config = ["[features] # keep comment", "multi_agent = true", ""].join("\n");
 
 	const result = removeUnsupportedRootMultiAgentMode(config);
-	const parsed = parseTomlWithPython(result);
+	const parsed = parseTomlWithBun(result);
 
 	assert.equal(result, config);
 	assert.equal("multi_agent_mode" in parsed, false);
@@ -1027,7 +1012,7 @@ test("#given legacy shorthand and no session model on hook path #when full migra
 	});
 
 	const content = await readFile(configPath, "utf8");
-	const parsed = parseTomlWithPython(content);
+	const parsed = parseTomlWithBun(content);
 	assert.doesNotMatch(content, /^\s*multi_agent_v2\s*=\s*(?:true|false)/m);
 	assert.equal(parsed.features.plugins, true);
 	assert.equal(parsed.features.multi_agent_v2.max_concurrent_threads_per_session, 16);
